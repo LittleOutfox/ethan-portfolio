@@ -5,7 +5,7 @@ import Contact from './components/Contact.jsx';
 import Experience from './components/Experience.jsx';
 import FooterStatus from './components/FooterStatus.jsx';
 import Hero from './components/Hero.jsx';
-import InkCanvasPlaceholder from './components/InkCanvasPlaceholder.jsx';
+import InkCanvas from './components/InkCanvas.jsx';
 import Navbar from './components/Navbar.jsx';
 import Notes from './components/Notes.jsx';
 import Projects from './components/Projects.jsx';
@@ -82,7 +82,7 @@ export default function Portfolio() {
       ref={rootRef}
       className="relative min-h-screen bg-transparent text-ink font-sans font-normal antialiased [overflow-x:clip]"
     >
-      <InkCanvasPlaceholder />
+      <InkCanvas />
 
       <Navbar
         active={active}
