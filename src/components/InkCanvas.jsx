@@ -1,51 +1,57 @@
 import { useEffect, useRef } from 'react';
 
 /* -----------------------------------------------------------
- * InkCanvas — foundation pass, v4.
+ * InkCanvas — foundation pass, v5.
  *
- * v3 had a ghosting bug: a single gradient stroke tied alpha to
- * POSITION on the oldest→newest axis, so old points the cursor
- * revisited landed at the bright end and re-lit. Fixed here by
- * making every trail segment own its own age, totally independent
- * of every other segment.
+ * Fixes the v4 cursor-lag: previously every mousemove pushed
+ * segments, mousemove fires >60 Hz on many mice, the trails
+ * array grew faster than rAF could drain it, and rendering
+ * fell behind the cursor.
  *
- * Per frame:
- *  · drop expired segments from the array head
- *  · clearRect the offscreen buffer (no leftover alpha by construction)
- *  · iterate surviving segments, stroke each ONE line based on its
- *    own (born, lifetime) — alpha is a pure function of own age
- *  · compositeToDisplay (cream → blurred buffer upscale → wash → vignette)
- *  · when the array empties, cancel RAF — mousemove restarts it
+ * Architecture now:
+ *  · mousemove ONLY updates a {targetX, targetY, targetT} latch.
+ *    It does not push segments.
+ *  · The rAF loop is the single producer of segments. Each tick:
+ *      synth(): catch up from (renderX, renderY) to the current
+ *               target, capped at MAX_STEPS_PER_FRAME segments.
+ *               Then renderX/Y jump to target — no backlog.
+ *      expire: drop trails whose age ≥ lifetime.
+ *      [draw is throttled by frameInterval; synth/expire are not]
+ *      draw:   stroke each segment with its own age-based alpha.
+ *      blur:   single-pass blur of the small buffer into tctx.
+ *      composite: cream → blurred ink → wash → vignette.
+ *  · When target == render AND trails is empty, cancel rAF.
  *
- * Beading at slow-cursor vertices is mitigated, not architected away:
- * low TRAIL_OPACITY + blur. Width and opacity jitter give organic feel
- * without the position-bound bug. Lifetime is INTENTIONALLY constant
- * across segments so the array stays sorted by expiration and head-only
- * shift cleanup is correct.
+ * Huge per-frame jumps are bounded by step count, not distance:
+ * the trail covers at most MAX_STEPS_PER_FRAME × TARGET_STEP_LEN
+ * of the move and lets the cursor leave a gap. Short tight trail
+ * stays put — no long bars snapping across.
  *
- * Next aesthetic lever (if it still reads as a line): 2–3 perpendicular-
- * offset sub-strokes per segment. Not in v4; document for the user.
+ * Ghost-safe model from v4 preserved: every segment owns its own
+ * (born, lifetime); alpha is f(now - born) only.
  * --------------------------------------------------------- */
 
 const GRAIN_URL =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
 const TUNING = {
-  TRAIL_OPACITY:       0.10,   // peak per-segment opacity at age=0
-  TRAIL_RADIUS:        28,     // half-width of stroke in display px (lineWidth = 2 × this × age-taper × jitter)
-  FADE_STRENGTH:       2.5,    // age-curve exponent — higher = quicker drop near the tail
-  TRAIL_LIFETIME_FEEL: 2200,   // ms — per-segment lifetime (kept constant across segments for sorted expiry)
-  MAX_DPR:             1.5,
-  MOBILE_SCALE:        0.45,
+  MAX_SEGMENTS:        512,    // hard cap on trail length
+  MAX_STEPS_PER_FRAME: 4,      // segments produced per rAF tick — protects against backlog
+  TRAIL_LIFETIME:      1800,   // ms per segment
+  TRAIL_OPACITY:       0.08,   // peak alpha at age=0 (subtle / readable)
+  TRAIL_WIDTH:         56,     // stroke lineWidth in display px (before age-taper + jitter)
+  BLUR_AMOUNT:         7,      // buffer-space blur kernel in buffer px
+  MAX_DPR:             1.5,    // display canvas DPR cap
+  MOBILE_SCALE:        0.45,   // buffer resolution scale on mobile
 };
 
-const DESKTOP_BUFFER_SCALE = 0.6;
+const FADE_STRENGTH        = 2.5;    // age-curve exponent
+const DESKTOP_BUFFER_SCALE = 0.6;    // buffer resolution scale on desktop
 const MOBILE_BREAKPOINT    = 820;
 const MOBILE_FPS           = 30;
-const BLUR_AMOUNT          = 6;    // display-space blur on the buffer upscale — softens edges
-const MAX_SEGMENTS         = 256;  // hard cap (≈4 s of 60 Hz mousemove). Oldest is dropped when over.
-const GAP_THRESHOLD_MS     = 220;  // skip segment creation if mouse "teleported" (leave/reenter, tab switch)
-const MIN_SEGMENT_DIST     = 1.0;  // CSS px — ignore tiny jitter so we don't pile zero-length strokes
+const TARGET_STEP_LEN      = 18;     // CSS px between sub-segment points (when not capped)
+const GAP_THRESHOLD_MS     = 220;    // mouse-presence gap above which we teleport instead of bridging
+const MIN_SEGMENT_DIST     = 1.0;    // CSS px — ignore tiny jitter
 
 export default function InkCanvas() {
   const canvasRef = useRef(null);
@@ -61,8 +67,12 @@ export default function InkCanvas() {
     const bufferScale  = isMobile ? TUNING.MOBILE_SCALE : DESKTOP_BUFFER_SCALE;
     const cursorEnabled = !isMobile && !reduceMotion;
 
-    const inkBuffer = document.createElement('canvas');
+    // Two offscreen surfaces: inkBuffer holds sharp strokes; tempBuffer holds
+    // the blurred copy used for compositing. Single blur pass per frame.
+    const inkBuffer  = document.createElement('canvas');
     const bctx = inkBuffer.getContext('2d');
+    const tempBuffer = document.createElement('canvas');
+    const tctx = tempBuffer.getContext('2d');
 
     let cssW = 0;
     let cssH = 0;
@@ -74,15 +84,17 @@ export default function InkCanvas() {
     let vignetteGradient = null;
     let raf = 0;
 
-    // Trail segments. Each owns its own birth/lifetime/visual params. Ages are
-    // computed from `born` only — never from siblings or cursor position.
     /** @type {Array<{x1:number,y1:number,x2:number,y2:number,born:number,lifetime:number,opacity:number,width:number}>} */
     const trails = [];
 
-    // Last mousemove anchor (for forming the next segment's start point).
-    let lastX = null;
-    let lastY = null;
-    let lastT = null;
+    // Latched target (written by mousemove) and last-synthesized "render head"
+    // (written by the loop). All coords in CSS px, timestamps in performance.now() units.
+    let targetX = null;
+    let targetY = null;
+    let targetT = null;
+    let renderX = null;
+    let renderY = null;
+    let renderT = null;
 
     const frameInterval = isMobile ? 1000 / MOBILE_FPS : 0;
     let lastFrame = 0;
@@ -109,9 +121,8 @@ export default function InkCanvas() {
       ctx.fillStyle = '#f4f1e9';
       ctx.fillRect(0, 0, cssW, cssH);
 
-      ctx.filter = `blur(${BLUR_AMOUNT}px)`;
-      ctx.drawImage(inkBuffer, 0, 0, cssW, cssH);
-      ctx.filter = 'none';
+      // tempBuffer holds the already-blurred ink. Bilinear upscale adds extra softening for free.
+      ctx.drawImage(tempBuffer, 0, 0, cssW, cssH);
 
       ctx.fillStyle = washGradient;
       ctx.fillRect(0, 0, cssW, cssH);
@@ -121,6 +132,7 @@ export default function InkCanvas() {
 
     const renderCleanFrame = () => {
       bctx.clearRect(0, 0, bw, bh);
+      tctx.clearRect(0, 0, bw, bh);
       compositeToDisplay();
     };
 
@@ -134,8 +146,10 @@ export default function InkCanvas() {
 
       bw = Math.max(1, Math.floor(cssW * bufferScale));
       bh = Math.max(1, Math.floor(cssH * bufferScale));
-      inkBuffer.width  = bw;
-      inkBuffer.height = bh;
+      inkBuffer.width   = bw;
+      inkBuffer.height  = bh;
+      tempBuffer.width  = bw;
+      tempBuffer.height = bh;
       bScaleX = bw / cssW;
       bScaleY = bh / cssH;
 
@@ -143,35 +157,86 @@ export default function InkCanvas() {
       renderCleanFrame();
     };
 
-    /**
-     * One frame. Returns true when the trail list is empty so the loop can stop.
-     */
-    const renderFrame = (time) => {
-      // Constant lifetime ⇒ array sorted by expiration ⇒ head-only shift is correct.
+    // Catch up the render head to the target. Bounded by MAX_STEPS_PER_FRAME so
+    // it cannot backlog. On huge jumps we cover only a short stretch and let
+    // renderX teleport to target — a short trail "stays put" rather than a long
+    // stretched bar snapping across the page.
+    const synthesizeToTarget = () => {
+      if (renderX === null || targetX === null) return;
+      if (targetX === renderX && targetY === renderY) return;
+
+      // Long gap = mouse was off-window or tab paused; don't bridge.
+      if (targetT - renderT > GAP_THRESHOLD_MS) {
+        renderX = targetX;
+        renderY = targetY;
+        renderT = targetT;
+        return;
+      }
+
+      const dx = targetX - renderX;
+      const dy = targetY - renderY;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < MIN_SEGMENT_DIST * MIN_SEGMENT_DIST) return;
+
+      const dist = Math.sqrt(distSq);
+      const fullSteps = Math.max(1, Math.ceil(dist / TARGET_STEP_LEN));
+      const numSteps = Math.min(TUNING.MAX_STEPS_PER_FRAME, fullSteps);
+      const coveredDist = Math.min(dist, numSteps * TARGET_STEP_LEN);
+      const stepLen = coveredDist / numSteps;
+      const ux = dx / dist;
+      const uy = dy / dist;
+      const dt = targetT - renderT;
+
+      for (let i = 0; i < numSteps; i++) {
+        const d0 = i * stepLen;
+        const d1 = (i + 1) * stepLen;
+        const fracBorn = (i + 0.5) / numSteps;
+        trails.push({
+          x1: renderX + ux * d0,
+          y1: renderY + uy * d0,
+          x2: renderX + ux * d1,
+          y2: renderY + uy * d1,
+          born: renderT + dt * fracBorn,
+          lifetime: TUNING.TRAIL_LIFETIME,
+          opacity: TUNING.TRAIL_OPACITY * (0.8 + Math.random() * 0.4),
+          width: TUNING.TRAIL_WIDTH * (0.85 + Math.random() * 0.3),
+        });
+        if (trails.length > TUNING.MAX_SEGMENTS) trails.shift();
+      }
+
+      // Teleport so next frame catches up from the cursor's current spot — no backlog.
+      renderX = targetX;
+      renderY = targetY;
+      renderT = targetT;
+    };
+
+    const expireSegments = (time) => {
       while (trails.length > 0 && time - trails[0].born >= trails[0].lifetime) {
         trails.shift();
       }
+    };
 
-      // Full reset — by construction no buffer alpha survives between frames.
+    const drawAndComposite = (time) => {
       bctx.clearRect(0, 0, bw, bh);
 
       if (trails.length === 0) {
+        tctx.clearRect(0, 0, bw, bh);
         compositeToDisplay();
-        return true;
+        return;
       }
 
       bctx.lineCap = 'round';
       bctx.lineJoin = 'round';
+      bctx.filter = 'none';
       const minScale = Math.min(bScaleX, bScaleY);
 
       for (let i = 0; i < trails.length; i++) {
         const seg = trails[i];
         const age = (time - seg.born) / seg.lifetime;
         if (age < 0 || age >= 1) continue;
-        const fade = Math.pow(1 - age, TUNING.FADE_STRENGTH);
+        const fade = Math.pow(1 - age, FADE_STRENGTH);
         const alpha = seg.opacity * fade;
         if (alpha < 0.002) continue;
-        // Width tapers with age so older segments thin out — comet feel, not a uniform pipe.
         const lineW = seg.width * (0.35 + 0.65 * fade) * minScale;
 
         bctx.strokeStyle = `rgba(34,28,22,${alpha})`;
@@ -182,22 +247,44 @@ export default function InkCanvas() {
         bctx.stroke();
       }
 
+      // Single-pass blur: cheap because the buffer is small (~1152×648 desktop).
+      tctx.clearRect(0, 0, bw, bh);
+      tctx.filter = `blur(${TUNING.BLUR_AMOUNT}px)`;
+      tctx.drawImage(inkBuffer, 0, 0);
+      tctx.filter = 'none';
+
       compositeToDisplay();
-      return false;
     };
 
     const loop = (time) => {
+      // Responsiveness path — runs on EVERY rAF tick even when the draw is
+      // throttled. Captures the latest target and times out old segments
+      // without any FPS gate.
+      synthesizeToTarget();
+      expireSegments(time);
+
+      // Idle? Stop the loop entirely; mousemove will resume it.
+      if (
+        trails.length === 0 &&
+        (targetX === null || (targetX === renderX && targetY === renderY))
+      ) {
+        // One last clean frame so the display matches the empty state.
+        bctx.clearRect(0, 0, bw, bh);
+        tctx.clearRect(0, 0, bw, bh);
+        compositeToDisplay();
+        raf = 0;
+        return;
+      }
+
+      // Draw is FPS-capped (mobile) — the responsiveness path above already ran.
       if (frameInterval && time - lastFrame < frameInterval) {
         raf = requestAnimationFrame(loop);
         return;
       }
       lastFrame = time;
-      const done = renderFrame(time);
-      if (done) {
-        raf = 0;
-      } else {
-        raf = requestAnimationFrame(loop);
-      }
+
+      drawAndComposite(time);
+      raf = requestAnimationFrame(loop);
     };
 
     const startLoop = () => {
@@ -208,32 +295,17 @@ export default function InkCanvas() {
 
     const onMouseMove = (e) => {
       const now = performance.now();
-      const x = e.clientX;
-      const y = e.clientY;
-
-      // Gap detector: skip segment creation if it would span a leave/reenter or
-      // a tab-switch pause — those would draw a long line across the page.
-      if (lastT !== null && now - lastT <= GAP_THRESHOLD_MS) {
-        const dx = x - lastX;
-        const dy = y - lastY;
-        if (dx * dx + dy * dy >= MIN_SEGMENT_DIST * MIN_SEGMENT_DIST) {
-          trails.push({
-            x1: lastX,
-            y1: lastY,
-            x2: x,
-            y2: y,
-            born: now,
-            lifetime: TUNING.TRAIL_LIFETIME_FEEL,
-            opacity: TUNING.TRAIL_OPACITY * (0.8 + Math.random() * 0.4),
-            width: TUNING.TRAIL_RADIUS * 2 * (0.85 + Math.random() * 0.3),
-          });
-          if (trails.length > MAX_SEGMENTS) trails.shift();
-        }
+      if (targetT === null) {
+        // First sighting — pin render to target so we don't draw a long line
+        // from (0,0) to wherever the cursor showed up.
+        targetX = renderX = e.clientX;
+        targetY = renderY = e.clientY;
+        targetT = renderT = now;
+      } else {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        targetT = now;
       }
-
-      lastX = x;
-      lastY = y;
-      lastT = now;
       startLoop();
     };
 
@@ -244,11 +316,9 @@ export default function InkCanvas() {
           raf = 0;
         }
       } else {
-        // Toss any accumulated state so we don't replay a stale trail on return.
         trails.length = 0;
-        lastX = null;
-        lastY = null;
-        lastT = null;
+        targetX = targetY = targetT = null;
+        renderX = renderY = renderT = null;
         renderCleanFrame();
       }
     };
