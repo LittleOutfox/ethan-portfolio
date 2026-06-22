@@ -253,18 +253,20 @@ const PRESETS = {
 
     // *** THE GRAND-PLUME LEVERS ***
     DENSITY_DISSIPATION:   0.65,   // ink lingers → grand coverage builds + thick body
-    // raised from 0.30 → more drag damps the springy "jello" oscillation
-    // so the field settles instead of wobbling after each move.
-    VELOCITY_DISSIPATION:  0.42,
+    // more drag both damps the springy "jello" wobble AND lets the global
+    // pressure wave fade before it can sweep edge-to-edge as a page ripple.
+    VELOCITY_DISSIPATION:  0.48,
     // dropped from 12 → vorticity confinement is an anti-damping term that
     // keeps the field lively and spins the tip too fast; lower = slower,
     // calmer swirl that still keeps the ink a cohesive body.
     CURL_STRENGTH:         8,
 
     INK_OPACITY:           0.96,
-    // saturate to dark sooner so mid-density reads as THICK ink; only the
-    // most dilute outer edge stays smoky-transparent.
-    DENSITY_ALPHA_CURVE:   [0.05, 0.42],
+    // low cutoff raised 0.05 → 0.09: clips the faint dilute dye that the
+    // global pressure wave rides on, killing the page-wide ripple while
+    // leaving the dense plume body (and its soft-spread halo) untouched.
+    // High cutoff still saturates mid-density into thick dark ink.
+    DENSITY_ALPHA_CURVE:   [0.09, 0.42],
     READABILITY_MASK_STRENGTH: 0.62,
     SUBSTEP_PX:            14,
     RENDER_SOFT_SPREAD:    4.5,
