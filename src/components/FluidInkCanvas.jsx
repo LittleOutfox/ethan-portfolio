@@ -212,8 +212,11 @@ const PRESETS = {
     MIN_DYE_NARROW_RADIUS: 0.0065,
     MAX_DYE_NARROW_RADIUS: 0.020,
     MAX_NIB_ASPECT_RATIO:  4.0,
-    BACK_OFFSET_RATIO:     0.30,
-    DYE_FRONT_FADE:        0.18,
+    // dye sits closer to the cursor (less back-shift) and is allowed to
+    // exist ahead of it (higher front fade) so the bow wave below has ink
+    // at the leading edge to pile into a dense moving front.
+    BACK_OFFSET_RATIO:     0.16,
+    DYE_FRONT_FADE:        0.50,
 
     // THICK ink — lay down a lot of dye so the body stays dense and dark
     // as it spreads, rather than thinning into smoke.
@@ -225,6 +228,12 @@ const PRESETS = {
     MIN_FORCE:             600,
     MAX_FORCE:             1700,
     VELOCITY_RADIUS:       0.13,   // broad smooth push (not a sharp fast jet)
+
+    // BOW WAVE — inject extra forward momentum this many px AHEAD of the
+    // cursor so motion shoves ink into a dense leading front (like the
+    // pushed head of a comet), with the turbulent body trailing behind.
+    FRONT_PUSH:            18,
+    FRONT_PUSH_GAIN:       1.4,
 
     // single concentrated source — breadth comes from billowing, not
     // from parallel companion nibs.
@@ -832,6 +841,11 @@ export default function FluidInkCanvas() {
       const ny = sxU / sL;
 
       const stepCount = Math.max(1, Math.ceil(lenPx / P.SUBSTEP_PX));
+      // bow-wave offset — how far ahead (in unit coords, along motion) to
+      // place the extra forward push. (dx,dy)/lenPx is the per-pixel unit
+      // step, so ×FRONT_PUSH gives a FRONT_PUSH-pixel forward offset.
+      const fwdScale = P.FRONT_PUSH ? P.FRONT_PUSH / lenPx : 0;
+      const pushGain = P.FRONT_PUSH_GAIN ?? 1;
       // companions also scale with speed — collapse to center on tiny moves
       const spreadUnitX = (P.NIB_SPREAD * speedT) / cssW();
       const spreadUnitY = (P.NIB_SPREAD * speedT) / cssH();
@@ -854,6 +868,18 @@ export default function FluidInkCanvas() {
             x: px, y: py,
             vx: sdx * force,
             vy: sdy * force,
+          });
+        }
+
+        // bow wave — a stronger forward push placed AHEAD of the cursor,
+        // so the fluid in front gets displaced and ink piles into a dense
+        // leading front instead of only trailing behind.
+        if (fwdScale > 0 && velSplats.length < MAX_QUEUED_SPLATS) {
+          velSplats.push({
+            x: px + dx * fwdScale,
+            y: py + dy * fwdScale,
+            vx: sdx * force * pushGain,
+            vy: sdy * force * pushGain,
           });
         }
 
