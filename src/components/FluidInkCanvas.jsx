@@ -225,15 +225,17 @@ const PRESETS = {
 
     // GENTLER injection — enough momentum to spread grandly, but slow
     // enough to read as heavy ink rather than a fast jet.
-    MIN_FORCE:             600,
-    MAX_FORCE:             1700,
+    MIN_FORCE:             520,
+    MAX_FORCE:             1450,
     VELOCITY_RADIUS:       0.13,   // broad smooth push (not a sharp fast jet)
 
     // BOW WAVE — inject extra forward momentum this many px AHEAD of the
     // cursor so motion shoves ink into a dense leading front (like the
     // pushed head of a comet), with the turbulent body trailing behind.
-    FRONT_PUSH:            18,
-    FRONT_PUSH_GAIN:       1.4,
+    // Eased back from 18/1.4 — the strong push was overshooting and adding
+    // to the springy "jello" wobble.
+    FRONT_PUSH:            15,
+    FRONT_PUSH_GAIN:       1.15,
 
     // single concentrated source — breadth comes from billowing, not
     // from parallel companion nibs.
@@ -247,13 +249,17 @@ const PRESETS = {
     NATURAL_VARIATION_DENSITY: 0.08,
     NATURAL_VARIATION_RADIUS:  0.06,
     NATURAL_POSITION_NOISE_PX: 2.0,
-    CURL_TIME_VARIANCE:    0.14,
+    CURL_TIME_VARIANCE:    0.08,   // less lively curl modulation → calmer
 
     // *** THE GRAND-PLUME LEVERS ***
     DENSITY_DISSIPATION:   0.65,   // ink lingers → grand coverage builds + thick body
-    VELOCITY_DISSIPATION:  0.30,   // motion persists (slow drift) → keeps spreading
-    CURL_STRENGTH:         12,     // KEY: low curl → slow, broad, majestic swirl; ink
-                                   // stays a cohesive body instead of shredding to wisps
+    // raised from 0.30 → more drag damps the springy "jello" oscillation
+    // so the field settles instead of wobbling after each move.
+    VELOCITY_DISSIPATION:  0.42,
+    // dropped from 12 → vorticity confinement is an anti-damping term that
+    // keeps the field lively and spins the tip too fast; lower = slower,
+    // calmer swirl that still keeps the ink a cohesive body.
+    CURL_STRENGTH:         8,
 
     INK_OPACITY:           0.96,
     // saturate to dark sooner so mid-density reads as THICK ink; only the
