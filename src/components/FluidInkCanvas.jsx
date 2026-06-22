@@ -184,44 +184,47 @@ const PRESETS = {
   },
 
   // INK_PLUME — ink injected into water. A small sharp speck at the
-  // cursor that the velocity field billows outward into large, turbulent,
-  // diffusing plumes. The grandeur comes from the SIM, not the stamp
-  // size: low velocity dissipation (motion persists → keeps carrying the
-  // dye), low dye dissipation (ink lives long enough to billow), and
-  // strong vorticity (curl folds the dye into tendrils/wisps).
+  // cursor that the velocity field carries into a large, THICK, slowly
+  // swirling body of ink that spreads grandly and disperses. The look is
+  // heavy ink, not hyper liquid: gentle force + low CURL_STRENGTH keep the
+  // motion slow and the dye cohesive (high curl pumps energy and shreds
+  // ink into thin fast wisps); low dye dissipation lets it linger and
+  // cover a big area; high density + an early alpha saturation make the
+  // body read thick and dark while the edges stay smoky.
   plume: {
     label:                 'INK_PLUME',
-    // higher dye texture → finer filament structure in the billow.
+    // higher dye texture → finer detail in the large billow.
     DYE_RESOLUTION:        768,
-    // let the plume finish billowing + fading before the loop idles out,
-    // so the sim never freezes a half-formed cloud on screen.
-    IDLE_PAUSE_MS:         9000,
+    // low dissipation = ink lingers; give it plenty of time to finish
+    // billowing + fading before the loop idles out, so the sim never
+    // freezes a half-formed cloud on screen.
+    IDLE_PAUSE_MS:         11000,
 
     MIN_INK_DISTANCE:      1.2,
     SLOW_SPEED:            120,
     FAST_SPEED:            1600,
 
-    // SHARP SOURCE — keep the injection point a tiny dense speck. The
-    // expansion is the field's job; if the stamp itself were big it would
-    // read as a brush, not an injection. Sharp like a fountain-pen tip.
-    MIN_DYE_LONG_RADIUS:   0.010,
-    MAX_DYE_LONG_RADIUS:   0.030,
-    MIN_DYE_NARROW_RADIUS: 0.0055,
-    MAX_DYE_NARROW_RADIUS: 0.013,
+    // SHARP SOURCE — injection point stays a small dense speck (sharp like
+    // a fountain-pen tip on slow moves); a bit more body than before so
+    // the plume that grows from it is grander and thicker.
+    MIN_DYE_LONG_RADIUS:   0.012,
+    MAX_DYE_LONG_RADIUS:   0.044,
+    MIN_DYE_NARROW_RADIUS: 0.0065,
+    MAX_DYE_NARROW_RADIUS: 0.020,
     MAX_NIB_ASPECT_RATIO:  4.0,
     BACK_OFFSET_RATIO:     0.30,
     DYE_FRONT_FADE:        0.18,
 
-    // moderate density — overlap + accumulation builds the dark core;
-    // the billowed edges stay dilute and smoky-transparent.
-    MIN_DENSITY_AMOUNT:    0.16,
-    MAX_DENSITY_AMOUNT:    0.58,
+    // THICK ink — lay down a lot of dye so the body stays dense and dark
+    // as it spreads, rather than thinning into smoke.
+    MIN_DENSITY_AMOUNT:    0.26,
+    MAX_DENSITY_AMOUNT:    1.00,
 
-    // ENERGETIC injection — strong momentum the persistent field carries
-    // far, and a broad velocity radius so a large region starts moving.
-    MIN_FORCE:             900,
-    MAX_FORCE:             2600,
-    VELOCITY_RADIUS:       0.11,
+    // GENTLER injection — enough momentum to spread grandly, but slow
+    // enough to read as heavy ink rather than a fast jet.
+    MIN_FORCE:             600,
+    MAX_FORCE:             1700,
+    VELOCITY_RADIUS:       0.13,   // broad smooth push (not a sharp fast jet)
 
     // single concentrated source — breadth comes from billowing, not
     // from parallel companion nibs.
@@ -235,20 +238,21 @@ const PRESETS = {
     NATURAL_VARIATION_DENSITY: 0.08,
     NATURAL_VARIATION_RADIUS:  0.06,
     NATURAL_POSITION_NOISE_PX: 2.0,
-    CURL_TIME_VARIANCE:    0.18,
+    CURL_TIME_VARIANCE:    0.14,
 
     // *** THE GRAND-PLUME LEVERS ***
-    DENSITY_DISSIPATION:   0.90,   // ink lingers seconds → time to billow & fade
-    VELOCITY_DISSIPATION:  0.32,   // motion persists → keeps expanding the dye region
-    CURL_STRENGTH:         26,     // strong vorticity → turbulent tendrils, folds, wisps
+    DENSITY_DISSIPATION:   0.65,   // ink lingers → grand coverage builds + thick body
+    VELOCITY_DISSIPATION:  0.30,   // motion persists (slow drift) → keeps spreading
+    CURL_STRENGTH:         12,     // KEY: low curl → slow, broad, majestic swirl; ink
+                                   // stays a cohesive body instead of shredding to wisps
 
-    INK_OPACITY:           0.92,
-    // wide curve: dilute billow stays translucent smoky-gray; only the
-    // dense core/overlaps read near-black.
-    DENSITY_ALPHA_CURVE:   [0.04, 0.62],
+    INK_OPACITY:           0.96,
+    // saturate to dark sooner so mid-density reads as THICK ink; only the
+    // most dilute outer edge stays smoky-transparent.
+    DENSITY_ALPHA_CURVE:   [0.05, 0.42],
     READABILITY_MASK_STRENGTH: 0.62,
     SUBSTEP_PX:            14,
-    RENDER_SOFT_SPREAD:    5.5,
+    RENDER_SOFT_SPREAD:    4.5,
   },
 };
 
