@@ -75,8 +75,8 @@ const PRESETS = {
     MAX_NIB_ASPECT_RATIO:  3.5,
     BACK_OFFSET_RATIO:     0.30,
     DYE_FRONT_FADE:        0.35,
-    MIN_DENSITY_AMOUNT:    0.10,
-    MAX_DENSITY_AMOUNT:    0.45,
+    MIN_DENSITY_AMOUNT:    0.12,
+    MAX_DENSITY_AMOUNT:    0.52,
     MIN_FORCE:             400,
     MAX_FORCE:             1100,
     VELOCITY_RADIUS:       0.06,
@@ -86,13 +86,19 @@ const PRESETS = {
     DENSITY_VARIANCE:      0,
     DIRECTION_SMOOTHING:   0.50,
     MIN_DIRECTION_SPEED:   25,
+    SPEED_RESPONSE:        0.15,    // exponential smoothing on speedT (per-event lerp)
+    NATURAL_VARIATION_DENSITY: 0.04, // ±4% low-freq density wobble
+    NATURAL_VARIATION_RADIUS:  0.03, // ±3% low-freq radius wobble
+    NATURAL_POSITION_NOISE_PX: 1.0,  // px perpendicular wobble at the nib position
+    CURL_TIME_VARIANCE:    0,        // slow vortex-strength modulation (0 = off)
     DENSITY_DISSIPATION:   2.4,
     VELOCITY_DISSIPATION:  2.4,
     CURL_STRENGTH:         5,
-    INK_OPACITY:           0.65,
-    DENSITY_ALPHA_CURVE:   [0.05, 0.55],
+    INK_OPACITY:           0.70,
+    DENSITY_ALPHA_CURVE:   [0.05, 0.50],
     READABILITY_MASK_STRENGTH: 0.60,
     SUBSTEP_PX:            38,
+    RENDER_SOFT_SPREAD:    0,
   },
 
   sumi: {
@@ -107,8 +113,8 @@ const PRESETS = {
     MAX_NIB_ASPECT_RATIO:  5.0,
     BACK_OFFSET_RATIO:     0.40,
     DYE_FRONT_FADE:        0.18,
-    MIN_DENSITY_AMOUNT:    0.15,
-    MAX_DENSITY_AMOUNT:    0.85,
+    MIN_DENSITY_AMOUNT:    0.18,
+    MAX_DENSITY_AMOUNT:    0.98,
     MIN_FORCE:             500,
     MAX_FORCE:             1400,
     VELOCITY_RADIUS:       0.085,
@@ -118,13 +124,19 @@ const PRESETS = {
     DENSITY_VARIANCE:      0,
     DIRECTION_SMOOTHING:   0.45,
     MIN_DIRECTION_SPEED:   25,
+    SPEED_RESPONSE:        0.18,
+    NATURAL_VARIATION_DENSITY: 0.07,
+    NATURAL_VARIATION_RADIUS:  0.05,
+    NATURAL_POSITION_NOISE_PX: 1.6,
+    CURL_TIME_VARIANCE:    0.10,
     DENSITY_DISSIPATION:   1.4,
     VELOCITY_DISSIPATION:  1.7,
     CURL_STRENGTH:         10,
     INK_OPACITY:           1.0,
-    DENSITY_ALPHA_CURVE:   [0.03, 0.40],
+    DENSITY_ALPHA_CURVE:   [0.03, 0.36], // saturate to peak slightly sooner → more body
     READABILITY_MASK_STRENGTH: 0.55,
     SUBSTEP_PX:            14,
+    RENDER_SOFT_SPREAD:    2.0,
   },
 
   kitsune: {
@@ -134,37 +146,43 @@ const PRESETS = {
     FAST_SPEED:            1800,
     MIN_DYE_LONG_RADIUS:   0.013,
     MAX_DYE_LONG_RADIUS:   0.060,
-    MIN_DYE_NARROW_RADIUS: 0.007,
-    MAX_DYE_NARROW_RADIUS: 0.014,
-    MAX_NIB_ASPECT_RATIO:  5.5,
-    BACK_OFFSET_RATIO:     0.40,
-    DYE_FRONT_FADE:        0.15,
-    MIN_DENSITY_AMOUNT:    0.10,
-    MAX_DENSITY_AMOUNT:    0.65,
+    MIN_DYE_NARROW_RADIUS: 0.0065,   // tighter slow-stroke nib → sharper tip
+    MAX_DYE_NARROW_RADIUS: 0.016,    // a touch tighter at speed too
+    MAX_NIB_ASPECT_RATIO:  5.0,      // narrower nib + same long → permit slightly more elongation
+    BACK_OFFSET_RATIO:     0.34,     // bring cursor closer to the gaussian peak → tip reads denser
+    DYE_FRONT_FADE:        0.10,     // less ink ahead of cursor → cleaner leading edge
+    MIN_DENSITY_AMOUNT:    0.12,     // slow-stroke tip a little denser
+    MAX_DENSITY_AMOUNT:    0.66,     // 0.62 → 0.66 — fast-stroke tip a little denser
     MIN_FORCE:             500,
     MAX_FORCE:             1400,
     VELOCITY_RADIUS:       0.075,
-    NIB_SPLIT:             3,       // 1 main + 2 parallel companions
-    NIB_SPREAD:            8,       // px (full spread @ FAST_SPEED; collapses at slow)
+    NIB_SPLIT:             3,
+    NIB_SPREAD:            12,
     NIB_JITTER:            0,
     DENSITY_VARIANCE:      0,
     DIRECTION_SMOOTHING:   0.45,
     MIN_DIRECTION_SPEED:   30,
-    DENSITY_DISSIPATION:   1.5,
+    SPEED_RESPONSE:        0.20,
+    NATURAL_VARIATION_DENSITY: 0.10,
+    NATURAL_VARIATION_RADIUS:  0.08,
+    NATURAL_POSITION_NOISE_PX: 2.6,
+    CURL_TIME_VARIANCE:    0.22,
+    DENSITY_DISSIPATION:   1.95,     // 1.75 → 1.95 — older ink fades quicker so it can't pool
     VELOCITY_DISSIPATION:  1.5,
-    CURL_STRENGTH:         16,
-    INK_OPACITY:           0.95,
-    DENSITY_ALPHA_CURVE:   [0.025, 0.42],
+    CURL_STRENGTH:         8,        // 12 → 8 — softer, broader fluid bending; fewer tight vortices
+    INK_OPACITY:           0.92,     // 0.95 → 0.92 — tone down peak alpha
+    DENSITY_ALPHA_CURVE:   [0.06, 0.78],   // wider curve: medium density stays translucent gray; only dense tip is near-black
     READABILITY_MASK_STRENGTH: 0.55,
-    SUBSTEP_PX:            12,
+    SUBSTEP_PX:            16,
+    RENDER_SOFT_SPREAD:    4.5,      // texels — soft halo sample around dilute ink
   },
 };
 
 function resolvePreset() {
-  if (typeof window === 'undefined') return PRESETS.sumi;
+  if (typeof window === 'undefined') return PRESETS.kitsune;
   const key = new URLSearchParams(window.location.search).get('ink');
   if (key && PRESETS[key]) return PRESETS[key];
-  return PRESETS.sumi; // default
+  return PRESETS.kitsune; // default
 }
 
 const MOBILE_BREAKPOINT = 820;
@@ -375,6 +393,8 @@ const FS_DISPLAY = /* glsl */ `#version 300 es
   precision mediump float;
   in vec2 vUv;
   uniform sampler2D uTexture;
+  uniform vec2 uDyeTexel;       // 1/dyeW, 1/dyeH
+  uniform float uSoftSpread;    // texels for the soft halo sample (0 = disabled)
   uniform vec3 uInkColor;
   uniform float uOpacityCap;
   uniform float uLowCutoff;
@@ -383,10 +403,21 @@ const FS_DISPLAY = /* glsl */ `#version 300 es
   uniform float uReadMax;
   out vec4 fragColor;
   void main() {
-    float d = clamp(texture(uTexture, vUv).x, 0.0, 1.0);
-    // density-to-alpha curve: clip the gray haze, push the cores to black
+    float d = texture(uTexture, vUv).x;
+    if (uSoftSpread > 0.0) {
+      // 4-tap cross sample at uSoftSpread texels. max(d, dBlur) keeps the
+      // dense core crisp but widens the dilute halo around it — feathered
+      // "ink in water" without softening the cursor tip.
+      vec2 o = uDyeTexel * uSoftSpread;
+      float dN = texture(uTexture, vUv + vec2(0.0, o.y)).x;
+      float dS = texture(uTexture, vUv - vec2(0.0, o.y)).x;
+      float dE = texture(uTexture, vUv + vec2(o.x, 0.0)).x;
+      float dW = texture(uTexture, vUv - vec2(o.x, 0.0)).x;
+      float dBlur = (dN + dS + dE + dW) * 0.25;
+      d = max(d, dBlur);
+    }
+    d = clamp(d, 0.0, 1.0);
     float shaped = smoothstep(uLowCutoff, uHighCutoff, d);
-    // ease the left side (where hero text sits) — read goes 0..1 across the viewport
     float mask = mix(uReadMin, uReadMax, smoothstep(0.0, 1.0, vUv.x));
     float a = shaped * uOpacityCap * mask;
     fragColor = vec4(uInkColor * a, a); // premultiplied
@@ -613,7 +644,9 @@ export default function FluidInkCanvas() {
     // turns. set on first move; reset on mouseleave / idle.
     let smoothedDirX = null;
     let smoothedDirY = null;
-    const IDLE_DIR_RESET_MS = 220;   // gap after which we reinit smoothed dir
+    let smoothedSpeedT = 0;
+    let lastEmitT = -Infinity; // wall-clock of last emit — used to snap smoothedSpeedT on idle
+    const IDLE_DIR_RESET_MS = 220;   // gap after which we reinit smoothed dir + speedT
 
     const MAX_QUEUED_SPLATS = 1024;
 
@@ -646,16 +679,41 @@ export default function FluidInkCanvas() {
       const speedPxSec = (lenPx / dtMs) * 1000;
       const range = Math.max(1, P.FAST_SPEED - P.SLOW_SPEED);
       const sRaw = clamp01((speedPxSec - P.SLOW_SPEED) / range);
-      const speedT = sRaw * sRaw * (3 - 2 * sRaw); // smoothstep
+      const targetSpeedT = sRaw * sRaw * (3 - 2 * sRaw); // smoothstep
 
-      // SCALE EMITTER WITH SPEED
+      // TEMPORAL smoothing on speedT — prevents visible step in emitter size as
+      // speed changes between move events. Snap on fresh strokes after idle so
+      // the first emit of a fast first stroke doesn't ramp up from zero.
+      if (now - lastEmitT > IDLE_DIR_RESET_MS) {
+        smoothedSpeedT = targetSpeedT;
+      } else {
+        smoothedSpeedT += (targetSpeedT - smoothedSpeedT) * P.SPEED_RESPONSE;
+      }
+      lastEmitT = now;
+      const speedT = smoothedSpeedT;
+
+      // SCALE EMITTER WITH (SMOOTHED) SPEED
       let longR = lerp(P.MIN_DYE_LONG_RADIUS,   P.MAX_DYE_LONG_RADIUS,   speedT);
-      const narrow = lerp(P.MIN_DYE_NARROW_RADIUS, P.MAX_DYE_NARROW_RADIUS, speedT);
-      const maxLong = narrow * P.MAX_NIB_ASPECT_RATIO;
-      if (longR > maxLong) longR = maxLong;        // cap nib aspect — never a spear
-      const backOffset = longR * P.BACK_OFFSET_RATIO;
-      const dyeAmount = lerp(P.MIN_DENSITY_AMOUNT, P.MAX_DENSITY_AMOUNT, speedT);
+      let narrow = lerp(P.MIN_DYE_NARROW_RADIUS, P.MAX_DYE_NARROW_RADIUS, speedT);
+      const dyeAmountBase = lerp(P.MIN_DENSITY_AMOUNT, P.MAX_DENSITY_AMOUNT, speedT);
       const force = lerp(P.MIN_FORCE, P.MAX_FORCE, speedT);
+
+      // ORGANIC VARIATION — low-frequency sinusoids on time. Smooth, never
+      // produces spikes; just slowly modulates body, shape, and nib position
+      // so repeated motions don't look identical.
+      const tSec = now * 0.001;
+      const radiusVar  = 1 + P.NATURAL_VARIATION_RADIUS  * Math.sin(tSec * 1.7 + 0.6);
+      const radiusVar2 = 1 + P.NATURAL_VARIATION_RADIUS  * Math.sin(tSec * 1.3 + 2.4);
+      const densVar    = 1 + P.NATURAL_VARIATION_DENSITY * Math.sin(tSec * 2.1 + 1.2);
+      const posWobble  = P.NATURAL_POSITION_NOISE_PX * Math.sin(tSec * 0.9 + 0.4);
+      longR *= radiusVar;
+      narrow *= radiusVar2;
+
+      // cap nib aspect AFTER variation so the wobble can never make a spear
+      const maxLong = narrow * P.MAX_NIB_ASPECT_RATIO;
+      if (longR > maxLong) longR = maxLong;
+      const backOffset = longR * P.BACK_OFFSET_RATIO;
+      const dyeAmount = dyeAmountBase * densVar;
 
       // raw direction in shader-aspect-corrected space (dye shader does p.x *= uAspect)
       const ar = aspect();
@@ -699,6 +757,9 @@ export default function FluidInkCanvas() {
       const spreadUnitY = (P.NIB_SPREAD * speedT) / cssH();
       const jitterUnitX = (P.NIB_JITTER * speedT) / cssW();
       const jitterUnitY = (P.NIB_JITTER * speedT) / cssH();
+      // organic position wobble — applied perpendicular to motion, same units
+      const wobbleUnitX = (posWobble * speedT) / cssW();
+      const wobbleUnitY = (posWobble * speedT) / cssH();
       const nibs = Math.max(1, P.NIB_SPLIT);
 
       for (let s = 1; s <= stepCount; s++) {
@@ -719,8 +780,9 @@ export default function FluidInkCanvas() {
         for (let i = 0; i < nibs; i++) {
           const u = nibs === 1 ? 0 : (i / (nibs - 1) - 0.5) * 2;
           const jSign = P.NIB_JITTER > 0 ? Math.random() * 2 - 1 : 0;
-          const ox = nx * (spreadUnitX * u + jitterUnitX * jSign);
-          const oy = ny * (spreadUnitY * u + jitterUnitY * jSign);
+          // perpendicular: companion spread + jitter + organic position wobble
+          const ox = nx * (spreadUnitX * u + jitterUnitX * jSign + wobbleUnitX);
+          const oy = ny * (spreadUnitY * u + jitterUnitY * jSign + wobbleUnitY);
           const lateral = 1 - Math.abs(u) * 0.5;
           const variance = P.DENSITY_VARIANCE > 0
             ? 1 + (Math.random() * 2 - 1) * P.DENSITY_VARIANCE
@@ -748,6 +810,8 @@ export default function FluidInkCanvas() {
       prev = null;
       smoothedDirX = null;
       smoothedDirY = null;
+      smoothedSpeedT = 0;
+      lastEmitT = -Infinity;
     };
 
     window.addEventListener('mousemove', onMove, { passive: true });
@@ -821,7 +885,13 @@ export default function FluidInkCanvas() {
       gl.uniform2f(progVorticity.uniforms.uTexelSize, velocity.texelX, velocity.texelY);
       gl.uniform1i(progVorticity.uniforms.uVelocity, velocity.read.attach(0));
       gl.uniform1i(progVorticity.uniforms.uCurl, curl.attach(1));
-      gl.uniform1f(progVorticity.uniforms.uCurlStrength, P.CURL_STRENGTH);
+      // Slow sinusoidal wobble in vortex strength prevents the trail from
+      // looking like a periodic chain of identical curls. Period ≈ 13 s,
+      // amplitude controlled per-preset (0 = off).
+      const curlMod = P.CURL_TIME_VARIANCE > 0
+        ? 1 + P.CURL_TIME_VARIANCE * Math.sin(performance.now() * 0.00048)
+        : 1;
+      gl.uniform1f(progVorticity.uniforms.uCurlStrength, P.CURL_STRENGTH * curlMod);
       gl.uniform1f(progVorticity.uniforms.uDt, dt);
       blit(velocity.write);
       velocity.swap();
@@ -884,6 +954,8 @@ export default function FluidInkCanvas() {
       gl.uniform1f(progDisplay.uniforms.uOpacityCap, P.INK_OPACITY);
       gl.uniform1f(progDisplay.uniforms.uLowCutoff, P.DENSITY_ALPHA_CURVE[0]);
       gl.uniform1f(progDisplay.uniforms.uHighCutoff, P.DENSITY_ALPHA_CURVE[1]);
+      gl.uniform2f(progDisplay.uniforms.uDyeTexel, dye.read.texelX, dye.read.texelY);
+      gl.uniform1f(progDisplay.uniforms.uSoftSpread, P.RENDER_SOFT_SPREAD);
       // READABILITY_MASK_STRENGTH 0..1 → readMin = (1-strength), readMax = 1.
       // strength=0 disables the mask (uniform), strength=1 puts the left side
       // fully transparent. The hero text sits on the left.
