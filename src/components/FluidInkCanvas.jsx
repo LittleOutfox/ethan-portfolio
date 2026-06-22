@@ -24,13 +24,19 @@ import InkCanvas from './InkCanvas.jsx';
  * --------------------------------------------------------- */
 
 // ---------------------------------------------------------------
-// PRESETS — switch via `?ink=foundation|sumi|kitsune` in the URL.
+// PRESETS — switch via `?ink=foundation|sumi|kitsune|plume` in the URL.
 //
 // Each preset bundles every behavior + render knob. The fixed
 // engine-level constants (resolution, DPR, etc.) live in COMMON
-// below so presets stay focused on the perceptual feel.
+// below so presets stay focused on the perceptual feel. A preset may
+// override a COMMON constant (e.g. DYE_RESOLUTION) by declaring it.
 //
-// Recommended default: SUMI_BLOOM.
+// `plume` (INK_PLUME) is the grand billowing mode: a small sharp ink
+// speck at the cursor that the energetic, slow-dissipating, high-curl
+// velocity field carries and folds into large diffusing plumes — like
+// ink injected into water. It is the default.
+//
+// Recommended default: INK_PLUME.
 // ---------------------------------------------------------------
 
 const COMMON = {
@@ -176,13 +182,81 @@ const PRESETS = {
     SUBSTEP_PX:            16,
     RENDER_SOFT_SPREAD:    4.5,      // texels — soft halo sample around dilute ink
   },
+
+  // INK_PLUME — ink injected into water. A small sharp speck at the
+  // cursor that the velocity field billows outward into large, turbulent,
+  // diffusing plumes. The grandeur comes from the SIM, not the stamp
+  // size: low velocity dissipation (motion persists → keeps carrying the
+  // dye), low dye dissipation (ink lives long enough to billow), and
+  // strong vorticity (curl folds the dye into tendrils/wisps).
+  plume: {
+    label:                 'INK_PLUME',
+    // higher dye texture → finer filament structure in the billow.
+    DYE_RESOLUTION:        768,
+    // let the plume finish billowing + fading before the loop idles out,
+    // so the sim never freezes a half-formed cloud on screen.
+    IDLE_PAUSE_MS:         9000,
+
+    MIN_INK_DISTANCE:      1.2,
+    SLOW_SPEED:            120,
+    FAST_SPEED:            1600,
+
+    // SHARP SOURCE — keep the injection point a tiny dense speck. The
+    // expansion is the field's job; if the stamp itself were big it would
+    // read as a brush, not an injection. Sharp like a fountain-pen tip.
+    MIN_DYE_LONG_RADIUS:   0.010,
+    MAX_DYE_LONG_RADIUS:   0.030,
+    MIN_DYE_NARROW_RADIUS: 0.0055,
+    MAX_DYE_NARROW_RADIUS: 0.013,
+    MAX_NIB_ASPECT_RATIO:  4.0,
+    BACK_OFFSET_RATIO:     0.30,
+    DYE_FRONT_FADE:        0.18,
+
+    // moderate density — overlap + accumulation builds the dark core;
+    // the billowed edges stay dilute and smoky-transparent.
+    MIN_DENSITY_AMOUNT:    0.16,
+    MAX_DENSITY_AMOUNT:    0.58,
+
+    // ENERGETIC injection — strong momentum the persistent field carries
+    // far, and a broad velocity radius so a large region starts moving.
+    MIN_FORCE:             900,
+    MAX_FORCE:             2600,
+    VELOCITY_RADIUS:       0.11,
+
+    // single concentrated source — breadth comes from billowing, not
+    // from parallel companion nibs.
+    NIB_SPLIT:             1,
+    NIB_SPREAD:            0,
+    NIB_JITTER:            0,
+    DENSITY_VARIANCE:      0,
+    DIRECTION_SMOOTHING:   0.40,
+    MIN_DIRECTION_SPEED:   25,
+    SPEED_RESPONSE:        0.18,
+    NATURAL_VARIATION_DENSITY: 0.08,
+    NATURAL_VARIATION_RADIUS:  0.06,
+    NATURAL_POSITION_NOISE_PX: 2.0,
+    CURL_TIME_VARIANCE:    0.18,
+
+    // *** THE GRAND-PLUME LEVERS ***
+    DENSITY_DISSIPATION:   0.90,   // ink lingers seconds → time to billow & fade
+    VELOCITY_DISSIPATION:  0.32,   // motion persists → keeps expanding the dye region
+    CURL_STRENGTH:         26,     // strong vorticity → turbulent tendrils, folds, wisps
+
+    INK_OPACITY:           0.92,
+    // wide curve: dilute billow stays translucent smoky-gray; only the
+    // dense core/overlaps read near-black.
+    DENSITY_ALPHA_CURVE:   [0.04, 0.62],
+    READABILITY_MASK_STRENGTH: 0.62,
+    SUBSTEP_PX:            14,
+    RENDER_SOFT_SPREAD:    5.5,
+  },
 };
 
 function resolvePreset() {
-  if (typeof window === 'undefined') return PRESETS.kitsune;
+  if (typeof window === 'undefined') return PRESETS.plume;
   const key = new URLSearchParams(window.location.search).get('ink');
   if (key && PRESETS[key]) return PRESETS[key];
-  return PRESETS.kitsune; // default
+  return PRESETS.plume; // default
 }
 
 const MOBILE_BREAKPOINT = 820;
@@ -557,13 +631,15 @@ export default function FluidInkCanvas() {
     try {
 
     const P = resolvePreset();
-    console.info(`[FluidInkCanvas] preset: ${P.label} — switch via ?ink=foundation|sumi|kitsune`);
+    console.info(`[FluidInkCanvas] preset: ${P.label} — switch via ?ink=foundation|sumi|kitsune|plume`);
 
     const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
     const dprCap = isMobile ? COMMON.MOBILE_DPR : COMMON.MAX_DPR;
     const scale = isMobile ? COMMON.MOBILE_SCALE : 1;
     const simRes = Math.round(COMMON.SIM_RESOLUTION * scale);
-    const dyeRes = Math.round(COMMON.DYE_RESOLUTION * scale);
+    // a preset may push a higher dye texture for finer filament detail.
+    const dyeRes = Math.round((P.DYE_RESOLUTION ?? COMMON.DYE_RESOLUTION) * scale);
+    const idlePauseMs = P.IDLE_PAUSE_MS ?? IDLE_PAUSE_MS;
 
     // --- programs
     const progCopy       = program(gl, VS_BASE, FS_COPY);
@@ -981,7 +1057,7 @@ export default function FluidInkCanvas() {
       // pause once everything is idle: no recent input, no live splats,
       // and dye is effectively black (skip the dye-empty check — costly to sample;
       // just rely on time since last input plus dissipation handling the fade)
-      if (now - lastInputT > IDLE_PAUSE_MS) {
+      if (now - lastInputT > idlePauseMs) {
         running = false;
         return;
       }
