@@ -11,6 +11,8 @@ export default function Contact() {
       <div className="max-w-[1280px] mx-auto">
         <Reveal>
           <Eyebrow no="06">Contact</Eyebrow>
+        </Reveal>
+        <Reveal delay={90}>
           <h2 className="font-display font-black text-[clamp(46px,9vw,150px)] leading-[0.98] tracking-[-0.02em] mt-7">
             Let&rsquo;s build
             <br />
@@ -33,7 +35,7 @@ export default function Contact() {
               <a
                 key={s.label}
                 href={s.href}
-                className="text-ink/60 no-underline transition-colors hover:text-ink"
+                className="relative inline-block text-ink/60 no-underline transition-colors duration-300 hover:text-ink after:absolute after:left-0 after:-bottom-1 after:h-px after:w-full after:bg-ink after:origin-left after:scale-x-0 after:transition-transform after:duration-300 after:ease-[cubic-bezier(.2,.7,.2,1)] hover:after:scale-x-100"
               >
                 {s.label}
               </a>
@@ -49,7 +51,7 @@ export default function Contact() {
             <div>Maker&rsquo;s mark</div>
             <div className="text-ink/[0.32]">九尾 · nine tails</div>
           </div>
-          <div className="shrink-0 w-[clamp(48px,5.5vw,60px)] h-[clamp(48px,5.5vw,60px)] border-[1.5px] border-seal rounded-lg flex items-center justify-center -rotate-3 [box-shadow:inset_0_0_0_3px_rgba(244,241,233,0.7)]">
+          <div className="shrink-0 w-[clamp(48px,5.5vw,60px)] h-[clamp(48px,5.5vw,60px)] border-[1.5px] border-seal rounded-lg flex items-center justify-center -rotate-3 [box-shadow:inset_0_0_0_3px_rgba(244,241,233,0.7)] transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] motion-safe:hover:rotate-0 motion-safe:hover:scale-[1.05]">
             <span className="font-display font-semibold text-[clamp(26px,3vw,32px)] leading-none text-seal">
               九
             </span>

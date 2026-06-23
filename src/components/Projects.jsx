@@ -11,19 +11,22 @@ export default function Projects() {
       <div className="max-w-[1280px] mx-auto">
         <Reveal>
           <Eyebrow no="02">Featured Projects</Eyebrow>
+        </Reveal>
+        <Reveal delay={90}>
           <h2 className="font-display font-bold text-[clamp(38px,6.4vw,96px)] leading-[1.02] tracking-[-0.015em] mt-6">
             Selected work.
           </h2>
         </Reveal>
 
         <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(24px,3vw,44px)] mt-[clamp(48px,8vh,90px)]">
-          {PROJECTS.map((p) => (
+          {PROJECTS.map((p, i) => (
             <Reveal
               as="article"
               key={p.no}
-              className="border border-ink/[0.12] p-[clamp(24px,2.4vw,32px)] flex flex-col gap-[22px] bg-white/50 transition-colors hover:border-ink/[0.34]"
+              delay={Math.min(i, 5) * 70}
+              className="group border border-ink/[0.12] p-[clamp(24px,2.4vw,32px)] flex flex-col gap-[22px] bg-white/50 transition-[transform,border-color,box-shadow] duration-300 ease-[cubic-bezier(.2,.7,.2,1)] hover:border-ink/[0.34] hover:shadow-[0_18px_40px_-24px_rgba(21,17,13,0.45)] motion-safe:hover:-translate-y-1"
             >
-              <div className="flex justify-between items-start font-mono text-[11px] tracking-[0.2em] uppercase text-ink/40">
+              <div className="flex justify-between items-start font-mono text-[11px] tracking-[0.2em] uppercase text-ink/40 transition-colors duration-300 group-hover:text-ink/60">
                 <span className="flex items-center gap-[9px]">
                   <span className="text-seal">{p.no}</span>
                   <span className="text-ink/[0.22]">/</span>
@@ -32,8 +35,8 @@ export default function Projects() {
                 <span>{p.year}</span>
               </div>
 
-              <div className="aspect-[4/3] border border-ink/[0.12] flex items-end p-3.5 [background:repeating-linear-gradient(135deg,rgba(21,17,13,0.045)_0_10px,transparent_10px_20px)]">
-                <span className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-ink/40">
+              <div className="aspect-[4/3] border border-ink/[0.12] flex items-end p-3.5 [background:repeating-linear-gradient(135deg,rgba(21,17,13,0.045)_0_10px,transparent_10px_20px)] transition-colors duration-300 group-hover:border-ink/30 group-hover:bg-ink/[0.05]">
+                <span className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-ink/40 transition-colors duration-300 group-hover:text-ink/70">
                   {p.img}
                 </span>
               </div>

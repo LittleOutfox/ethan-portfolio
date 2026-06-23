@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 
+import useReducedMotion from '../hooks/useReducedMotion.js';
+
 export default function Reveal({ as: Tag = 'div', delay = 0, className = '', children, ...rest }) {
   const ref = useRef(null);
+  const reduced = useReducedMotion();
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
+    if (reduced) {
+      setShown(true);
+      return;
+    }
     const el = ref.current;
     if (!el || !('IntersectionObserver' in window)) {
       setShown(true);
@@ -23,7 +30,16 @@ export default function Reveal({ as: Tag = 'div', delay = 0, className = '', chi
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [reduced]);
+
+  // Reduced motion: render in place, fully visible, no transform/transition.
+  if (reduced) {
+    return (
+      <Tag ref={ref} className={className} {...rest}>
+        {children}
+      </Tag>
+    );
+  }
 
   return (
     <Tag

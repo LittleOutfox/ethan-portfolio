@@ -4,59 +4,85 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-[clamp(20px,5vw,64px)] py-[18px] [background:linear-gradient(180deg,rgba(244,241,233,0.86)_0%,rgba(244,241,233,0)_100%)] backdrop-blur-sm">
-        <span
+        <button
+          type="button"
           onClick={onLogo}
           className="cursor-pointer font-mono text-[12px] tracking-[0.26em] uppercase text-ink"
         >
           Ethan&nbsp;Tiong<span className="text-ink/35">&nbsp;/&nbsp;EE</span>
-        </span>
+        </button>
 
         {!isMobile && (
           <nav className="flex items-center gap-[26px]">
             {NAV.map((l) => (
-              <span
+              <button
+                type="button"
                 key={l.id}
                 onClick={() => onSelect(l.id)}
+                aria-current={active === l.id ? 'true' : undefined}
                 className={`cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase flex items-center gap-[7px] transition-colors hover:text-ink ${
                   active === l.id ? 'text-ink' : 'text-ink/50'
                 }`}
               >
-                {active === l.id && <span className="w-[5px] h-[5px] rounded-full bg-seal" />}
+                {/* Dot is always rendered (reserves its space) so the active
+                    indicator fades/scales in without shifting the labels. */}
+                <span
+                  aria-hidden="true"
+                  className={`w-[5px] h-[5px] rounded-full bg-seal transition-[opacity,transform] duration-300 ease-[cubic-bezier(.2,.7,.2,1)] ${
+                    active === l.id ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                  }`}
+                />
                 {l.label}
-              </span>
+              </button>
             ))}
           </nav>
         )}
 
         {isMobile && (
-          <span
+          <button
+            type="button"
             onClick={onToggle}
+            aria-expanded={navOpen}
+            aria-controls="mobile-menu"
             className="cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink"
           >
-            Menu
-          </span>
+            {navOpen ? 'Close' : 'Menu'}
+          </button>
         )}
       </header>
 
-      {navOpen && (
-        <div className="fixed inset-0 z-[60] bg-paper/95 backdrop-blur-md flex flex-col justify-center gap-1.5 p-[clamp(28px,9vw,80px)]">
-          <span
-            onClick={onToggle}
-            className="absolute top-[22px] right-[clamp(20px,5vw,64px)] cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink/60"
+      {/* Always mounted so open/close can animate; hidden + non-focusable
+          when closed (pointer-events-none + tabIndex -1 on its controls). */}
+      <div
+        id="mobile-menu"
+        aria-hidden={!navOpen}
+        className={`fixed inset-0 z-[60] bg-paper/95 backdrop-blur-md flex flex-col justify-center gap-1.5 p-[clamp(28px,9vw,80px)] transition-opacity duration-300 ease-[cubic-bezier(.2,.7,.2,1)] ${
+          navOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={onToggle}
+          tabIndex={navOpen ? 0 : -1}
+          className="absolute top-[22px] right-[clamp(20px,5vw,64px)] cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink/60"
+        >
+          Close
+        </button>
+        {NAV.map((l, i) => (
+          <button
+            type="button"
+            key={l.id}
+            onClick={() => onSelect(l.id)}
+            tabIndex={navOpen ? 0 : -1}
+            style={{ transitionDelay: navOpen ? `${i * 45 + 80}ms` : '0ms' }}
+            className={`text-left cursor-pointer font-display font-bold text-[clamp(34px,9vw,60px)] leading-[1.05] text-ink transition-[opacity,transform] duration-500 ease-[cubic-bezier(.2,.7,.2,1)] ${
+              navOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+            }`}
           >
-            Close
-          </span>
-          {NAV.map((l) => (
-            <span
-              key={l.id}
-              onClick={() => onSelect(l.id)}
-              className="cursor-pointer font-display font-bold text-[clamp(34px,9vw,60px)] leading-[1.05] text-ink"
-            >
-              {l.label}
-            </span>
-          ))}
-        </div>
-      )}
+            {l.label}
+          </button>
+        ))}
+      </div>
     </>
   );
 }

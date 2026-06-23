@@ -11,12 +11,14 @@ export default function About() {
       <div className="max-w-[1280px] mx-auto">
         <Reveal>
           <Eyebrow no="01">Identity</Eyebrow>
+        </Reveal>
+        <Reveal delay={90}>
           <h2 className="font-display font-bold text-[clamp(38px,6.4vw,96px)] leading-[1.02] tracking-[-0.015em] mt-6 max-w-[16ch]">
             I turn invisible systems into tangible things.
           </h2>
         </Reveal>
 
-        <Reveal delay={120} className="mt-[clamp(36px,6vh,64px)] max-w-[60ch]">
+        <Reveal delay={160} className="mt-[clamp(36px,6vh,64px)] max-w-[60ch]">
           <p className="text-[clamp(16px,1.7vw,21px)] leading-[1.7] text-ink/70 m-0">
             Signals, circuits, code, and hardware — ideas becoming real. I&rsquo;m an Electrical Engineering
             student who works at the seam where the electrical meets the physical: embedded firmware,

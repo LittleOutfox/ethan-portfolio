@@ -62,16 +62,18 @@ export default function Portfolio() {
   const scrollToId = useCallback((id) => {
     const el = rootRef.current?.querySelector(`#${id}`);
     if (el) {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       window.scrollTo({
         top: window.scrollY + el.getBoundingClientRect().top - 56,
-        behavior: 'smooth',
+        behavior: reduced ? 'auto' : 'smooth',
       });
     }
     setNavOpen(false);
   }, []);
 
   const scrollTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
     setNavOpen(false);
   }, []);
 

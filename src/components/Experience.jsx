@@ -11,16 +11,19 @@ export default function Experience() {
       <div className="max-w-[1100px] mx-auto">
         <Reveal>
           <Eyebrow no="05">Experience</Eyebrow>
+        </Reveal>
+        <Reveal delay={90}>
           <h2 className="font-display font-bold text-[clamp(38px,6.4vw,96px)] leading-[1.02] tracking-[-0.015em] mt-6">
             Where I&rsquo;ve been.
           </h2>
         </Reveal>
 
         <div className="mt-[clamp(40px,7vh,72px)]">
-          {EXPERIENCE.map((x) => (
+          {EXPERIENCE.map((x, i) => (
             <Reveal
               as="article"
               key={x.period}
+              delay={Math.min(i, 5) * 70}
               className="border-t border-ink/[0.12] py-[clamp(28px,4vh,44px)] flex flex-wrap gap-[clamp(16px,4vw,56px)]"
             >
               <span className="basis-[160px] shrink-0 font-mono text-[12px] tracking-[0.16em] uppercase text-ink/45 pt-1.5">

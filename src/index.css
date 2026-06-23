@@ -9,3 +9,28 @@ body,
   min-height: 100vh;
   background-color: #f4f1e9;
 }
+
+/* Visible keyboard focus only (not on mouse click) — a thin ink ring that
+   fits the paper/ink aesthetic. Applies to every interactive element. */
+:focus-visible {
+  outline: 2px solid #15110d;
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced-motion safety net: neutralise CSS transitions/animations and
+   instant-scroll so all choreography becomes effectively immediate. The
+   WebGL ink already swaps to its static fallback under this preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

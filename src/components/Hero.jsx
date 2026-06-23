@@ -35,12 +35,13 @@ export default function Hero({ onScrollToId }) {
       </div>
 
       <div className="animate-heroRise [animation-delay:0.26s] flex items-end justify-between gap-5">
-        <span
+        <button
+          type="button"
           onClick={() => onScrollToId('about')}
-          className="cursor-pointer flex items-center gap-3 font-mono text-[11px] tracking-[0.24em] uppercase text-ink/55"
+          className="cursor-pointer flex items-center gap-3 font-mono text-[11px] tracking-[0.24em] uppercase text-ink/55 transition-colors hover:text-ink"
         >
           <span className="text-seal">↓</span> Scroll
-        </span>
+        </button>
         <span className="font-mono text-[11px] tracking-[0.24em] uppercase text-ink/[0.42]">
           Open to embedded / hardware roles
         </span>
