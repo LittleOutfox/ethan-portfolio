@@ -27,15 +27,15 @@ export default function Notes() {
               className="border-t border-ink/[0.12] py-[clamp(28px,4vh,44px)] flex flex-wrap gap-[clamp(20px,4vw,56px)] items-baseline"
             >
               <span className="font-mono text-[13px] tracking-[0.18em] text-seal">{d.no}</span>
-              <div className="flex-1 min-w-[260px]">
+              <div className="flex-1 min-w-0 basis-full sm:basis-0">
                 <h3 className="font-display font-semibold text-[clamp(24px,3.4vw,40px)] leading-[1.08] m-0">
                   {d.title}
                 </h3>
                 <p className="text-[15px] leading-[1.6] text-ink/60 mt-3 max-w-[52ch]">{d.blurb}</p>
               </div>
-              <div className="flex flex-col gap-2 items-start font-mono text-[11px] tracking-[0.16em] uppercase text-ink/45 min-w-[120px]">
+              <div className="flex flex-col gap-2 items-start font-mono text-[11px] tracking-[0.16em] uppercase text-ink/60 min-w-[120px]">
                 <span>{d.tag}</span>
-                <span className="text-ink/30">{d.read}</span>
+                <span className="text-ink/55">{d.read}</span>
               </div>
             </Reveal>
           ))}

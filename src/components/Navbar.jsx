@@ -5,32 +5,64 @@ import { NAV } from '../data/nav.js';
 export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, onLogo }) {
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
+  const headerRef = useRef(null);
+  const overlayRef = useRef(null);
 
-  // Mobile menu: Escape closes it; focus moves into the panel on open and
-  // returns to the toggle on close so keyboard users aren't stranded.
+  // Mobile menu when open: trap Tab within the panel, make the rest of the
+  // page inert (header + main), close on Escape, move focus into the panel,
+  // and restore focus to the toggle on close. Desktop never opens it.
   useEffect(() => {
     if (!navOpen) return undefined;
-    const toggleEl = toggleRef.current; // same persistent node; capture for cleanup
+    const toggleEl = toggleRef.current; // persistent node; capture for cleanup
+    const headerEl = headerRef.current;
+    const mainEl = typeof document !== 'undefined' ? document.querySelector('main') : null;
+    if (headerEl) headerEl.inert = true;
+    if (mainEl) mainEl.inert = true;
     closeRef.current?.focus();
+
     const onKey = (e) => {
-      if (e.key === 'Escape') onToggle();
+      if (e.key === 'Escape') {
+        onToggle();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const root = overlayRef.current;
+      if (!root) return;
+      const items = Array.from(
+        root.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])'),
+      ).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1);
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
+      if (headerEl) headerEl.inert = false;
+      if (mainEl) mainEl.inert = false;
       toggleEl?.focus();
     };
   }, [navOpen, onToggle]);
 
   return (
     <>
-      <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-[clamp(20px,5vw,64px)] py-[18px] [background:linear-gradient(180deg,rgba(244,241,233,0.86)_0%,rgba(244,241,233,0)_100%)] backdrop-blur-sm">
+      <header
+        ref={headerRef}
+        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-[clamp(20px,5vw,64px)] py-[18px] [background:linear-gradient(180deg,rgba(244,241,233,0.86)_0%,rgba(244,241,233,0)_100%)] backdrop-blur-sm"
+      >
         <button
           type="button"
           onClick={onLogo}
           className="cursor-pointer font-mono text-[12px] tracking-[0.26em] uppercase text-ink"
         >
-          Ethan&nbsp;Tiong<span className="text-ink/35">&nbsp;/&nbsp;EE</span>
+          Ethan&nbsp;Tiong<span className="text-ink/55">&nbsp;/&nbsp;EE</span>
         </button>
 
         {!isMobile && (
@@ -42,7 +74,7 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
                 onClick={() => onSelect(l.id)}
                 aria-current={active === l.id ? 'true' : undefined}
                 className={`cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase flex items-center gap-[7px] transition-colors hover:text-ink ${
-                  active === l.id ? 'text-ink' : 'text-ink/50'
+                  active === l.id ? 'text-ink' : 'text-ink/60'
                 }`}
               >
                 {/* Dot is always rendered (reserves its space) so the active
@@ -66,7 +98,7 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
             onClick={onToggle}
             aria-expanded={navOpen}
             aria-controls="mobile-menu"
-            className="cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink"
+            className="tap-target cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink"
           >
             {navOpen ? 'Close' : 'Menu'}
           </button>
@@ -77,6 +109,7 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
           when closed (pointer-events-none + tabIndex -1 on its controls). */}
       <div
         id="mobile-menu"
+        ref={overlayRef}
         aria-hidden={!navOpen}
         className={`fixed inset-0 z-[60] bg-paper/95 backdrop-blur-md flex flex-col justify-center gap-1.5 p-[clamp(28px,9vw,80px)] transition-opacity duration-300 ease-[cubic-bezier(.2,.7,.2,1)] ${
           navOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -87,7 +120,7 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
           type="button"
           onClick={onToggle}
           tabIndex={navOpen ? 0 : -1}
-          className="absolute top-[22px] right-[clamp(20px,5vw,64px)] cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink/60"
+          className="tap-target absolute top-[22px] right-[clamp(20px,5vw,64px)] cursor-pointer font-mono text-[11.5px] tracking-[0.2em] uppercase text-ink/60"
         >
           Close
         </button>

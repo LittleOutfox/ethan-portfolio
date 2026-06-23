@@ -25,7 +25,7 @@ export default function About() {
             board-level hardware, and the quiet, disciplined systems that sit beneath the surface and
             simply work.
           </p>
-          <div className="mt-[clamp(22px,3.4vh,34px)] flex flex-wrap gap-x-[18px] gap-y-2.5 items-center font-mono text-[11px] tracking-[0.14em] uppercase text-ink/50">
+          <div className="mt-[clamp(22px,3.4vh,34px)] flex flex-wrap gap-x-[18px] gap-y-2.5 items-center font-mono text-[11px] tracking-[0.14em] uppercase text-ink/60">
             <span className="text-seal">▸</span>
             <span>Electrical Engineering · Waterloo</span>
             <span className="text-ink/[0.28]">/</span>

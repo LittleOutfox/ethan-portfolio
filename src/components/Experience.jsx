@@ -26,10 +26,10 @@ export default function Experience() {
               delay={Math.min(i, 5) * 70}
               className="border-t border-ink/[0.12] py-[clamp(28px,4vh,44px)] flex flex-wrap gap-[clamp(16px,4vw,56px)]"
             >
-              <span className="basis-[160px] shrink-0 font-mono text-[12px] tracking-[0.16em] uppercase text-ink/45 pt-1.5">
+              <span className="basis-[160px] shrink-0 font-mono text-[12px] tracking-[0.16em] uppercase text-ink/60 pt-1.5">
                 {x.period}
               </span>
-              <div className="flex-1 min-w-[280px]">
+              <div className="flex-1 min-w-0 basis-full sm:basis-0">
                 <h3 className="font-display font-semibold text-[clamp(24px,3.2vw,38px)] leading-[1.08] m-0">
                   {x.role}
                 </h3>

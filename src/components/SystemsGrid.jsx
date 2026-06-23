@@ -4,8 +4,8 @@ import Reveal from './Reveal.jsx';
 export default function SystemsGrid() {
   return (
     <Reveal delay={200} className="mt-[clamp(56px,9vh,110px)]">
-      <div className="font-mono text-[11px] tracking-[0.28em] uppercase text-ink/40 mb-[clamp(24px,4vh,40px)]">
-        Layers I work across <span className="text-ink/30">· nine tails</span>
+      <div className="font-mono text-[11px] tracking-[0.28em] uppercase text-ink/60 mb-[clamp(24px,4vh,40px)]">
+        Layers I work across <span className="text-ink/55">· nine tails</span>
       </div>
       <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))] gap-px bg-ink/10 border border-ink/10">
         {SYSTEMS.map((t, i) => (
