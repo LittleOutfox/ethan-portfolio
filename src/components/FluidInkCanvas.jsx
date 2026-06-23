@@ -24,19 +24,15 @@ import InkCanvas from './InkCanvas.jsx';
  * --------------------------------------------------------- */
 
 // ---------------------------------------------------------------
-// PRESETS — switch via `?ink=foundation|sumi|kitsune|plume` in the URL.
+// INK — the single ink configuration (one look, no presets / no URL switch).
 //
-// Each preset bundles every behavior + render knob. The fixed
-// engine-level constants (resolution, DPR, etc.) live in COMMON
-// below so presets stay focused on the perceptual feel. A preset may
-// override a COMMON constant (e.g. DYE_RESOLUTION) by declaring it.
+// Every behavior + render knob lives here; the fixed engine-level
+// constants (resolution, DPR, etc.) live in COMMON below. A field may
+// override a COMMON constant (e.g. DYE_RESOLUTION) by redeclaring it.
 //
-// `plume` (INK_PLUME) is the grand billowing mode: a small sharp ink
-// speck at the cursor that the energetic, slow-dissipating, high-curl
-// velocity field carries and folds into large diffusing plumes — like
-// ink injected into water. It is the default.
-//
-// Recommended default: INK_PLUME.
+// The look: a small sharp ink speck at the cursor that the energetic,
+// slow-dissipating, low-curl velocity field carries and folds into
+// large, thick, slowly diffusing plumes — ink injected into water.
 // ---------------------------------------------------------------
 
 const COMMON = {
@@ -48,7 +44,7 @@ const COMMON = {
   MOBILE_SCALE:         0.55,
 };
 
-// Per-preset emitter fields:
+// Emitter + sim fields:
 //   MIN_INK_DISTANCE   — px the cursor must move before any splat fires (small-move gate)
 //   SLOW_SPEED, FAST_SPEED — px/sec; speed range that maps to the emitter scale curve
 //   MIN_/MAX_DYE_LONG_RADIUS, MIN_/MAX_DYE_NARROW_RADIUS
@@ -68,122 +64,8 @@ const COMMON = {
 //   DENSITY_DISSIPATION / VELOCITY_DISSIPATION / CURL_STRENGTH — sim fade & swirl
 //   INK_OPACITY / DENSITY_ALPHA_CURVE / READABILITY_MASK_STRENGTH — render
 
-const PRESETS = {
-  foundation: {
-    label:                 'FOUNDATION',
-    MIN_INK_DISTANCE:      2.5,
-    SLOW_SPEED:            200,
-    FAST_SPEED:            2200,
-    MIN_DYE_LONG_RADIUS:   0.012,
-    MAX_DYE_LONG_RADIUS:   0.045,
-    MIN_DYE_NARROW_RADIUS: 0.010,
-    MAX_DYE_NARROW_RADIUS: 0.018,
-    MAX_NIB_ASPECT_RATIO:  3.5,
-    BACK_OFFSET_RATIO:     0.30,
-    DYE_FRONT_FADE:        0.35,
-    MIN_DENSITY_AMOUNT:    0.12,
-    MAX_DENSITY_AMOUNT:    0.52,
-    MIN_FORCE:             400,
-    MAX_FORCE:             1100,
-    VELOCITY_RADIUS:       0.06,
-    NIB_SPLIT:             1,
-    NIB_SPREAD:            0,
-    NIB_JITTER:            0,
-    DENSITY_VARIANCE:      0,
-    DIRECTION_SMOOTHING:   0.50,
-    MIN_DIRECTION_SPEED:   25,
-    SPEED_RESPONSE:        0.15,    // exponential smoothing on speedT (per-event lerp)
-    NATURAL_VARIATION_DENSITY: 0.04, // ±4% low-freq density wobble
-    NATURAL_VARIATION_RADIUS:  0.03, // ±3% low-freq radius wobble
-    NATURAL_POSITION_NOISE_PX: 1.0,  // px perpendicular wobble at the nib position
-    CURL_TIME_VARIANCE:    0,        // slow vortex-strength modulation (0 = off)
-    DENSITY_DISSIPATION:   2.4,
-    VELOCITY_DISSIPATION:  2.4,
-    CURL_STRENGTH:         5,
-    INK_OPACITY:           0.70,
-    DENSITY_ALPHA_CURVE:   [0.05, 0.50],
-    READABILITY_MASK_STRENGTH: 0.60,
-    SUBSTEP_PX:            38,
-    RENDER_SOFT_SPREAD:    0,
-  },
-
-  sumi: {
-    label:                 'SUMI_BLOOM',
-    MIN_INK_DISTANCE:      1.5,
-    SLOW_SPEED:            150,
-    FAST_SPEED:            1800,
-    MIN_DYE_LONG_RADIUS:   0.014,
-    MAX_DYE_LONG_RADIUS:   0.075,
-    MIN_DYE_NARROW_RADIUS: 0.008,
-    MAX_DYE_NARROW_RADIUS: 0.018,
-    MAX_NIB_ASPECT_RATIO:  5.0,
-    BACK_OFFSET_RATIO:     0.40,
-    DYE_FRONT_FADE:        0.18,
-    MIN_DENSITY_AMOUNT:    0.18,
-    MAX_DENSITY_AMOUNT:    0.98,
-    MIN_FORCE:             500,
-    MAX_FORCE:             1400,
-    VELOCITY_RADIUS:       0.085,
-    NIB_SPLIT:             1,
-    NIB_SPREAD:            0,
-    NIB_JITTER:            0,
-    DENSITY_VARIANCE:      0,
-    DIRECTION_SMOOTHING:   0.45,
-    MIN_DIRECTION_SPEED:   25,
-    SPEED_RESPONSE:        0.18,
-    NATURAL_VARIATION_DENSITY: 0.07,
-    NATURAL_VARIATION_RADIUS:  0.05,
-    NATURAL_POSITION_NOISE_PX: 1.6,
-    CURL_TIME_VARIANCE:    0.10,
-    DENSITY_DISSIPATION:   1.4,
-    VELOCITY_DISSIPATION:  1.7,
-    CURL_STRENGTH:         10,
-    INK_OPACITY:           1.0,
-    DENSITY_ALPHA_CURVE:   [0.03, 0.36], // saturate to peak slightly sooner → more body
-    READABILITY_MASK_STRENGTH: 0.55,
-    SUBSTEP_PX:            14,
-    RENDER_SOFT_SPREAD:    2.0,
-  },
-
-  kitsune: {
-    label:                 'KITSUNE_WAKE',
-    MIN_INK_DISTANCE:      1.5,
-    SLOW_SPEED:            150,
-    FAST_SPEED:            1800,
-    MIN_DYE_LONG_RADIUS:   0.013,
-    MAX_DYE_LONG_RADIUS:   0.060,
-    MIN_DYE_NARROW_RADIUS: 0.0065,   // tighter slow-stroke nib → sharper tip
-    MAX_DYE_NARROW_RADIUS: 0.016,    // a touch tighter at speed too
-    MAX_NIB_ASPECT_RATIO:  5.0,      // narrower nib + same long → permit slightly more elongation
-    BACK_OFFSET_RATIO:     0.34,     // bring cursor closer to the gaussian peak → tip reads denser
-    DYE_FRONT_FADE:        0.10,     // less ink ahead of cursor → cleaner leading edge
-    MIN_DENSITY_AMOUNT:    0.12,     // slow-stroke tip a little denser
-    MAX_DENSITY_AMOUNT:    0.66,     // 0.62 → 0.66 — fast-stroke tip a little denser
-    MIN_FORCE:             500,
-    MAX_FORCE:             1400,
-    VELOCITY_RADIUS:       0.075,
-    NIB_SPLIT:             3,
-    NIB_SPREAD:            12,
-    NIB_JITTER:            0,
-    DENSITY_VARIANCE:      0,
-    DIRECTION_SMOOTHING:   0.45,
-    MIN_DIRECTION_SPEED:   30,
-    SPEED_RESPONSE:        0.20,
-    NATURAL_VARIATION_DENSITY: 0.10,
-    NATURAL_VARIATION_RADIUS:  0.08,
-    NATURAL_POSITION_NOISE_PX: 2.6,
-    CURL_TIME_VARIANCE:    0.22,
-    DENSITY_DISSIPATION:   1.95,     // 1.75 → 1.95 — older ink fades quicker so it can't pool
-    VELOCITY_DISSIPATION:  1.5,
-    CURL_STRENGTH:         8,        // 12 → 8 — softer, broader fluid bending; fewer tight vortices
-    INK_OPACITY:           0.92,     // 0.95 → 0.92 — tone down peak alpha
-    DENSITY_ALPHA_CURVE:   [0.06, 0.78],   // wider curve: medium density stays translucent gray; only dense tip is near-black
-    READABILITY_MASK_STRENGTH: 0.55,
-    SUBSTEP_PX:            16,
-    RENDER_SOFT_SPREAD:    4.5,      // texels — soft halo sample around dilute ink
-  },
-
-  // INK_PLUME — ink injected into water. A small sharp speck at the
+const INK = {
+  // ink injected into water. A small sharp speck at the
   // cursor that the velocity field carries into a large, THICK, slowly
   // swirling body of ink that spreads grandly and disperses. The look is
   // heavy ink, not hyper liquid: gentle force + low CURL_STRENGTH keep the
@@ -191,9 +73,7 @@ const PRESETS = {
   // ink into thin fast wisps); low dye dissipation lets it linger and
   // cover a big area; high density + an early alpha saturation make the
   // body read thick and dark while the edges stay smoky.
-  plume: {
-    label:                 'INK_PLUME',
-    // higher dye texture → finer detail in the large billow.
+  // higher dye texture → finer detail in the large billow.
     DYE_RESOLUTION:        768,
     // low dissipation = ink lingers; give it plenty of time to finish
     // billowing + fading before the loop idles out, so the sim never
@@ -270,15 +150,7 @@ const PRESETS = {
     READABILITY_MASK_STRENGTH: 0.62,
     SUBSTEP_PX:            14,
     RENDER_SOFT_SPREAD:    4.5,
-  },
 };
-
-function resolvePreset() {
-  if (typeof window === 'undefined') return PRESETS.plume;
-  const key = new URLSearchParams(window.location.search).get('ink');
-  if (key && PRESETS[key]) return PRESETS[key];
-  return PRESETS.plume; // default
-}
 
 const MOBILE_BREAKPOINT = 820;
 const INK_COLOR = [0.082, 0.067, 0.051]; // matches Tailwind `ink` #15110d (linear-ish)
@@ -651,10 +523,7 @@ export default function FluidInkCanvas() {
 
     try {
 
-    const P = resolvePreset();
-    if (import.meta.env.DEV) {
-      console.info(`[FluidInkCanvas] preset: ${P.label} — switch via ?ink=foundation|sumi|kitsune|plume`);
-    }
+    const P = INK;
 
     const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
     const dprCap = isMobile ? COMMON.MOBILE_DPR : COMMON.MAX_DPR;

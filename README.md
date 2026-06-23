@@ -24,16 +24,7 @@ npm run lint     # run ESLint
 
 ## Ink background
 
-The fluid-ink background (`src/components/FluidInkCanvas.jsx`) ships several presets, selectable via a URL query param:
-
-| `?ink=` | Preset |
-| --- | --- |
-| `plume` | **Default** — sharp cursor source that billows into thick, slow, diffusing ink plumes |
-| `kitsune` | Directional nib wake |
-| `sumi` | Soft sumi-e bloom |
-| `foundation` | Restrained baseline |
-
-Example: `/?ink=kitsune`.
+The background (`src/components/FluidInkCanvas.jsx`) is a real-time WebGL2 fluid simulation: a small sharp ink "speck" follows the cursor and the velocity field carries it into large, thick, slowly diffusing plumes — ink injected into water.
 
 It automatically falls back to a lighter Canvas 2D trail (`src/components/InkCanvas.jsx`) when WebGL2 is unavailable, and disables animation entirely under `prefers-reduced-motion`.
 
