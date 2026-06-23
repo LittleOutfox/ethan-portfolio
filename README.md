@@ -1,8 +1,45 @@
-# React + Vite
+# Ethan Tiong — Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio for Ethan Tiong, an Electrical Engineering student at the University of Waterloo (embedded firmware, board-level hardware, signal/data systems).
 
-Currently, two official plugins are available:
+A single-page site with a custom WebGL fluid-ink background ("ink in water") on a cream/ink, kitsune-inspired editorial aesthetic.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+> **Status:** Design prototype / portfolio in progress. The project, notes, skills, and experience copy is temporary placeholder content pending a final design + content pass.
+
+## Tech
+
+- [Vite](https://vitejs.dev/) + [React 18](https://react.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- Raw WebGL2 fluid simulation (no animation libraries) with a Canvas 2D fallback
+
+## Getting started
+
+```bash
+npm install      # install dependencies
+npm run dev      # start the dev server (http://localhost:5173)
+npm run build    # production build → dist/
+npm run preview  # serve the production build locally
+npm run lint     # run ESLint
+```
+
+## Ink background
+
+The fluid-ink background (`src/components/FluidInkCanvas.jsx`) ships several presets, selectable via a URL query param:
+
+| `?ink=` | Preset |
+| --- | --- |
+| `plume` | **Default** — sharp cursor source that billows into thick, slow, diffusing ink plumes |
+| `kitsune` | Directional nib wake |
+| `sumi` | Soft sumi-e bloom |
+| `foundation` | Restrained baseline |
+
+Example: `/?ink=kitsune`.
+
+It automatically falls back to a lighter Canvas 2D trail (`src/components/InkCanvas.jsx`) when WebGL2 is unavailable, and disables animation entirely under `prefers-reduced-motion`.
+
+## Deployment
+
+Static site — the build output is `dist/`.
+
+- **Vercel:** zero config (auto-detects Vite). Build command `npm run build`, output directory `dist`.
+- **Netlify:** configured in `netlify.toml` (build `npm run build`, publish `dist`).

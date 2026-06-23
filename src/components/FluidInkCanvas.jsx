@@ -652,7 +652,9 @@ export default function FluidInkCanvas() {
     try {
 
     const P = resolvePreset();
-    console.info(`[FluidInkCanvas] preset: ${P.label} — switch via ?ink=foundation|sumi|kitsune|plume`);
+    if (import.meta.env.DEV) {
+      console.info(`[FluidInkCanvas] preset: ${P.label} — switch via ?ink=foundation|sumi|kitsune|plume`);
+    }
 
     const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
     const dprCap = isMobile ? COMMON.MOBILE_DPR : COMMON.MAX_DPR;
