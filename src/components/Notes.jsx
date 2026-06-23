@@ -24,7 +24,7 @@ export default function Notes() {
               as="article"
               key={d.no}
               delay={Math.min(i, 5) * 70}
-              className="border-t border-ink/[0.12] py-[clamp(28px,4vh,44px)] flex flex-wrap gap-[clamp(20px,4vw,56px)] items-baseline cursor-pointer transition-colors hover:bg-ink/[0.02]"
+              className="border-t border-ink/[0.12] py-[clamp(28px,4vh,44px)] flex flex-wrap gap-[clamp(20px,4vw,56px)] items-baseline"
             >
               <span className="font-mono text-[13px] tracking-[0.18em] text-seal">{d.no}</span>
               <div className="flex-1 min-w-[260px]">

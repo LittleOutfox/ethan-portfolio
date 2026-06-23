@@ -22,9 +22,19 @@ export default function Portfolio() {
   const isMobile = vw < MOBILE_BREAKPOINT;
 
   useEffect(() => {
-    const onResize = () => setVw(window.innerWidth);
+    let raf = 0;
+    const onResize = () => {
+      if (raf) return; // coalesce bursts of resize events to one update per frame
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setVw(window.innerWidth);
+      });
+    };
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   useEffect(() => {
@@ -84,6 +94,13 @@ export default function Portfolio() {
       ref={rootRef}
       className="relative min-h-screen bg-transparent text-ink font-sans font-normal antialiased [overflow-x:clip]"
     >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:bg-paper focus:text-ink focus:border focus:border-ink focus:px-4 focus:py-2 focus:font-mono focus:text-[12px] focus:uppercase focus:tracking-[0.2em]"
+      >
+        Skip to content
+      </a>
+
       <FluidInkCanvas />
 
       <Navbar
@@ -95,7 +112,7 @@ export default function Portfolio() {
         onLogo={scrollTop}
       />
 
-      <main className="relative z-[2]">
+      <main id="main-content" tabIndex={-1} className="relative z-[2]">
         <Hero onScrollToId={scrollToId} />
         <About />
         <Projects />

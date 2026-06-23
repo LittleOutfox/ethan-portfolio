@@ -1,6 +1,27 @@
+import { useEffect, useRef } from 'react';
+
 import { NAV } from '../data/nav.js';
 
 export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, onLogo }) {
+  const toggleRef = useRef(null);
+  const closeRef = useRef(null);
+
+  // Mobile menu: Escape closes it; focus moves into the panel on open and
+  // returns to the toggle on close so keyboard users aren't stranded.
+  useEffect(() => {
+    if (!navOpen) return undefined;
+    const toggleEl = toggleRef.current; // same persistent node; capture for cleanup
+    closeRef.current?.focus();
+    const onKey = (e) => {
+      if (e.key === 'Escape') onToggle();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      toggleEl?.focus();
+    };
+  }, [navOpen, onToggle]);
+
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-[clamp(20px,5vw,64px)] py-[18px] [background:linear-gradient(180deg,rgba(244,241,233,0.86)_0%,rgba(244,241,233,0)_100%)] backdrop-blur-sm">
@@ -40,6 +61,7 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
 
         {isMobile && (
           <button
+            ref={toggleRef}
             type="button"
             onClick={onToggle}
             aria-expanded={navOpen}
@@ -61,6 +83,7 @@ export default function Navbar({ active, isMobile, navOpen, onToggle, onSelect, 
         }`}
       >
         <button
+          ref={closeRef}
           type="button"
           onClick={onToggle}
           tabIndex={navOpen ? 0 : -1}

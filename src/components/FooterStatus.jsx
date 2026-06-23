@@ -20,7 +20,7 @@ export default function FooterStatus({ footerVisible, onScrollTop }) {
         <button
           type="button"
           onClick={onScrollTop}
-          className="cursor-pointer transition-colors hover:text-ink"
+          className="relative inline-block cursor-pointer transition-colors duration-300 hover:text-ink after:absolute after:left-0 after:-bottom-1 after:h-px after:w-full after:bg-ink after:origin-left after:scale-x-0 after:transition-transform after:duration-300 after:ease-[cubic-bezier(.2,.7,.2,1)] hover:after:scale-x-100"
         >
           ↑ Back to top
         </button>

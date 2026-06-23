@@ -20,6 +20,11 @@ body,
 :focus:not(:focus-visible) {
   outline: none;
 }
+/* Programmatic focus targets (e.g. the skip-link landing on <main>) shouldn't
+   draw a ring around a whole region. */
+[tabindex='-1']:focus {
+  outline: none;
+}
 
 /* Reduced-motion safety net: neutralise CSS transitions/animations and
    instant-scroll so all choreography becomes effectively immediate. The

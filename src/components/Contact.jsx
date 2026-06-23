@@ -26,7 +26,7 @@ export default function Contact() {
         >
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="font-display italic font-medium text-[clamp(24px,4vw,46px)] text-ink no-underline border-b border-ink/30 pb-1.5 transition-colors hover:border-seal"
+            className="font-display italic font-medium text-[clamp(24px,4vw,46px)] text-ink no-underline border-b border-ink/30 pb-1.5 transition-colors hover:border-seal focus-visible:border-seal"
           >
             {CONTACT_EMAIL}
           </a>

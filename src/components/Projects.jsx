@@ -35,8 +35,32 @@ export default function Projects() {
                 <span>{p.year}</span>
               </div>
 
-              <div className="aspect-[4/3] border border-ink/[0.12] flex items-end p-3.5 [background:repeating-linear-gradient(135deg,rgba(21,17,13,0.045)_0_10px,transparent_10px_20px)] transition-colors duration-300 group-hover:border-ink/30 group-hover:bg-ink/[0.05]">
-                <span className="font-mono text-[10.5px] tracking-[0.2em] uppercase text-ink/40 transition-colors duration-300 group-hover:text-ink/70">
+              <div className="relative aspect-[4/3] overflow-hidden border border-ink/[0.12] flex items-end p-3.5 [background-image:linear-gradient(rgba(21,17,13,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(21,17,13,0.05)_1px,transparent_1px)] [background-size:22px_22px] transition-colors duration-300 group-hover:border-ink/30">
+                {/* decorative technical-plate motif: registration ticks + a
+                    circuit trace with a seal node. Static → reduced-motion safe. */}
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 100 75"
+                  preserveAspectRatio="none"
+                  className="pointer-events-none absolute inset-0 h-full w-full text-ink/20 transition-colors duration-300 group-hover:text-ink/40"
+                >
+                  <path
+                    d="M6 6 H12 M6 6 V12 M94 6 H88 M94 6 V12 M6 69 H12 M6 69 V63 M94 69 H88 M94 69 V63"
+                    stroke="currentColor"
+                    strokeWidth="0.4"
+                    fill="none"
+                  />
+                  <path
+                    d="M14 56 H34 V40 H60 V22 H82"
+                    stroke="currentColor"
+                    strokeWidth="0.55"
+                    fill="none"
+                  />
+                  <circle cx="34" cy="40" r="1.3" fill="currentColor" />
+                  <circle cx="60" cy="22" r="1.3" fill="currentColor" />
+                  <circle cx="82" cy="22" r="1.9" fill="#7A1712" />
+                </svg>
+                <span className="relative font-mono text-[10.5px] tracking-[0.2em] uppercase text-ink/40 transition-colors duration-300 group-hover:text-ink/70">
                   {p.img}
                 </span>
               </div>

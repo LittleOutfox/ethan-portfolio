@@ -18,7 +18,7 @@ export default {
       },
       keyframes: {
         revealUp: { from: { opacity: '0', transform: 'translateY(42px)' }, to: { opacity: '1', transform: 'none' } },
-        heroRise: { from: { transform: 'translateY(44px)' }, to: { transform: 'none' } },
+        heroRise: { from: { opacity: '0', transform: 'translateY(30px)' }, to: { opacity: '1', transform: 'none' } },
         statusPulse: { '0%,100%': { opacity: '1' }, '50%': { opacity: '0.25' } },
       },
       animation: {
