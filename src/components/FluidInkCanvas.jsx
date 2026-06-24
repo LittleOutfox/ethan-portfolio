@@ -14,10 +14,10 @@ import InkCanvas from './InkCanvas.jsx';
  * the display pass paints it as premultiplied black on transparent
  * background so the page colour shows through.
  *
- * Cursor delta seeds the velocity field with a momentum splat;
- * a single dye splat is co-located, surrounded by 8 micro-velocity
- * "tails" with rotated kicks so the wake branches/curls into the
- * kitsune nine-tail silhouette without ever drawing 9 visible marks.
+ * Cursor movement seeds the velocity field with a momentum splat and a
+ * co-located directional dye "nib"; a forward bow-wave push drives ink into
+ * a leading front and the low-dissipation field billows it into large,
+ * slowly diffusing plumes. A one-shot swoosh plays once on first load.
  *
  * Falls back to <InkCanvas /> when WebGL2 is unavailable or
  * prefers-reduced-motion is on.
@@ -55,7 +55,7 @@ const COMMON = {
 //   MIN_/MAX_DENSITY_AMOUNT — peak dye per emit, interpolated by speed
 //   MIN_/MAX_FORCE     — velocity scalar applied to mouse delta, interpolated by speed
 //   VELOCITY_RADIUS    — sigma of the (still circular) velocity injection
-//   NIB_SPLIT          — number of parallel companion nibs (1 = single, 3 = kitsune trio)
+//   NIB_SPLIT          — number of parallel companion nibs (1 = single source)
 //   NIB_SPREAD         — px perpendicular spread of companions; scales with speed
 //   NIB_JITTER         — px random jitter; scales with speed; presets ship 0
 //   DENSITY_VARIANCE   — ± per-emit dye amplitude; presets ship 0

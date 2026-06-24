@@ -17,12 +17,10 @@ export default {
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       keyframes: {
-        revealUp: { from: { opacity: '0', transform: 'translateY(42px)' }, to: { opacity: '1', transform: 'none' } },
         heroRise: { from: { opacity: '0', transform: 'translateY(30px)' }, to: { opacity: '1', transform: 'none' } },
         statusPulse: { '0%,100%': { opacity: '1' }, '50%': { opacity: '0.25' } },
       },
       animation: {
-        revealUp: 'revealUp 0.9s cubic-bezier(.2,.7,.2,1) both',
         heroRise: 'heroRise 1.1s cubic-bezier(.2,.7,.2,1) both',
         statusPulse: 'statusPulse 2.4s ease-in-out infinite',
       },
