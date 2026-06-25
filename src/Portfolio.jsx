@@ -6,6 +6,7 @@ import Experience from './components/Experience.jsx';
 import FooterStatus from './components/FooterStatus.jsx';
 import FluidInkCanvas from './components/FluidInkCanvas.jsx';
 import Hero from './components/Hero.jsx';
+import KitsuneScene from './components/kitsune/KitsuneScene.jsx';
 import Navbar from './components/Navbar.jsx';
 import Notes from './components/Notes.jsx';
 import Projects from './components/Projects.jsx';
@@ -102,6 +103,8 @@ export default function Portfolio() {
       </a>
 
       <FluidInkCanvas />
+
+      <KitsuneScene />
 
       <Navbar
         active={active}

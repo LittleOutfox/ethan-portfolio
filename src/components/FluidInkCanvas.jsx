@@ -606,7 +606,6 @@ export default function FluidInkCanvas() {
     const dyeSplats = []; // {x,y, dirX,dirY, amount}
     let lastInputT = performance.now();
     let prev = null;
-    let userMoved = false; // becomes true on real input — suppresses the one-shot intro
 
     // smoothed direction state — persists across move events so the dye
     // emitter and its perpendicular offsets don't snap sideways on sharp
@@ -790,7 +789,6 @@ export default function FluidInkCanvas() {
 
     const onTouch = (e) => {
       if (!e.touches.length) return;
-      userMoved = true;
       onMove(e.touches[0]);
     };
     const onLeave = () => {
@@ -801,8 +799,7 @@ export default function FluidInkCanvas() {
       lastEmitT = -Infinity;
     };
 
-    const onMoveReal = (e) => { userMoved = true; onMove(e); };
-    window.addEventListener('mousemove', onMoveReal, { passive: true });
+    window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('touchmove', onTouch, { passive: true });
     window.addEventListener('mouseleave', onLeave);
 
@@ -985,7 +982,7 @@ export default function FluidInkCanvas() {
 
     disposers.push(() => cancelAnimationFrame(rafId));
     disposers.push(() => window.removeEventListener('resize', resizeCanvas));
-    disposers.push(() => window.removeEventListener('mousemove', onMoveReal));
+    disposers.push(() => window.removeEventListener('mousemove', onMove));
     disposers.push(() => window.removeEventListener('touchmove', onTouch));
     disposers.push(() => window.removeEventListener('mouseleave', onLeave));
     disposers.push(() => document.removeEventListener('visibilitychange', onVis));
@@ -1001,41 +998,6 @@ export default function FluidInkCanvas() {
 
     setFallback(false);
     start();
-
-    // --- one-shot hero intro: a fast, grand vertical swoosh on load — rises
-    // bottom→top through the right-side negative space with an S-shaped lateral
-    // swing (plus a touch of variation so it reads as a hand stroke, not a
-    // perfect arc) at a fast, constant pace — the high speed driving the
-    // speed-scaled emitter to a grand billow. Driven frame-by-frame through the SAME emitter (real
-    // ink, not a scripted layer): sampled every frame so the line stays smooth.
-    // Fires once per page load; skipped under reduced-motion (never reached
-    // then) and abandoned the instant the user moves; cleaned up on unmount.
-    const INTRO_MS = 420;
-    let introRaf = 0;
-    let introStart = 0;
-    const introTick = (now) => {
-      if (userMoved || document.visibilityState !== 'visible') {
-        introRaf = 0;
-        return;
-      }
-      if (!introStart) introStart = now;
-      const p = Math.min(1, (now - introStart) / INTRO_MS);
-      const eased = p; // constant, fast stroke — no slow-to-fast ramp
-      const y = 0.92 - eased * 0.84; // starts lower, sweeps taller to the top
-      // S swing whose width grows with height — tight bottom curve, fuller top
-      const amp = 0.13 * (0.45 + 0.55 * eased);
-      const x =
-        0.78 + amp * Math.sin(eased * Math.PI * 2.0) + 0.02 * Math.sin(eased * Math.PI * 4.0);
-      onMove({ clientX: x * cssW(), clientY: y * cssH() });
-      introRaf = p < 1 ? requestAnimationFrame(introTick) : 0;
-    };
-    const introDelay = setTimeout(() => {
-      introRaf = requestAnimationFrame(introTick);
-    }, 700);
-    disposers.push(() => {
-      clearTimeout(introDelay);
-      if (introRaf) cancelAnimationFrame(introRaf);
-    });
 
     } catch (e) {
       console.warn('[FluidInkCanvas] init failed, falling back to InkCanvas:', e);
