@@ -8,7 +8,7 @@ export default function Notes() {
       id="writing"
       className="border-t border-ink/10 px-[clamp(20px,5vw,64px)] py-[clamp(96px,16vh,200px)]"
     >
-      <div className="max-w-[1100px] mx-auto">
+      <div className="max-w-[1280px] mx-auto">
         <Reveal>
           <Eyebrow no="03">Technical Deep Dives</Eyebrow>
         </Reveal>
@@ -18,7 +18,7 @@ export default function Notes() {
           </h2>
         </Reveal>
 
-        <div className="mt-[clamp(40px,7vh,72px)]">
+        <div className="mt-[clamp(40px,7vh,72px)] max-w-[920px]">
           {NOTES.map((d, i) => (
             <Reveal
               as="article"
