@@ -1,22 +1,23 @@
-import aboutUrl from '../../assets/kitsune/about.svg';
-import contactUrl from '../../assets/kitsune/contact.svg';
-import homeUrl from '../../assets/kitsune/home.svg';
-import notesUrl from '../../assets/kitsune/notes.svg';
-import workUrl from '../../assets/kitsune/selected_work.svg';
-import toolsUrl from '../../assets/kitsune/tools.svg';
-import beenUrl from '../../assets/kitsune/whereivebeen.svg';
+import bowingUrl from '../../assets/kitsune/bowing.svg';
+import descendingUrl from '../../assets/kitsune/descending.svg';
+import divingUrl from '../../assets/kitsune/diving.svg';
+import howlingUrl from '../../assets/kitsune/howling.svg';
+import sittingUrl from '../../assets/kitsune/sitting.svg';
+import standingUrl from '../../assets/kitsune/standing.svg';
+import walkingUrl from '../../assets/kitsune/walking.svg';
 
 /* KitsuneFigure — renders one kitsune pose as an <img> (the SVGs are large, so
  * loading them as image assets keeps them out of the JS bundle and lets the
- * browser rasterize them once). Keyed by section. */
+ * browser rasterize them once). Keyed by section; the file is named for the
+ * pose it depicts. */
 const POSES = {
-  hero: homeUrl,
-  about: aboutUrl,
-  work: workUrl,
-  notes: notesUrl,
-  skills: toolsUrl,
-  experience: beenUrl,
-  contact: contactUrl,
+  hero: sittingUrl,
+  about: bowingUrl,
+  work: descendingUrl,
+  notes: divingUrl,
+  skills: standingUrl,
+  experience: howlingUrl,
+  contact: walkingUrl,
 };
 
 export default function KitsuneFigure({ pose = 'hero', className = '', style }) {
