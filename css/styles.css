@@ -43,14 +43,33 @@ a { color: inherit; text-decoration: none; }
    ambient layers
    ------------------------------------------------------------ */
 
-#foxfire {
+.journey {
   position: fixed; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  filter: brightness(0.72) saturate(0.85);
+  transition: opacity 2.4s ease;
+  pointer-events: none;
+}
+.journey.ready { opacity: 0.6; }
+
+.journey-veil {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 100% at 50% 42%, transparent 28%, rgba(8, 7, 13, 0.85) 100%),
+    linear-gradient(to bottom, rgba(8, 7, 13, 0.55), transparent 24%, transparent 72%, rgba(8, 7, 13, 0.7));
+}
+
+#foxfire {
+  position: fixed; inset: 0; z-index: 2;
   width: 100%; height: 100%;
   pointer-events: none;
 }
 
 .tint {
-  position: fixed; inset: 0; z-index: 1;
+  position: fixed; inset: 0; z-index: 3;
   pointer-events: none; opacity: 0;
   background: radial-gradient(60% 55% at 68% 62%, rgba(224, 160, 92, 0.22), transparent 70%);
 }
@@ -189,31 +208,38 @@ html.no-js .veil { display: none; }
 }
 
 /* ------------------------------------------------------------
-   fox drawings
+   spirit foxes — ink drawings turned to moonlight
+   Three stacked copies: wide bloom, tight bloom, sharp lines.
    ------------------------------------------------------------ */
 
-[data-fox] svg {
-  width: 100%; height: auto; display: block; overflow: visible;
-  filter: drop-shadow(0 0 16px rgba(168, 180, 236, 0.22));
+.spirit-mount { position: relative; }
+.spirit-mount img {
+  display: block; width: 100%; height: auto;
+  user-select: none; -webkit-user-drag: none;
 }
-[data-fox] .ln {
-  fill: none; stroke: #c9cff2; stroke-width: 2.1;
-  stroke-linecap: round; stroke-linejoin: round;
+.spirit-mount img.sharp {
+  position: relative; z-index: 2;
+  filter: invert(1) brightness(1.28);
+  opacity: 0.95;
 }
-[data-fox] .dot { fill: #dfe4fb; stroke: none; }
-[data-fox] .tailfill {
-  fill: rgba(168, 180, 236, 0.1);
-  stroke: rgba(200, 208, 244, 0.75); stroke-width: 1.4;
-  stroke-linejoin: round;
+.spirit-mount img.bloom {
+  position: absolute; inset: 0; z-index: 1; height: 100%;
+  filter: invert(1) brightness(1.6) blur(5px);
+  opacity: 0.6;
+}
+.spirit-mount img.bloom2 {
+  position: absolute; inset: 0; z-index: 0; height: 100%;
+  filter: invert(1) brightness(2) blur(16px);
+  opacity: 0.38;
 }
 
 /* ------------------------------------------------------------
    shared chapter grammar
    ------------------------------------------------------------ */
 
-main { position: relative; z-index: 2; }
+main { position: relative; z-index: 4; }
 
-.chapter { position: relative; padding: 26vh var(--pad-x); }
+.chapter { position: relative; padding: 20vh var(--pad-x); }
 
 .ch-grid {
   display: grid;
@@ -301,16 +327,9 @@ main { position: relative; z-index: 2; }
   color: var(--moon-dim);
 }
 
-.hero-relic {
-  position: relative;
-  width: clamp(300px, 52vh, 540px);
-  aspect-ratio: 16 / 10;
-  margin-top: 2vh;
-  background: url('../assets/fox-glass.webp') no-repeat;
-  background-size: 140%;
-  background-position: 66% 47%;
-  -webkit-mask-image: radial-gradient(ellipse 58% 55% at 50% 50%, #000 42%, transparent 74%);
-  mask-image: radial-gradient(ellipse 58% 55% at 50% 50%, #000 42%, transparent 74%);
+.hero-spirit {
+  width: clamp(300px, 52vh, 520px);
+  margin-top: 2.5vh;
 }
 
 .hero-cue {
@@ -359,7 +378,7 @@ main { position: relative; z-index: 2; }
 }
 .origin-facts dd { font-family: var(--serif); font-size: 17px; color: var(--moon); }
 
-.origin-fox { width: min(30vw, 400px); justify-self: center; margin-top: 4vh; }
+.origin-fox { width: min(32vw, 430px); justify-self: center; margin-top: 4vh; }
 
 /* ------------------------------------------------------------
    02 · the hunt (horizontal)
@@ -367,15 +386,6 @@ main { position: relative; z-index: 2; }
 
 .hunt { padding: 0; }
 .hunt-pin { height: 100vh; position: relative; overflow: hidden; }
-
-.hunt-bg {
-  position: absolute; inset: 0;
-  background: url('../assets/forest-mist.webp') center / cover no-repeat;
-  opacity: 0.55;
-  -webkit-mask-image: radial-gradient(120% 92% at 50% 50%, #000 52%, transparent 96%);
-  mask-image: radial-gradient(120% 92% at 50% 50%, #000 52%, transparent 96%);
-  pointer-events: none;
-}
 
 .hunt-track {
   display: flex; align-items: center;
@@ -420,8 +430,8 @@ main { position: relative; z-index: 2; }
 }
 
 .hunt-fox {
-  position: absolute; bottom: 9vh; left: 5vw;
-  width: clamp(220px, 26vw, 360px);
+  position: absolute; bottom: 8vh; left: 5vw;
+  width: clamp(240px, 28vw, 390px);
   pointer-events: none;
 }
 
@@ -449,8 +459,8 @@ main { position: relative; z-index: 2; }
 }
 
 .works-fox {
-  position: absolute; right: 10vw; bottom: 18vh;
-  width: clamp(240px, 30vw, 420px);
+  position: absolute; right: 12vw; top: 8vh;
+  width: clamp(160px, 17vw, 250px);
   pointer-events: none;
   will-change: transform, opacity;
 }
@@ -514,11 +524,10 @@ html.js:not(.reduced) .relic { opacity: 0; }
 
 .fire-note { margin-top: 3.4vh; max-width: 38ch; color: var(--moon-dim); font-size: 14px; }
 
-.fire-fox { width: min(26vw, 340px); justify-self: center; margin-top: 2vh; }
-.fire-fox svg { filter: drop-shadow(0 0 16px rgba(224, 160, 92, 0.25)); }
-.fire-fox .ln { stroke: #e8d4bc; }
-.fire-fox .dot { fill: #f2ddb8; }
-.fire-fox .tailfill { fill: rgba(224, 160, 92, 0.1); stroke: rgba(232, 212, 188, 0.7); }
+.fire-fox { width: min(28vw, 360px); justify-self: center; margin-top: 8vh; }
+.fire-fox img.sharp { filter: invert(1) sepia(0.4) saturate(1.4) brightness(1.22); }
+.fire-fox img.bloom { filter: invert(1) sepia(0.55) saturate(1.8) brightness(1.5) blur(5px); }
+.fire-fox img.bloom2 { filter: invert(1) sepia(0.6) saturate(2) brightness(1.8) blur(16px); }
 
 .fire-list { list-style: none; grid-column: 1 / -1; margin-top: 10vh; }
 .fire-list li {
@@ -551,6 +560,24 @@ html.js:not(.reduced) .relic { opacity: 0; }
   position: absolute; left: 4vw; top: 50%;
   transform: translateY(-46%);
   width: min(52vw, 660px);
+}
+
+.tails-spirit {
+  position: relative; z-index: 1;
+  --wipe: 55%;
+  -webkit-mask-image: linear-gradient(100deg, #000 0%, #000 var(--wipe), transparent calc(var(--wipe) + 14%));
+  mask-image: linear-gradient(100deg, #000 0%, #000 var(--wipe), transparent calc(var(--wipe) + 14%));
+}
+
+.tails-extra { position: absolute; inset: 0; z-index: 0; }
+.tails-extra svg {
+  width: 100%; height: auto; display: block; overflow: visible;
+  filter: blur(0.4px) drop-shadow(0 0 16px rgba(168, 180, 236, 0.3));
+}
+.tails-extra .petal path {
+  fill: rgba(205, 213, 246, 0.13);
+  stroke: rgba(222, 227, 250, 0.5);
+  stroke-width: 1.2;
 }
 
 .tails-list {
@@ -597,17 +624,10 @@ html.js:not(.reduced) .relic { opacity: 0; }
   pointer-events: none;
 }
 
-.pool-bg {
-  position: absolute; inset: 0; z-index: 0;
-  background: url('../assets/pool-night.webp') center 62% / cover no-repeat;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 26%);
-  pointer-events: none;
-}
 
 .pool-fox-wrap {
-  position: absolute; right: 11vw; bottom: 51.5%; z-index: 2;
-  width: min(21vw, 270px);
+  position: absolute; right: 15vw; bottom: 40%; z-index: 2;
+  width: min(13vw, 175px);
   pointer-events: none;
 }
 .pool-fox { width: 100%; }
@@ -692,7 +712,7 @@ html.js:not(.reduced) .relic { opacity: 0; }
   .hunt-fox { width: 200px; left: 8vw; }
 
   .works-head { top: 12vh; transform: none; }
-  .works-fox { right: 4vw; bottom: 8vh; width: 200px; }
+  .works-fox { right: 6vw; top: 6vh; width: 130px; }
   .relic { top: 54%; }
 
   .tails-head { top: 8vh; }
@@ -700,7 +720,7 @@ html.js:not(.reduced) .relic { opacity: 0; }
   .tails-list { right: 50%; transform: translate(50%, -38%); width: 84vw; }
   .tails-count { bottom: 4vh; }
 
-  .pool-fox-wrap { width: 40vw; right: 6vw; }
+  .pool-fox-wrap { width: 24vw; right: 8vw; }
   .footer { flex-direction: column; gap: 6px; padding-bottom: 16px; }
 }
 
@@ -746,6 +766,11 @@ html.no-js .tails-list li, html.reduced .tails-list li { opacity: 1; }
 html.no-js .tails-count, html.reduced .tails-count { display: none; }
 
 html.reduced .rail { display: none; }
+html.reduced .journey, html.no-js .journey,
+html.reduced .journey-veil, html.no-js .journey-veil { display: none; }
+html.reduced .tails-spirit, html.no-js .tails-spirit {
+  -webkit-mask-image: none; mask-image: none;
+}
 html.reduced .grain { animation: none; }
 html.reduced .hero-cue-line::after { animation: none; }
 html.reduced .pool-reflection { animation: none; }

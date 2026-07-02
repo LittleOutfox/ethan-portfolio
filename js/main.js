@@ -1,6 +1,6 @@
 /* ============================================================
-   KYŪBI — a nine-tailed portfolio
-   fox renderer · scroll choreography · foxfire · moon pool
+   KYŪBI — a nine-tailed portfolio · v2
+   spirit ink foxes · scroll-scrubbed forest journey · foxfire
    ============================================================ */
 
 (function () {
@@ -14,22 +14,25 @@
   if (!MOTION) doc.classList.add('reduced');
 
   /* ------------------------------------------------------------
-     1 · fox renderer — one spirit, six poses
+     1 · spirit mounts — the ink foxes, made of moonlight
+     Each mount gets three stacked copies: a wide soft bloom,
+     a tight bloom, and the sharp ink lines. Black ink is
+     inverted to translucent white by CSS filters.
      ------------------------------------------------------------ */
 
-  function foxHead(opts) {
-    opts = opts || {};
-    var eye = opts.eye === 'closed'
-      ? '<path class="ln" d="M -38 -9 q 7 4 13 0"/>'
-      : '<circle class="dot" cx="-33" cy="-11" r="2.6"/>';
-    return '' +
-      '<path class="ln" d="M 2 4 C -1 -8 -7 -17 -17 -22 C -31 -28 -46 -21 -60 -4"/>' +
-      '<path class="ln" d="M -60 -4 C -50 3 -38 5 -28 4 C -18 3 -8 5 -2 12"/>' +
-      '<path class="ln" d="M -8 -21 C -6 -32 -3 -42 1 -50 C 6 -38 9 -28 11 -17"/>' +
-      '<path class="ln" d="M -27 -23 C -28 -34 -28 -45 -27 -55 C -20 -46 -14 -36 -11 -25"/>' +
-      eye +
-      '<circle class="dot" cx="-60" cy="-4" r="2.2"/>';
-  }
+  document.querySelectorAll('[data-kfox]').forEach(function (el) {
+    var name = el.getAttribute('data-kfox');
+    var src = 'assets/kitsune/' + name + '.svg';
+    el.innerHTML =
+      '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false">' +
+      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false">' +
+      '<img class="sharp" src="' + src + '" alt="" draggable="false">';
+  });
+
+  /* ------------------------------------------------------------
+     2 · extra tails — three ink petals that complete the nine
+     Overlaid on the sitting fox in the transformation scene.
+     ------------------------------------------------------------ */
 
   function tailPath(len, bend, w) {
     return 'M 0 0' +
@@ -37,115 +40,65 @@
       ' C ' + (bend * 0.45 + w * 0.8) + ' ' + (-len * 0.70) + ' ' + (w * 1.05) + ' ' + (-len * 0.26) + ' 0 0 Z';
   }
 
-  function tailG(x, y, ang, len, bend, w, idx) {
-    var cls = idx === undefined ? 'tail' : 'tail t' + idx;
-    return '<g class="' + cls + '" transform="translate(' + x + ' ' + y + ') rotate(' + ang + ')">' +
-      '<g class="tail-inner"><path class="tailfill" d="' + tailPath(len, bend, w) + '"/></g></g>';
+  var tailsExtra = document.getElementById('tailsExtra');
+  if (tailsExtra) {
+    // sitting.svg is 674x502; its tail fan grows from roughly (370, 310)
+    var petals = [
+      { x: 368, y: 306, ang: -6, len: 225, bend: 42, w: 26 },
+      { x: 376, y: 310, ang: 24, len: 250, bend: 64, w: 30 },
+      { x: 372, y: 314, ang: 48, len: 235, bend: 80, w: 27 }
+    ];
+    var svg = '<svg viewBox="0 0 674 502" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">';
+    petals.forEach(function (p, i) {
+      svg += '<g transform="translate(' + p.x + ' ' + p.y + ') rotate(' + p.ang + ')">' +
+        '<g class="petal petal-' + i + '"><path d="' + tailPath(p.len, p.bend, p.w) + '"/></g></g>';
+    });
+    svg += '</svg>';
+    tailsExtra.innerHTML = svg;
   }
-
-  function seatedBody() {
-    return '' +
-      '<path class="ln" d="M 268 292 C 288 238 266 184 226 170 C 213 165 206 157 202 147"/>' +
-      '<g transform="translate(202 147) rotate(-6)">' + foxHead() + '</g>' +
-      '<path class="ln" d="M 198 160 C 190 202 187 258 189 314"/>' +
-      '<path class="ln" d="M 189 314 L 172 314"/>' +
-      '<path class="ln" d="M 228 252 C 238 274 246 294 252 312"/>' +
-      '<path class="ln" d="M 252 312 L 234 313"/>';
-  }
-
-  function fanBody() {
-    return '' +
-      '<path class="ln" d="M 252 268 C 272 220 252 172 214 160 C 202 156 196 148 192 138"/>' +
-      '<g transform="translate(192 138) rotate(-6)">' + foxHead() + '</g>' +
-      '<path class="ln" d="M 188 152 C 180 196 177 254 179 310"/>' +
-      '<path class="ln" d="M 179 310 L 162 310"/>' +
-      '<path class="ln" d="M 214 244 C 224 266 232 288 238 308"/>' +
-      '<path class="ln" d="M 238 308 L 220 309"/>';
-  }
-
-  function nineTails() {
-    var out = '';
-    for (var i = 0; i < 9; i++) {
-      var t = i / 8;
-      var ang = -52 + t * 144;
-      var len = 140 + Math.sin(t * Math.PI) * 75;
-      var bend = (t - 0.4) * 85;
-      var bx = 252 + (t - 0.5) * 26;
-      var by = 268 - Math.sin(t * Math.PI) * 8;
-      out += tailG(bx, by, ang, len, bend, 11 + Math.sin(t * Math.PI) * 4, i);
-    }
-    return out;
-  }
-
-  var POSES = {
-    curl: {
-      vb: '70 90 250 225',
-      draw: function () {
-        return tailG(240, 262, -115, 130, 60, 24) +
-          '<path class="ln" d="M 252 150 C 224 122 180 116 146 136 C 108 158 96 208 116 244 C 134 276 180 292 220 276 C 230 272 236 268 240 262"/>' +
-          '<g transform="translate(240 158) rotate(60) scale(-0.95,0.95)">' + foxHead({ eye: 'closed' }) + '</g>';
-      }
-    },
-    seated: {
-      vb: '120 70 285 265',
-      draw: function () { return tailG(268, 292, 95, 118, -42, 24) + seatedBody(); }
-    },
-    stalk: {
-      vb: '-75 120 490 200',
-      draw: function () {
-        return tailG(90, 232, -112, 150, 42, 20) +
-          '<path class="ln" d="M 90 232 C 150 212 230 208 288 222 C 296 224 302 228 306 233"/>' +
-          '<g transform="translate(306 233) rotate(-10) scale(-1,1)">' + foxHead() + '</g>' +
-          '<path class="ln" d="M 272 240 C 272 264 272 284 274 304"/>' +
-          '<path class="ln" d="M 274 304 L 290 304"/>' +
-          '<path class="ln" d="M 128 240 C 122 264 122 286 124 306"/>' +
-          '<path class="ln" d="M 124 306 L 140 306"/>';
-      }
-    },
-    leap: {
-      vb: '-20 125 440 190',
-      draw: function () {
-        return tailG(126, 268, -104, 122, 40, 20) +
-          '<path class="ln" d="M 126 268 C 170 182 274 158 334 196"/>' +
-          '<g transform="translate(338 199) rotate(14) scale(-1,1)">' + foxHead() + '</g>' +
-          '<path class="ln" d="M 318 220 C 330 244 344 266 360 286"/>' +
-          '<path class="ln" d="M 306 224 C 314 250 322 272 332 294"/>' +
-          '<path class="ln" d="M 150 252 C 134 272 118 288 100 300"/>' +
-          '<path class="ln" d="M 168 258 C 158 276 148 290 136 302"/>';
-      }
-    },
-    gaze: {
-      vb: '95 35 265 300',
-      draw: function () {
-        return tailG(268, 296, 93, 116, -40, 23) +
-          '<path class="ln" d="M 268 296 C 288 242 266 190 226 176 C 213 171 206 163 203 153"/>' +
-          '<g transform="translate(203 153) rotate(-38)">' + foxHead() + '</g>' +
-          '<path class="ln" d="M 200 166 C 192 206 189 260 191 316"/>' +
-          '<path class="ln" d="M 191 316 L 174 316"/>' +
-          '<path class="ln" d="M 228 256 C 238 278 246 296 252 314"/>' +
-          '<circle class="dot ember-dot" cx="150" cy="66" r="4.5"/>' +
-          '<circle class="dot ember-dot" cx="126" cy="96" r="2"/>' +
-          '<circle class="dot ember-dot" cx="170" cy="94" r="2.6"/>';
-      }
-    },
-    fan: {
-      vb: '25 20 395 330',
-      draw: function () { return nineTails() + fanBody(); }
-    },
-    pool: {
-      vb: '25 20 395 330',
-      draw: function () { return nineTails() + fanBody(); }
-    }
-  };
-
-  document.querySelectorAll('[data-fox]').forEach(function (el) {
-    var pose = POSES[el.getAttribute('data-fox')];
-    if (!pose) return;
-    el.innerHTML = '<svg viewBox="' + pose.vb + '" xmlns="http://www.w3.org/2000/svg">' + pose.draw() + '</svg>';
-  });
 
   /* ------------------------------------------------------------
-     2 · foxfire — drifting spirit lights
+     3 · the journey — a forest that moves as you scroll
+     ------------------------------------------------------------ */
+
+  (function journey() {
+    var v = document.getElementById('journey');
+    if (!v) return;
+    if (reducedQuery.matches) { v.remove(); return; }
+    // fetch as blob: object URLs are fully seekable even when the
+    // server (e.g. python http.server) doesn't support range requests
+    var SRC = 'assets/journey.mp4';
+    fetch(SRC)
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(function (b) { v.src = URL.createObjectURL(b); })
+      .catch(function () { v.src = SRC; });
+    var dur = 0, cur = 0;
+
+    v.addEventListener('loadedmetadata', function () {
+      dur = v.duration || 0;
+      v.classList.add('ready');
+    });
+    v.addEventListener('error', function () {
+      v.classList.remove('ready');
+      v.remove();
+    });
+
+    function tick() {
+      if (dur) {
+        var max = doc.scrollHeight - window.innerHeight;
+        var target = (max > 0 ? window.scrollY / max : 0) * Math.max(0, dur - 0.08);
+        cur += (target - cur) * 0.07;
+        if (Math.abs(cur - v.currentTime) > 0.033) {
+          try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  /* ------------------------------------------------------------
+     4 · foxfire — drifting spirit lights
      ------------------------------------------------------------ */
 
   (function foxfire() {
@@ -172,15 +125,6 @@
     var cool = sprite(168, 180, 236);
     var warm = sprite(224, 160, 92);
 
-    function resize() {
-      W = window.innerWidth; H = window.innerHeight;
-      canvas.width = W * dpr; canvas.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var target = Math.max(24, Math.min(54, Math.round(W * H / 46000)));
-      while (parts.length < target) parts.push(spawn(true));
-      parts.length = target;
-    }
-
     function spawn(anywhere) {
       return {
         x: Math.random() * W,
@@ -194,9 +138,18 @@
       };
     }
 
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var target = Math.max(24, Math.min(54, Math.round(W * H / 46000)));
+      while (parts.length < target) parts.push(spawn(true));
+      parts.length = target;
+    }
+
     var lastY = window.scrollY, drift = 0;
 
-    function frame(t) {
+    function frame() {
       var sy = window.scrollY;
       drift += (sy - lastY) * 0.03;
       drift *= 0.92;
@@ -241,7 +194,7 @@
   })();
 
   /* ------------------------------------------------------------
-     3 · moon pool — still water, easily disturbed
+     5 · moon pool — still water, easily disturbed
      ------------------------------------------------------------ */
 
   (function moonPool() {
@@ -279,9 +232,8 @@
 
     var autoTimer = 0;
 
-    function frame(t) {
+    function frame() {
       if (!visible) { requestAnimationFrame(frame); return; }
-      var time = t * 0.001;
 
       autoTimer -= 1;
       if (autoTimer <= 0 && !reduced) {
@@ -291,7 +243,6 @@
 
       ctx.clearRect(0, 0, W, H);
 
-      // ripple rings — the pool image below carries the moonlight
       for (var j = ripples.length - 1; j >= 0; j--) {
         var r2 = ripples[j];
         r2.r += r2.v;
@@ -319,7 +270,7 @@
   })();
 
   /* ------------------------------------------------------------
-     4 · veil — enter the dark
+     6 · veil — enter the dark
      ------------------------------------------------------------ */
 
   var veil = document.getElementById('veil');
@@ -344,18 +295,16 @@
   }
 
   /* ------------------------------------------------------------
-     5 · motion — the journey itself
+     7 · motion — the journey itself
      ------------------------------------------------------------ */
 
   if (!MOTION) {
-    // No choreography: everything is visible, tails are grown, story intact.
     if (veil && reducedQuery.matches) veil.classList.add('gone');
     return;
   }
 
   gsap.registerPlugin(ScrollTrigger);
 
-  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
 
   if (typeof window.Lenis === 'function') {
@@ -376,41 +325,35 @@
     });
   });
 
-  // ---- stroke drawing helper ------------------------------------
-  function prepareDraw(mount) {
-    var paths = mount.querySelectorAll('.ln');
-    paths.forEach(function (p) {
-      var len = p.getTotalLength();
-      p.style.strokeDasharray = len;
-      p.style.strokeDashoffset = len;
+  // ---- spirit condensation: blooms first, then the ink ----------
+  var LAYER_OPACITY = { bloom2: 0.38, bloom: 0.6, sharp: 0.95 };
+
+  function condense(mount, opts) {
+    opts = opts || {};
+    var imgs = mount.querySelectorAll('img');
+    gsap.set(imgs, { opacity: 0 });
+    gsap.set(mount, { y: opts.y === undefined ? 30 : opts.y });
+    var tl = gsap.timeline({ paused: true });
+    tl.to(mount, { y: 0, duration: 2.2, ease: 'power2.out' }, 0);
+    imgs.forEach(function (img, i) {
+      var end = LAYER_OPACITY[img.className] || 1;
+      tl.to(img, { opacity: end, duration: 1.6, ease: 'power2.out' }, i * 0.45);
     });
-    return paths;
+    return tl;
   }
 
-  function drawTween(paths, opts) {
-    return gsap.to(paths, Object.assign({
-      strokeDashoffset: 0,
-      duration: 1.8,
-      ease: 'power2.inOut',
-      stagger: 0.12
-    }, opts || {}));
-  }
-
-  // draw-in for the ambient foxes (origin, fire, pool)
+  // ambient foxes materialize when their chapter nears
   ['.origin-fox', '.fire-fox', '.pool-fox-wrap'].forEach(function (sel) {
     var mount = document.querySelector(sel);
     if (!mount) return;
-    var paths = prepareDraw(mount);
-    var tails = mount.querySelectorAll('.tailfill');
-    gsap.set(tails, { opacity: 0 });
+    var mounts = mount.classList.contains('spirit-mount') ? [mount]
+      : Array.prototype.slice.call(mount.querySelectorAll('.spirit-mount'));
+    var tls = mounts.map(function (m) { return condense(m); });
     ScrollTrigger.create({
       trigger: mount,
       start: 'top 82%',
       once: true,
-      onEnter: function () {
-        drawTween(paths);
-        gsap.to(tails, { opacity: 1, duration: 1.6, delay: 0.9, ease: 'power2.out' });
-      }
+      onEnter: function () { tls.forEach(function (t) { t.play(); }); }
     });
   });
 
@@ -423,14 +366,22 @@
     });
   });
 
+  // ---- continuity: each chapter drifts up as it hands over -------
+  gsap.utils.toArray('.origin .ch-grid, .fire .ch-grid, .pool-content').forEach(function (el) {
+    gsap.to(el, {
+      y: -50, ease: 'none',
+      scrollTrigger: { trigger: el, start: 'bottom 45%', end: 'bottom -10%', scrub: 1 }
+    });
+  });
+
   // ---- 00 · hero: entrance + zoom-through -----------------------
   (function hero() {
     var zoom = document.querySelector('.hero-zoom');
+    var spirit = document.querySelector('.hero-spirit');
 
     gsap.set('.hero-eyebrow, .hero-sub', { opacity: 0, y: 24 });
     gsap.set('.hero-title', { opacity: 0, scale: 0.965, filter: 'blur(16px)' });
     gsap.set('.hero-moon', { opacity: 0, scale: 0.85 });
-    gsap.set('.hero-relic', { opacity: 0, y: 26, scale: 0.94 });
 
     var entrance = gsap.timeline({ paused: true });
     entrance
@@ -438,7 +389,7 @@
       .to('.hero-title', { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.9, ease: 'expo.out' }, 0.2)
       .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.7)
       .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.9)
-      .to('.hero-relic', { opacity: 1, y: 0, scale: 1, duration: 2.4, ease: 'power2.out' }, 1.0);
+      .add(condense(spirit, { y: 20 }).play(), 0.8);
     window.__heroEntrance = entrance;
 
     gsap.timeline({
@@ -479,17 +430,11 @@
       }
     });
 
-    // fox stalks forward as the forest slides past
     var foxMount = document.querySelector('.hunt-fox');
-    var paths = prepareDraw(foxMount);
-    var tails = foxMount.querySelectorAll('.tailfill');
-    gsap.set(tails, { opacity: 0 });
+    var foxTl = condense(foxMount, { y: 0 });
     ScrollTrigger.create({
       trigger: '.hunt-pin', start: 'top 70%', once: true,
-      onEnter: function () {
-        drawTween(paths);
-        gsap.to(tails, { opacity: 1, duration: 1.4, delay: 0.8 });
-      }
+      onEnter: function () { foxTl.play(); }
     });
     gsap.fromTo(foxMount, { x: 0 }, {
       x: function () { return window.innerWidth * 0.42; },
@@ -500,10 +445,8 @@
         scrub: 1.4, invalidateOnRefresh: true
       }
     });
-    // breathing
     gsap.to(foxMount, { y: -7, duration: 2.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
 
-    // skills surface as they enter from the right
     gsap.utils.toArray('.skill').forEach(function (el) {
       gsap.fromTo(el, { opacity: 0, y: 70 }, {
         opacity: 1, y: 0, duration: 1, ease: 'power3.out',
@@ -527,19 +470,11 @@
   (function works() {
     var relics = gsap.utils.toArray('[data-relic]');
     var foxMount = document.querySelector('.works-fox');
-    var paths = prepareDraw(foxMount);
-    var tails = foxMount.querySelectorAll('.tailfill');
-    gsap.set(tails, { opacity: 0 });
-    ScrollTrigger.create({
-      trigger: '.works-pin', start: 'top 60%', once: true,
-      onEnter: function () {
-        drawTween(paths, { duration: 1.4 });
-        gsap.to(tails, { opacity: 1, duration: 1.2, delay: 0.6 });
-      }
-    });
+    var foxImgs = foxMount.querySelectorAll('img');
+    gsap.set(foxImgs, { opacity: 0 });
 
     var num = document.getElementById('relicNum');
-    var offsets = [0.1, -0.08, 0.12, -0.05]; // fraction of viewport width
+    var offsets = [0.1, -0.08, 0.12, -0.05];
 
     var tl = gsap.timeline({
       scrollTrigger: {
@@ -550,7 +485,6 @@
         scrub: 1,
         invalidateOnRefresh: true,
         onUpdate: function () {
-          // relic i occupies [2 + 2i, 2 + 2i + 2.4] on the timeline
           var idx = Math.max(1, Math.min(relics.length, Math.floor((tl.time() - 0.8) / 2)));
           var txt = '0' + idx;
           if (num.textContent !== txt) num.textContent = txt;
@@ -558,16 +492,17 @@
       }
     });
 
-    // the fox leaps across while the heading holds
+    // the fox dives down past the heading
     tl.fromTo(foxMount,
-      { x: function () { return -window.innerWidth * 0.75; }, y: 40, opacity: 0 },
-      { x: 0, opacity: 1, duration: 1.6, ease: 'none' }, 0);
-    tl.to(foxMount, { y: -110, duration: 0.8, ease: 'power1.out' }, 0);
-    tl.to(foxMount, { y: 30, duration: 0.8, ease: 'power1.in' }, 0.8);
-    tl.to(foxMount, { opacity: 0, duration: 0.5, ease: 'none' }, 1.6);
+      { y: function () { return -window.innerHeight * 0.7; } },
+      { y: function () { return window.innerHeight * 0.15; }, duration: 1.8, ease: 'none' }, 0);
+    foxImgs.forEach(function (img) {
+      var end = LAYER_OPACITY[img.className] || 1;
+      tl.to(img, { opacity: end, duration: 0.5, ease: 'none' }, 0.2);
+      tl.to(img, { opacity: 0, duration: 0.4, ease: 'none' }, 1.5);
+    });
     tl.to('.works-head', { opacity: 0, y: -60, duration: 0.7, ease: 'none' }, 1.3);
 
-    // relics fly past the camera
     relics.forEach(function (relic, i) {
       var at = 2 + i * 2;
       var off = offsets[i % offsets.length];
@@ -583,7 +518,7 @@
         { scale: 1.45, opacity: 0, duration: 0.7, ease: 'power1.in' },
         at + 1.7);
     });
-    tl.to({}, { duration: 0.4 }); // breathing room at the end
+    tl.to({}, { duration: 0.4 });
   })();
 
   // ---- 04 · foxfire: the world warms ------------------------------
@@ -599,24 +534,17 @@
     y: -50, ease: 'none',
     scrollTrigger: { trigger: '#fire', start: 'top bottom', end: 'bottom top', scrub: 1 }
   });
-  // embers above the gazing fox drift
-  gsap.utils.toArray('.fire-fox .ember-dot').forEach(function (d, i) {
-    gsap.to(d, {
-      y: -12 - i * 4, duration: 2.4 + i * 0.7,
-      yoyo: true, repeat: -1, ease: 'sine.inOut', delay: i * 0.5
-    });
-  });
 
   // ---- 05 · nine tails: transformation ----------------------------
   (function tails() {
-    var scene = document.querySelector('.tails-scene');
-    var paths = prepareDraw(scene);
-    var tailGroups = scene.querySelectorAll('.tail-inner');
+    var spirit = document.querySelector('.tails-spirit');
+    var spiritImgs = spirit.querySelectorAll('img');
+    var petals = document.querySelectorAll('#tailsExtra .petal');
     var listItems = document.querySelectorAll('#tailsList li');
     var num = document.getElementById('tailNum');
 
-    // tails start folded
-    tailGroups.forEach(function (g) {
+    gsap.set(spiritImgs, { opacity: 0 });
+    petals.forEach(function (g) {
       g.setAttribute('transform', 'scale(0.001)');
       g.style.opacity = '0';
     });
@@ -631,6 +559,8 @@
       });
     }
 
+    var wipe = { p: 55 };
+
     var tl = gsap.timeline({
       scrollTrigger: {
         trigger: '.tails-pin',
@@ -639,38 +569,47 @@
         pin: true,
         scrub: 1,
         onUpdate: function (self) {
-          var p = Math.max(0, self.progress - 0.12) / 0.85;
+          var p = Math.max(0, self.progress - 0.1) / 0.85;
           setCount(Math.max(0, Math.min(8, Math.floor(p * 9))));
         }
       }
     });
 
-    // the fox draws itself first
-    paths.forEach(function (p) {
-      tl.to(p, { strokeDashoffset: 0, duration: 0.35, ease: 'none' }, 0);
+    // the fox condenses…
+    spiritImgs.forEach(function (img, i) {
+      var end = LAYER_OPACITY[img.className] || 1;
+      tl.to(img, { opacity: end, duration: 0.5, ease: 'none' }, i * 0.12);
     });
 
-    // then each tail unfurls
-    tailGroups.forEach(function (g, i) {
+    // …then the fan sweeps open across the drawn tails…
+    tl.to(wipe, {
+      p: 112, duration: 6.4, ease: 'none',
+      onUpdate: function () {
+        spirit.style.setProperty('--wipe', wipe.p + '%');
+      }
+    }, 0.9);
+
+    // …and the last three tails unfurl beyond the ink
+    petals.forEach(function (g, i) {
       var proxy = { v: 0.001 };
       tl.to(proxy, {
-        v: 1, duration: 0.55, ease: 'power2.out',
+        v: 1, duration: 0.8, ease: 'power2.out',
         onUpdate: function () {
           g.setAttribute('transform', 'scale(' + proxy.v + ')');
-          g.style.opacity = Math.min(1, proxy.v * 1.6);
+          g.style.opacity = Math.min(1, proxy.v * 1.4);
         }
-      }, 0.5 + i * 0.32);
+      }, 5.0 + i * 0.85);
     });
 
-    tl.to({}, { duration: 0.4 });
+    tl.to({}, { duration: 0.5 });
   })();
 
   // ---- 06 · moon pool: arrival -------------------------------------
-  gsap.fromTo('.pool-bg', { opacity: 0 }, {
-    opacity: 1, ease: 'none',
-    scrollTrigger: { trigger: '#pool', start: 'top 85%', end: 'top 25%', scrub: 1 }
+  // the descending spirit floats gently above its reflection
+  gsap.to('.pool-fox', {
+    y: -12, duration: 3.2, yoyo: true, repeat: -1, ease: 'sine.inOut'
   });
-  gsap.fromTo('.pool-fox-wrap', { y: 50 }, {
+  gsap.fromTo('.pool-fox-wrap', { y: -90 }, {
     y: 0, ease: 'none',
     scrollTrigger: { trigger: '#pool', start: 'top bottom', end: 'center center', scrub: 1 }
   });
@@ -710,7 +649,6 @@
       });
     });
 
-    // cursor halo
     var halo = document.querySelector('.cursor-halo');
     var hx = -100, hy = -100, tx = -100, ty = -100, shown = false;
     window.addEventListener('mousemove', function (e) {
@@ -724,7 +662,7 @@
     });
   })();
 
-  // keep measurements honest once fonts arrive
+  // keep measurements honest once fonts and images arrive
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { ScrollTrigger.refresh(); });
   }

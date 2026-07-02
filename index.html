@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
 
-  <link rel="preload" as="image" href="assets/fox-glass.webp">
-  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="preload" as="image" href="assets/kitsune/sitting.svg">
+  <link rel="stylesheet" href="css/styles.css?v=4">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -21,6 +21,8 @@
 <body>
 
   <!-- ambient layers -->
+  <video class="journey" id="journey" muted playsinline preload="auto" aria-hidden="true"></video>
+  <div class="journey-veil" aria-hidden="true"></div>
   <canvas id="foxfire" aria-hidden="true"></canvas>
   <div class="tint" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
@@ -69,7 +71,7 @@
           <p class="hero-eyebrow" data-reveal>A spirit portfolio · Ethan Tiong</p>
           <h1 class="hero-title">KYŪBI</h1>
           <p class="hero-sub" data-reveal>One fox. Nine tails.<br>Follow the spirit through the dark.</p>
-          <div class="hero-relic" aria-hidden="true"></div>
+          <div class="hero-spirit spirit-mount" data-kfox="sitting" aria-hidden="true"></div>
         </div>
         <div class="hero-cue" aria-hidden="true">
           <span>Scroll</span>
@@ -97,14 +99,13 @@
             <div><dt>Status</dt><dd>Open to wander</dd></div>
           </dl>
         </div>
-        <div class="origin-fox" data-fox="seated" aria-hidden="true"></div>
+        <div class="origin-fox spirit-mount" data-kfox="bowing" aria-hidden="true"></div>
       </div>
     </section>
 
     <!-- 02 · THE HUNT (horizontal) -->
     <section class="chapter hunt" id="hunt">
       <div class="hunt-pin">
-        <div class="hunt-bg" aria-hidden="true"></div>
         <div class="hunt-track" id="huntTrack">
           <div class="hunt-intro">
             <p class="ch-label"><span class="ch-num">02</span><span class="ch-rule"></span><span class="ch-name">The Hunt</span></p>
@@ -140,7 +141,7 @@
             <p>The fox never chases<br>what it hasn't studied.</p>
           </div>
         </div>
-        <div class="hunt-fox" data-fox="stalk" aria-hidden="true"></div>
+        <div class="hunt-fox spirit-mount" data-kfox="walking" aria-hidden="true"></div>
         <svg class="hunt-ground" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 2"><path id="huntGround" d="M 0 1 L 100 1" /></svg>
       </div>
     </section>
@@ -152,7 +153,7 @@
           <p class="ch-label"><span class="ch-num">03</span><span class="ch-rule"></span><span class="ch-name">The Leap</span></p>
           <h2 class="ch-title">Selected works,<br><em>caught mid-air.</em></h2>
         </header>
-        <div class="works-fox" data-fox="leap" aria-hidden="true"></div>
+        <div class="works-fox spirit-mount" data-kfox="diving" aria-hidden="true"></div>
         <div class="relics">
           <article class="relic" data-relic>
             <div class="relic-shard" aria-hidden="true"></div>
@@ -198,7 +199,7 @@
           <h2 class="ch-title" data-reveal>Not every night<br><em>is a hunt.</em></h2>
           <p class="fire-note" data-reveal>Some nights are just for the fire — the things I do when nobody is paying for it.</p>
         </header>
-        <div class="fire-fox" data-fox="gaze" aria-hidden="true"></div>
+        <div class="fire-fox spirit-mount" data-kfox="howling" aria-hidden="true"></div>
         <ul class="fire-list">
           <li data-reveal><span class="fire-name">Film photography</span><span class="fire-desc">35mm, mostly after midnight.</span></li>
           <li data-reveal><span class="fire-name">Ramen cartography</span><span class="fire-desc">Mapping the city one bowl at a time.</span></li>
@@ -215,7 +216,10 @@
           <p class="ch-label"><span class="ch-num">05</span><span class="ch-rule"></span><span class="ch-name">Transformation</span></p>
           <h2 class="ch-title">Every tail<br><em>is earned.</em></h2>
         </header>
-        <div class="tails-scene" data-fox="fan" aria-hidden="true"></div>
+        <div class="tails-scene" aria-hidden="true">
+          <div class="tails-extra" id="tailsExtra"></div>
+          <div class="tails-spirit spirit-mount" data-kfox="sitting"></div>
+        </div>
         <ol class="tails-list" id="tailsList">
           <li><span class="tl-year">2018</span><span class="tl-mark">First line of code</span></li>
           <li><span class="tl-year">2019</span><span class="tl-mark">First design system</span></li>
@@ -233,11 +237,10 @@
 
     <!-- 06 · THE MOON POOL (contact) -->
     <section class="chapter pool" id="pool">
-      <div class="pool-bg" aria-hidden="true"></div>
       <canvas id="poolCanvas" aria-hidden="true"></canvas>
       <div class="pool-fox-wrap" aria-hidden="true">
-        <div class="pool-fox" data-fox="pool"></div>
-        <div class="pool-fox pool-reflection" data-fox="pool"></div>
+        <div class="pool-fox spirit-mount" data-kfox="descending"></div>
+        <div class="pool-reflection spirit-mount" data-kfox="descending"></div>
       </div>
       <div class="pool-content">
         <p class="ch-label" data-reveal><span class="ch-num">06</span><span class="ch-rule"></span><span class="ch-name">The Moon Pool</span></p>
@@ -263,6 +266,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-  <script src="js/main.js?v=2"></script>
+  <script src="js/main.js?v=4"></script>
 </body>
 </html>
