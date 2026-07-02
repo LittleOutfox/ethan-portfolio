@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KYŪBI — Ethan Tiong · A Nine-Tailed Portfolio</title>
+  <meta name="description" content="A moonlit spirit journey — one fox, nine tails, and everything Ethan Tiong makes along the way.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
+
+  <link rel="preload" as="image" href="assets/fox-glass.webp">
+  <link rel="stylesheet" href="css/styles.css?v=2">
+  <script>
+    document.documentElement.classList.replace('no-js', 'js');
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  </script>
+</head>
+<body>
+
+  <!-- ambient layers -->
+  <canvas id="foxfire" aria-hidden="true"></canvas>
+  <div class="tint" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor-halo" aria-hidden="true"></div>
+
+  <!-- intro veil -->
+  <div class="veil" id="veil" role="dialog" aria-label="Introduction">
+    <div class="veil-inner">
+      <span class="veil-kanji" aria-hidden="true">狐</span>
+      <p class="veil-word">KYŪBI <span aria-hidden="true">— 九尾</span></p>
+      <p class="veil-line">Follow the spirit through the dark.</p>
+      <button class="veil-enter" id="veilEnter">Enter<span class="veil-enter-rule"></span></button>
+    </div>
+  </div>
+
+  <!-- fixed chrome -->
+  <header class="nav">
+    <a class="nav-mark" href="#top" aria-label="Back to top">
+      <span class="nav-kanji" aria-hidden="true">九尾</span>
+      <span class="nav-word">KYŪBI</span>
+    </a>
+    <nav class="nav-links" aria-label="Chapters">
+      <a href="#origin" data-nav="origin">Origin</a>
+      <a href="#hunt" data-nav="hunt">Hunt</a>
+      <a href="#works" data-nav="works">Works</a>
+      <a href="#fire" data-nav="fire">Fire</a>
+      <a href="#tails" data-nav="tails">Tails</a>
+      <a href="#pool" data-nav="pool">Contact</a>
+    </nav>
+  </header>
+
+  <aside class="rail" aria-hidden="true">
+    <span class="rail-label">巡る</span>
+    <span class="rail-line"><span class="rail-fill" id="railFill"></span></span>
+    <span class="rail-count" id="railCount">00</span>
+  </aside>
+
+  <main id="top">
+
+    <!-- 00 · AWAKENING -->
+    <section class="hero" id="hero">
+      <div class="hero-pin">
+        <div class="hero-zoom">
+          <div class="hero-moon" aria-hidden="true"></div>
+          <span class="hero-watermark" aria-hidden="true">九尾</span>
+          <p class="hero-eyebrow" data-reveal>A spirit portfolio · Ethan Tiong</p>
+          <h1 class="hero-title">KYŪBI</h1>
+          <p class="hero-sub" data-reveal>One fox. Nine tails.<br>Follow the spirit through the dark.</p>
+          <div class="hero-relic" aria-hidden="true"></div>
+        </div>
+        <div class="hero-cue" aria-hidden="true">
+          <span>Scroll</span>
+          <span class="hero-cue-line"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 01 · ORIGIN -->
+    <section class="chapter origin" id="origin">
+      <span class="edge-kanji" aria-hidden="true">目覚め</span>
+      <div class="ch-grid">
+        <header class="ch-head">
+          <p class="ch-label" data-reveal>
+            <span class="ch-num">01</span><span class="ch-rule"></span><span class="ch-name">Origin</span>
+          </p>
+          <h2 class="ch-title" data-reveal>The fox wakes,<br><em>and remembers its name.</em></h2>
+        </header>
+        <div class="origin-body">
+          <p class="lead" data-reveal>I'm Ethan — a designer-engineer who builds quiet, deliberate things for the web. I care about restraint, about motion that means something, and about the half-second where an interface becomes a feeling.</p>
+          <p data-reveal>Most of my work lives where craft and code overlap: brand worlds, interactive stories, small tools with good manners. This site is a map of that territory — told the only way a fox knows how. <span class="mut">(Filler text — the real story goes here.)</span></p>
+          <dl class="origin-facts" data-reveal>
+            <div><dt>Based</dt><dd>Singapore · GMT+8</dd></div>
+            <div><dt>Practice</dt><dd>Design × Engineering</dd></div>
+            <div><dt>Status</dt><dd>Open to wander</dd></div>
+          </dl>
+        </div>
+        <div class="origin-fox" data-fox="seated" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- 02 · THE HUNT (horizontal) -->
+    <section class="chapter hunt" id="hunt">
+      <div class="hunt-pin">
+        <div class="hunt-bg" aria-hidden="true"></div>
+        <div class="hunt-track" id="huntTrack">
+          <div class="hunt-intro">
+            <p class="ch-label"><span class="ch-num">02</span><span class="ch-rule"></span><span class="ch-name">The Hunt</span></p>
+            <h2 class="ch-title">Skills, tracked<br><em>in the dark.</em></h2>
+            <p class="hunt-hint" aria-hidden="true">Keep scrolling →</p>
+          </div>
+          <article class="skill">
+            <span class="skill-kanji" aria-hidden="true">壱</span>
+            <h3>Design</h3>
+            <p>Interfaces with intent. Systems before screens, always.</p>
+          </article>
+          <article class="skill">
+            <span class="skill-kanji" aria-hidden="true">弐</span>
+            <h3>Engineering</h3>
+            <p>TypeScript, WebGL, and other sharp teeth.</p>
+          </article>
+          <article class="skill">
+            <span class="skill-kanji" aria-hidden="true">参</span>
+            <h3>Motion &amp; 3D</h3>
+            <p>Choreography for pixels. Nothing moves without a reason.</p>
+          </article>
+          <article class="skill">
+            <span class="skill-kanji" aria-hidden="true">肆</span>
+            <h3>Prototyping</h3>
+            <p>Cardboard, code — whatever answers the question fastest.</p>
+          </article>
+          <article class="skill">
+            <span class="skill-kanji" aria-hidden="true">伍</span>
+            <h3>Story</h3>
+            <p>Every project is a hunt: a beginning, a chase, an end.</p>
+          </article>
+          <div class="hunt-outro">
+            <p>The fox never chases<br>what it hasn't studied.</p>
+          </div>
+        </div>
+        <div class="hunt-fox" data-fox="stalk" aria-hidden="true"></div>
+        <svg class="hunt-ground" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 2"><path id="huntGround" d="M 0 1 L 100 1" /></svg>
+      </div>
+    </section>
+
+    <!-- 03 · THE LEAP (works corridor) -->
+    <section class="chapter works" id="works">
+      <div class="works-pin">
+        <header class="works-head">
+          <p class="ch-label"><span class="ch-num">03</span><span class="ch-rule"></span><span class="ch-name">The Leap</span></p>
+          <h2 class="ch-title">Selected works,<br><em>caught mid-air.</em></h2>
+        </header>
+        <div class="works-fox" data-fox="leap" aria-hidden="true"></div>
+        <div class="relics">
+          <article class="relic" data-relic>
+            <div class="relic-shard" aria-hidden="true"></div>
+            <p class="relic-meta">Interactive installation · 2025</p>
+            <h3 class="relic-title">Lantern</h3>
+            <p class="relic-line">A room that listens, and answers in light.</p>
+            <p class="relic-role">Design &amp; build</p>
+          </article>
+          <article class="relic" data-relic>
+            <div class="relic-shard" aria-hidden="true"></div>
+            <p class="relic-meta">E-commerce experience · 2024</p>
+            <h3 class="relic-title">Paper Moon</h3>
+            <p class="relic-line">Retail, reimagined as a quiet ritual.</p>
+            <p class="relic-role">Art direction &amp; front-end</p>
+          </article>
+          <article class="relic" data-relic>
+            <div class="relic-shard" aria-hidden="true"></div>
+            <p class="relic-meta">WebGL experiment · 2024</p>
+            <h3 class="relic-title">Hollow</h3>
+            <p class="relic-line">A forest that grows as you type.</p>
+            <p class="relic-role">Everything, badly at first</p>
+          </article>
+          <article class="relic" data-relic>
+            <div class="relic-shard" aria-hidden="true"></div>
+            <p class="relic-meta">Brand &amp; site · 2023</p>
+            <h3 class="relic-title">Ember</h3>
+            <p class="relic-line">An identity for a studio that never sleeps.</p>
+            <p class="relic-role">Design &amp; build</p>
+          </article>
+        </div>
+        <p class="works-count" aria-hidden="true"><span id="relicNum">01</span> / 04</p>
+      </div>
+    </section>
+
+    <!-- 04 · FOXFIRE (hobbies) -->
+    <section class="chapter fire" id="fire">
+      <span class="edge-kanji" aria-hidden="true">狐火</span>
+      <div class="ch-grid">
+        <header class="ch-head">
+          <p class="ch-label" data-reveal>
+            <span class="ch-num">04</span><span class="ch-rule"></span><span class="ch-name">Foxfire</span>
+          </p>
+          <h2 class="ch-title" data-reveal>Not every night<br><em>is a hunt.</em></h2>
+          <p class="fire-note" data-reveal>Some nights are just for the fire — the things I do when nobody is paying for it.</p>
+        </header>
+        <div class="fire-fox" data-fox="gaze" aria-hidden="true"></div>
+        <ul class="fire-list">
+          <li data-reveal><span class="fire-name">Film photography</span><span class="fire-desc">35mm, mostly after midnight.</span></li>
+          <li data-reveal><span class="fire-name">Ramen cartography</span><span class="fire-desc">Mapping the city one bowl at a time.</span></li>
+          <li data-reveal><span class="fire-name">Analog synthesizers</span><span class="fire-desc">Patch cables and patience.</span></li>
+          <li data-reveal><span class="fire-name">Aimless walks</span><span class="fire-desc">Where the good ideas hide.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 05 · NINE TAILS (transformation) -->
+    <section class="chapter tails" id="tails">
+      <div class="tails-pin">
+        <header class="ch-head tails-head">
+          <p class="ch-label"><span class="ch-num">05</span><span class="ch-rule"></span><span class="ch-name">Transformation</span></p>
+          <h2 class="ch-title">Every tail<br><em>is earned.</em></h2>
+        </header>
+        <div class="tails-scene" data-fox="fan" aria-hidden="true"></div>
+        <ol class="tails-list" id="tailsList">
+          <li><span class="tl-year">2018</span><span class="tl-mark">First line of code</span></li>
+          <li><span class="tl-year">2019</span><span class="tl-mark">First design system</span></li>
+          <li><span class="tl-year">2020</span><span class="tl-mark">Studio apprenticeship</span></li>
+          <li><span class="tl-year">2021</span><span class="tl-mark">First site shipped</span></li>
+          <li><span class="tl-year">2022</span><span class="tl-mark">The agency years</span></li>
+          <li><span class="tl-year">2023</span><span class="tl-mark">Award nights</span></li>
+          <li><span class="tl-year">2024</span><span class="tl-mark">Independent practice</span></li>
+          <li><span class="tl-year">2025</span><span class="tl-mark">The good work</span></li>
+          <li><span class="tl-year">2026</span><span class="tl-mark">Still hungry</span></li>
+        </ol>
+        <p class="tails-count" aria-hidden="true"><span id="tailNum">01</span> / 09 <span class="tails-count-kanji">尾</span></p>
+      </div>
+    </section>
+
+    <!-- 06 · THE MOON POOL (contact) -->
+    <section class="chapter pool" id="pool">
+      <div class="pool-bg" aria-hidden="true"></div>
+      <canvas id="poolCanvas" aria-hidden="true"></canvas>
+      <div class="pool-fox-wrap" aria-hidden="true">
+        <div class="pool-fox" data-fox="pool"></div>
+        <div class="pool-fox pool-reflection" data-fox="pool"></div>
+      </div>
+      <div class="pool-content">
+        <p class="ch-label" data-reveal><span class="ch-num">06</span><span class="ch-rule"></span><span class="ch-name">The Moon Pool</span></p>
+        <h2 class="ch-title" data-reveal>The water is still.<br><em>Say something.</em></h2>
+        <div class="pool-card" data-reveal>
+          <a class="pool-mail" href="mailto:ethanwtiong@outlook.com">ethanwtiong@outlook.com</a>
+          <div class="pool-links">
+            <a href="#" rel="noopener">GitHub</a>
+            <a href="#" rel="noopener">LinkedIn</a>
+            <a href="#" rel="noopener">Instagram</a>
+          </div>
+          <p class="pool-whisper">The fox will find you. <span aria-hidden="true">狐はあなたを見つける</span></p>
+        </div>
+      </div>
+      <footer class="footer">
+        <p>© 2026 Ethan Tiong · Designed &amp; built by hand</p>
+        <p aria-hidden="true">狐に導かれて</p>
+      </footer>
+    </section>
+
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+  <script src="js/main.js?v=2"></script>
+</body>
+</html>
