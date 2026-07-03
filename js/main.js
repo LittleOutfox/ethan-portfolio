@@ -67,7 +67,7 @@
     if (reducedQuery.matches) { v.remove(); return; }
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests
-    var SRC = 'assets/journey.mp4?v=2';
+    var SRC = 'assets/journey.mp4?v=3';
     fetch(SRC)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
       .then(function (b) { v.src = URL.createObjectURL(b); })
@@ -194,67 +194,74 @@
   })();
 
   /* ------------------------------------------------------------
-     5 · moon pool — still water, easily disturbed
+     5 · the snowfield — quiet snow, stirred by your presence
      ------------------------------------------------------------ */
 
-  (function moonPool() {
+  (function snowfall() {
     var canvas = document.getElementById('poolCanvas');
     var section = document.getElementById('pool');
     if (!canvas || !section) return;
+    if (reducedQuery.matches) { canvas.remove(); return; }
     var ctx = canvas.getContext('2d');
     var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    var W = 0, H = 0, visible = false;
-    var ripples = [];
-    var reduced = reducedQuery.matches;
+    var W = 0, H = 0, flakes = [], visible = false;
+    var mx = -9999, my = -9999;
+
+    function spawn(anywhere) {
+      return {
+        x: Math.random() * W,
+        y: anywhere ? Math.random() * H : -6,
+        r: 0.6 + Math.random() * 1.9,
+        vy: 0.25 + Math.random() * 0.6,
+        sway: Math.random() * Math.PI * 2,
+        swaySpeed: 0.004 + Math.random() * 0.008,
+        a: 0.2 + Math.random() * 0.5
+      };
+    }
 
     function resize() {
       var rect = canvas.getBoundingClientRect();
       W = rect.width; H = rect.height;
       canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var target = Math.max(50, Math.min(150, Math.round(W * H / 18000)));
+      while (flakes.length < target) flakes.push(spawn(true));
+      flakes.length = target;
     }
 
-    function addRipple(x, y, strength) {
-      if (ripples.length > 26) ripples.shift();
-      ripples.push({ x: x, y: y, r: 4, v: 0.9 + strength, a: 0.5 * (0.6 + strength) });
-    }
-
-    var lastMx = -999, lastMy = -999;
     section.addEventListener('mousemove', function (e) {
       var rect = canvas.getBoundingClientRect();
-      var x = e.clientX - rect.left, y = e.clientY - rect.top;
-      if (y < 0 || y > H) return;
-      if (Math.hypot(x - lastMx, y - lastMy) > 30) {
-        addRipple(x, y, 0.4);
-        lastMx = x; lastMy = y;
-      }
+      mx = e.clientX - rect.left; my = e.clientY - rect.top;
     });
-
-    var autoTimer = 0;
+    section.addEventListener('mouseleave', function () { mx = -9999; my = -9999; });
 
     function frame() {
       if (!visible) { requestAnimationFrame(frame); return; }
-
-      autoTimer -= 1;
-      if (autoTimer <= 0 && !reduced) {
-        addRipple(W * (0.15 + Math.random() * 0.7), H * (0.1 + Math.random() * 0.6), 0.15);
-        autoTimer = 130 + Math.random() * 120;
-      }
-
       ctx.clearRect(0, 0, W, H);
-
-      for (var j = ripples.length - 1; j >= 0; j--) {
-        var r2 = ripples[j];
-        r2.r += r2.v;
-        r2.a *= 0.972;
-        if (r2.a < 0.01) { ripples.splice(j, 1); continue; }
-        ctx.strokeStyle = 'rgba(200,208,244,' + (r2.a * 0.55).toFixed(3) + ')';
-        ctx.lineWidth = 1;
+      ctx.fillStyle = 'rgba(236,238,248,1)';
+      for (var i = 0; i < flakes.length; i++) {
+        var f = flakes[i];
+        f.sway += f.swaySpeed;
+        f.y += f.vy;
+        f.x += Math.sin(f.sway) * 0.3;
+        // a passing hand stirs the snow
+        var dx = f.x - mx, dy = f.y - my;
+        var d2 = dx * dx + dy * dy;
+        if (d2 < 8100 && d2 > 1) {
+          var d = Math.sqrt(d2);
+          var push = (1 - d / 90) * 1.4;
+          f.x += (dx / d) * push;
+          f.y += (dy / d) * push * 0.5;
+        }
+        if (f.y > H + 8) { flakes[i] = spawn(false); continue; }
+        if (f.x < -10) f.x = W + 8;
+        if (f.x > W + 10) f.x = -8;
+        ctx.globalAlpha = f.a;
         ctx.beginPath();
-        ctx.ellipse(r2.x, r2.y, r2.r, r2.r * 0.32, 0, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fill();
       }
-
+      ctx.globalAlpha = 1;
       requestAnimationFrame(frame);
     }
 
@@ -469,8 +476,9 @@
       trigger: '.hunt-pin', start: 'top 70%', once: true,
       onEnter: function () { foxTl.play(); }
     });
+    // it stays at the edge, always a little further gone
     gsap.fromTo(foxMount, { x: 0 }, {
-      x: function () { return window.innerWidth * 0.42; },
+      x: function () { return window.innerWidth * 0.09; },
       ease: 'none',
       scrollTrigger: {
         trigger: '.hunt-pin', start: 'top top',
@@ -516,13 +524,15 @@
         end: '+=340%',
         pin: true,
         scrub: 1,
-        invalidateOnRefresh: true,
-        onUpdate: function () {
-          var idx = Math.max(1, Math.min(relics.length, Math.floor((tl.time() - 0.8) / 2)));
-          var txt = '0' + idx;
-          if (num.textContent !== txt) num.textContent = txt;
-        }
+        invalidateOnRefresh: true
       }
+    });
+    // counter follows the timeline playhead, not raw scroll —
+    // the scrub keeps easing after scrolling stops
+    tl.eventCallback('onUpdate', function () {
+      var idx = Math.max(1, Math.min(relics.length, Math.floor((tl.time() - 0.8) / 2)));
+      var txt = '0' + idx;
+      if (num.textContent !== txt) num.textContent = txt;
     });
 
     // the fox dives down past the heading
@@ -601,12 +611,12 @@
         start: 'top top',
         end: '+=320%',
         pin: true,
-        scrub: 1,
-        onUpdate: function (self) {
-          var p = Math.max(0, self.progress - 0.1) / 0.85;
-          setCount(Math.max(0, Math.min(8, Math.floor(p * 9))));
-        }
+        scrub: 1
       }
+    });
+    tl.eventCallback('onUpdate', function () {
+      var p = Math.max(0, tl.progress() - 0.1) / 0.85;
+      setCount(Math.max(0, Math.min(8, Math.floor(p * 9))));
     });
 
     // the fox condenses…
@@ -638,14 +648,11 @@
     tl.to({}, { duration: 0.5 });
   })();
 
-  // ---- 06 · moon pool: arrival -------------------------------------
-  // the descending spirit floats gently above its reflection
-  gsap.to('.pool-fox', {
-    y: -12, duration: 3.2, yoyo: true, repeat: -1, ease: 'sine.inOut'
-  });
-  gsap.fromTo('.pool-fox-wrap', { y: -90 }, {
-    y: 0, ease: 'none',
-    scrollTrigger: { trigger: '#pool', start: 'top bottom', end: 'center center', scrub: 1 }
+  // ---- 06 · the snowfield: the plunge -------------------------------
+  // scrolling in drives the fox headfirst into the snowy hill
+  gsap.fromTo('.pool-fox-wrap', { y: -170 }, {
+    y: 0, ease: 'power1.in',
+    scrollTrigger: { trigger: '#pool', start: 'top bottom', end: 'center 45%', scrub: 1 }
   });
 
   // ---- chrome: rail, nav state, cursor ------------------------------

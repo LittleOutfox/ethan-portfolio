@@ -123,7 +123,7 @@ html.no-js .veil { display: none; }
 }
 
 .veil-spirit {
-  width: clamp(90px, 13vh, 130px);
+  width: clamp(110px, 16vh, 160px);
   margin: 0 auto 4vh;
   animation: veil-float 6s ease-in-out infinite;
 }
@@ -346,8 +346,8 @@ main { position: relative; z-index: 4; }
 }
 
 .hero-spirit {
-  width: clamp(300px, 52vh, 520px);
-  margin-top: 2.5vh;
+  width: clamp(340px, 60vh, 620px);
+  margin-top: 2vh;
 }
 
 .hero-cue {
@@ -396,7 +396,7 @@ main { position: relative; z-index: 4; }
 }
 .origin-facts dd { font-family: var(--serif); font-size: 17px; color: var(--moon); }
 
-.origin-fox { width: min(32vw, 430px); justify-self: center; margin-top: 4vh; }
+.origin-fox { width: min(38vw, 520px); justify-self: center; margin-top: 4vh; }
 
 /* ------------------------------------------------------------
    02 · the hunt (horizontal)
@@ -447,11 +447,15 @@ main { position: relative; z-index: 4; }
   color: var(--moon-dim);
 }
 
+/* the walking fox is cut off on its right edge by design —
+   it sits flush against the viewport edge, forever leaving */
 .hunt-fox {
-  position: absolute; bottom: 8vh; left: 5vw;
-  width: clamp(240px, 28vw, 390px);
+  position: absolute; bottom: 7vh; right: 0;
+  width: clamp(300px, 34vw, 480px);
   pointer-events: none;
+  z-index: 0;
 }
+.hunt-track { position: relative; z-index: 1; }
 
 .hunt-ground {
   position: absolute; bottom: 11vh; left: 0;
@@ -478,7 +482,7 @@ main { position: relative; z-index: 4; }
 
 .works-fox {
   position: absolute; right: 12vw; top: 8vh;
-  width: clamp(160px, 17vw, 250px);
+  width: clamp(200px, 21vw, 310px);
   pointer-events: none;
   will-change: transform, opacity;
 }
@@ -545,7 +549,7 @@ html.js:not(.reduced) .relic { opacity: 0; }
 
 .fire-note { margin-top: 3.4vh; max-width: 38ch; color: var(--moon-dim); font-size: 14px; }
 
-.fire-fox { width: min(28vw, 360px); justify-self: center; margin-top: 8vh; }
+.fire-fox { width: min(34vw, 440px); justify-self: center; margin-top: 8vh; }
 .fire-fox img.sharp { filter: invert(1) sepia(0.4) saturate(1.4) brightness(1.22); }
 .fire-fox img.bloom { filter: invert(1) sepia(0.55) saturate(1.8) brightness(1.5) blur(5px); }
 .fire-fox img.bloom2 { filter: invert(1) sepia(0.6) saturate(2) brightness(1.8) blur(16px); }
@@ -580,7 +584,7 @@ html.js:not(.reduced) .relic { opacity: 0; }
 .tails-scene {
   position: absolute; left: 4vw; top: 50%;
   transform: translateY(-46%);
-  width: min(52vw, 660px);
+  width: min(58vw, 740px);
 }
 
 .tails-spirit {
@@ -641,14 +645,14 @@ html.js:not(.reduced) .relic { opacity: 0; }
 
 #poolCanvas {
   position: absolute; left: 0; bottom: 0; z-index: 1;
-  width: 100%; height: 52%;
+  width: 100%; height: 100%;
   pointer-events: none;
 }
 
 
 .pool-fox-wrap {
-  position: absolute; right: 13vw; bottom: 31%; z-index: 2;
-  width: min(21vw, 280px);
+  position: absolute; right: 22vw; bottom: 10%; z-index: 2;
+  width: min(25vw, 330px);
   pointer-events: none;
 }
 /* the plunging fox is drawn with very fine lines — lift it */
@@ -656,19 +660,6 @@ html.js:not(.reduced) .relic { opacity: 0; }
 .pool-fox-wrap img.bloom { filter: invert(1) brightness(2.4) blur(4px); opacity: 0.8; }
 .pool-fox-wrap img.bloom2 { filter: invert(1) brightness(2.8) blur(14px); opacity: 0.5; }
 .pool-fox { width: 100%; }
-.pool-reflection {
-  position: absolute; top: 99%; left: 0; width: 100%;
-  transform: scaleY(-1);
-  opacity: 0.22;
-  filter: blur(3px);
-  -webkit-mask-image: linear-gradient(to top, transparent 30%, rgba(0,0,0,0.9) 100%);
-  mask-image: linear-gradient(to top, transparent 30%, rgba(0,0,0,0.9) 100%);
-  animation: waver 7s ease-in-out infinite;
-}
-@keyframes waver {
-  0%, 100% { transform: scaleY(-1) skewX(0deg); }
-  50% { transform: scaleY(-1.03) skewX(0.8deg); }
-}
 
 .pool-content { position: relative; z-index: 3; padding: 0 var(--pad-x); max-width: 780px; }
 
@@ -799,5 +790,4 @@ html.reduced .tails-spirit, html.no-js .tails-spirit {
 html.reduced .grain { animation: none; }
 html.reduced .veil-spirit { animation: none; }
 html.reduced .hero-cue-line::after { animation: none; }
-html.reduced .pool-reflection { animation: none; }
 html.reduced .cursor-halo { display: none; }
