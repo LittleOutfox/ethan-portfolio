@@ -67,7 +67,7 @@
     if (reducedQuery.matches) { v.remove(); return; }
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests
-    var SRC = 'assets/journey.mp4';
+    var SRC = 'assets/journey.mp4?v=2';
     fetch(SRC)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
       .then(function (b) { v.src = URL.createObjectURL(b); })
@@ -357,9 +357,32 @@
     });
   });
 
-  // ---- generic reveals (outside hero) ---------------------------
+  // ---- typographic choreography ----------------------------------
+  // chapter titles rise line-by-line out of masked slots
+  document.querySelectorAll('.ch-title').forEach(function (t) {
+    var parts = t.innerHTML.split(/<br\s*\/?>/i);
+    t.innerHTML = parts.map(function (p) {
+      return '<span class="tl"><span class="tl-i">' + p + '</span></span>';
+    }).join('');
+    gsap.fromTo(t.querySelectorAll('.tl-i'),
+      { yPercent: 108 },
+      {
+        yPercent: 0, duration: 1.5, ease: 'power4.out', stagger: 0.14,
+        scrollTrigger: { trigger: t, start: 'top 85%', once: true }
+      });
+  });
+
+  // hairline rules draw themselves in
+  gsap.utils.toArray('.ch-rule').forEach(function (r) {
+    gsap.fromTo(r, { scaleX: 0 }, {
+      scaleX: 1, duration: 1.4, ease: 'power3.inOut',
+      scrollTrigger: { trigger: r, start: 'top 88%', once: true }
+    });
+  });
+
+  // ---- generic reveals (outside hero, titles handled above) ------
   gsap.utils.toArray('[data-reveal]').forEach(function (el) {
-    if (el.closest('#hero')) return;
+    if (el.closest('#hero') || el.classList.contains('ch-title')) return;
     gsap.fromTo(el, { y: 40, opacity: 0 }, {
       y: 0, opacity: 1, duration: 1.3, ease: 'power3.out',
       scrollTrigger: { trigger: el, start: 'top 87%', once: true }
@@ -379,17 +402,26 @@
     var zoom = document.querySelector('.hero-zoom');
     var spirit = document.querySelector('.hero-spirit');
 
+    // the wordmark arrives letter by letter
+    var ht = document.querySelector('.hero-title');
+    ht.innerHTML = Array.from(ht.textContent).map(function (c) {
+      return '<span class="hc">' + c + '</span>';
+    }).join('');
+
     gsap.set('.hero-eyebrow, .hero-sub', { opacity: 0, y: 24 });
-    gsap.set('.hero-title', { opacity: 0, scale: 0.965, filter: 'blur(16px)' });
+    gsap.set('.hero-title', { opacity: 0, filter: 'blur(16px)' });
     gsap.set('.hero-moon', { opacity: 0, scale: 0.85 });
 
     var entrance = gsap.timeline({ paused: true });
     entrance
       .to('.hero-moon', { opacity: 1, scale: 1, duration: 2.4, ease: 'power2.out' }, 0)
-      .to('.hero-title', { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.9, ease: 'expo.out' }, 0.2)
-      .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.7)
-      .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.9)
-      .add(condense(spirit, { y: 20 }).play(), 0.8);
+      .to('.hero-title', { opacity: 1, filter: 'blur(0px)', duration: 1.9, ease: 'expo.out' }, 0.2)
+      .fromTo('.hero-title .hc',
+        { yPercent: 46, opacity: 0 },
+        { yPercent: 0, opacity: 1, stagger: 0.06, duration: 1.5, ease: 'expo.out' }, 0.25)
+      .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.8)
+      .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 1.0)
+      .add(condense(spirit, { y: 20 }).play(), 0.9);
     window.__heroEntrance = entrance;
 
     gsap.timeline({
@@ -402,6 +434,7 @@
       }
     })
       .to(zoom, { scale: 1.55, ease: 'power1.in' }, 0)
+      .to('.hero-title', { letterSpacing: '0.22em', ease: 'power1.in' }, 0)
       .to(zoom, { opacity: 0, ease: 'none' }, 0.45)
       .to('.hero-cue', { opacity: 0, ease: 'none', duration: 0.2 }, 0);
   })();
@@ -510,12 +543,13 @@
         {
           xPercent: -50, yPercent: -50,
           x: function () { return window.innerWidth * off; },
-          scale: 0.55, opacity: 0
+          scale: 0.55, opacity: 0,
+          rotationX: 14, rotationY: off * 60
         },
-        { scale: 1, opacity: 1, duration: 0.85, ease: 'power1.inOut' },
+        { scale: 1, opacity: 1, rotationX: 0, rotationY: 0, duration: 0.85, ease: 'power1.inOut' },
         at);
       tl.to(relic,
-        { scale: 1.45, opacity: 0, duration: 0.7, ease: 'power1.in' },
+        { scale: 1.45, opacity: 0, rotationX: -10, duration: 0.7, ease: 'power1.in' },
         at + 1.7);
     });
     tl.to({}, { duration: 0.4 });

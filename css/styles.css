@@ -122,6 +122,16 @@ html.no-js .veil { display: none; }
   user-select: none;
 }
 
+.veil-spirit {
+  width: clamp(90px, 13vh, 130px);
+  margin: 0 auto 4vh;
+  animation: veil-float 6s ease-in-out infinite;
+}
+@keyframes veil-float {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50% { transform: translateY(-14px); opacity: 1; }
+}
+
 .veil-word {
   position: relative;
   font-family: var(--serif); font-weight: 400;
@@ -263,6 +273,14 @@ main { position: relative; z-index: 4; }
   line-height: 1.04; letter-spacing: 0.01em;
 }
 .ch-title em { font-style: italic; color: #cdd5f8; }
+
+/* masked line reveals — each line rises out of its own slot */
+.ch-title .tl { display: block; overflow: hidden; }
+.ch-title .tl-i { display: block; }
+
+.ch-rule { transform-origin: left center; }
+
+.hero-title .hc { display: inline-block; }
 
 .edge-kanji {
   position: absolute; right: 3.5vw; top: 22vh;
@@ -465,7 +483,10 @@ main { position: relative; z-index: 4; }
   will-change: transform, opacity;
 }
 
-.relics { position: absolute; inset: 0; pointer-events: none; }
+.relics {
+  position: absolute; inset: 0; pointer-events: none;
+  perspective: 1200px;
+}
 
 .relic {
   position: absolute; left: 50%; top: 50%;
@@ -626,10 +647,14 @@ html.js:not(.reduced) .relic { opacity: 0; }
 
 
 .pool-fox-wrap {
-  position: absolute; right: 15vw; bottom: 40%; z-index: 2;
-  width: min(13vw, 175px);
+  position: absolute; right: 13vw; bottom: 31%; z-index: 2;
+  width: min(21vw, 280px);
   pointer-events: none;
 }
+/* the plunging fox is drawn with very fine lines — lift it */
+.pool-fox-wrap img.sharp { filter: invert(1) brightness(2) contrast(1.15); }
+.pool-fox-wrap img.bloom { filter: invert(1) brightness(2.4) blur(4px); opacity: 0.8; }
+.pool-fox-wrap img.bloom2 { filter: invert(1) brightness(2.8) blur(14px); opacity: 0.5; }
 .pool-fox { width: 100%; }
 .pool-reflection {
   position: absolute; top: 99%; left: 0; width: 100%;
@@ -772,6 +797,7 @@ html.reduced .tails-spirit, html.no-js .tails-spirit {
   -webkit-mask-image: none; mask-image: none;
 }
 html.reduced .grain { animation: none; }
+html.reduced .veil-spirit { animation: none; }
 html.reduced .hero-cue-line::after { animation: none; }
 html.reduced .pool-reflection { animation: none; }
 html.reduced .cursor-halo { display: none; }

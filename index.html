@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
 
   <link rel="preload" as="image" href="assets/kitsune/sitting.svg">
-  <link rel="stylesheet" href="css/styles.css?v=4">
+  <link rel="stylesheet" href="css/styles.css?v=5">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -32,6 +32,7 @@
   <div class="veil" id="veil" role="dialog" aria-label="Introduction">
     <div class="veil-inner">
       <span class="veil-kanji" aria-hidden="true">狐</span>
+      <div class="veil-spirit spirit-mount" data-kfox="descending" aria-hidden="true"></div>
       <p class="veil-word">KYŪBI <span aria-hidden="true">— 九尾</span></p>
       <p class="veil-line">Follow the spirit through the dark.</p>
       <button class="veil-enter" id="veilEnter">Enter<span class="veil-enter-rule"></span></button>
@@ -239,8 +240,8 @@
     <section class="chapter pool" id="pool">
       <canvas id="poolCanvas" aria-hidden="true"></canvas>
       <div class="pool-fox-wrap" aria-hidden="true">
-        <div class="pool-fox spirit-mount" data-kfox="descending"></div>
-        <div class="pool-reflection spirit-mount" data-kfox="descending"></div>
+        <div class="pool-fox spirit-mount" data-kfox="standing"></div>
+        <div class="pool-reflection spirit-mount" data-kfox="standing"></div>
       </div>
       <div class="pool-content">
         <p class="ch-label" data-reveal><span class="ch-num">06</span><span class="ch-rule"></span><span class="ch-name">The Moon Pool</span></p>
@@ -266,6 +267,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-  <script src="js/main.js?v=4"></script>
+  <script src="js/main.js?v=5"></script>
 </body>
 </html>
