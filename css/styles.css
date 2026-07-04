@@ -589,6 +589,15 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .wscene-role::before, .wscene-role::after {
   content: ''; width: 52px; height: 1px; background: var(--hairline);
 }
+.wscene-visit {
+  display: inline-block; margin-top: 3vh;
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--moon-dim);
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 3px;
+  transition: color 0.4s, border-color 0.4s;
+}
+.wscene-visit:hover { color: var(--spirit); border-color: var(--spirit-soft); }
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
