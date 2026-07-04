@@ -30,35 +30,7 @@
   });
 
   /* ------------------------------------------------------------
-     2 · extra tails — three ink petals that complete the nine
-     Overlaid on the sitting fox in the transformation scene.
-     ------------------------------------------------------------ */
-
-  function tailPath(len, bend, w) {
-    return 'M 0 0' +
-      ' C ' + (-w) + ' ' + (-len * 0.30) + ' ' + (bend * 0.45 - w * 0.9) + ' ' + (-len * 0.78) + ' ' + bend + ' ' + (-len) +
-      ' C ' + (bend * 0.45 + w * 0.8) + ' ' + (-len * 0.70) + ' ' + (w * 1.05) + ' ' + (-len * 0.26) + ' 0 0 Z';
-  }
-
-  var tailsExtra = document.getElementById('tailsExtra');
-  if (tailsExtra) {
-    // sitting.svg is 674x502; its tail fan grows from roughly (370, 310)
-    var petals = [
-      { x: 368, y: 306, ang: -6, len: 225, bend: 42, w: 26 },
-      { x: 376, y: 310, ang: 24, len: 250, bend: 64, w: 30 },
-      { x: 372, y: 314, ang: 48, len: 235, bend: 80, w: 27 }
-    ];
-    var svg = '<svg viewBox="0 0 674 502" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">';
-    petals.forEach(function (p, i) {
-      svg += '<g transform="translate(' + p.x + ' ' + p.y + ') rotate(' + p.ang + ')">' +
-        '<g class="petal petal-' + i + '"><path d="' + tailPath(p.len, p.bend, p.w) + '"/></g></g>';
-    });
-    svg += '</svg>';
-    tailsExtra.innerHTML = svg;
-  }
-
-  /* ------------------------------------------------------------
-     3 · the journey — a forest that moves as you scroll
+     2 · the journey — a forest that moves as you scroll
      ------------------------------------------------------------ */
 
   (function journey() {
@@ -387,6 +359,16 @@
     });
   });
 
+  // chapter watermarks drift at their own pace — designed depth
+  gsap.utils.toArray('.ch-watermark').forEach(function (w) {
+    gsap.fromTo(w, { y: 70 }, {
+      y: -70, ease: 'none',
+      scrollTrigger: {
+        trigger: w.closest('section') || w, start: 'top bottom', end: 'bottom top', scrub: 1.2
+      }
+    });
+  });
+
   // ---- generic reveals (outside hero, titles handled above) ------
   gsap.utils.toArray('[data-reveal]').forEach(function (el) {
     if (el.closest('#hero') || el.classList.contains('ch-title')) return;
@@ -476,9 +458,10 @@
       trigger: '.hunt-pin', start: 'top 70%', once: true,
       onEnter: function () { foxTl.play(); }
     });
-    // it stays at the edge, always a little further gone
-    gsap.fromTo(foxMount, { x: 0 }, {
-      x: function () { return window.innerWidth * 0.09; },
+    // mostly gone already — only the tails still trail in frame,
+    // and it slips a little further out as you follow
+    gsap.fromTo(foxMount, { x: function () { return window.innerWidth * 0.13; } }, {
+      x: function () { return window.innerWidth * 0.22; },
       ease: 'none',
       scrollTrigger: {
         trigger: '.hunt-pin', start: 'top top',
@@ -507,21 +490,23 @@
     });
   })();
 
-  // ---- 03 · the leap: works corridor -----------------------------
+  // ---- 03 · the leap: works as full-screen scenes ------------------
+  // each project approaches from the deep, fills the viewport,
+  // then passes through the camera as the next one surfaces
   (function works() {
-    var relics = gsap.utils.toArray('[data-relic]');
+    var scenes = gsap.utils.toArray('[data-wscene]');
     var foxMount = document.querySelector('.works-fox');
     var foxImgs = foxMount.querySelectorAll('img');
     gsap.set(foxImgs, { opacity: 0 });
 
     var num = document.getElementById('relicNum');
-    var offsets = [0.1, -0.08, 0.12, -0.05];
+    var STEP = 2.3;
 
     var tl = gsap.timeline({
       scrollTrigger: {
         trigger: '.works-pin',
         start: 'top top',
-        end: '+=340%',
+        end: '+=400%',
         pin: true,
         scrub: 1,
         invalidateOnRefresh: true
@@ -530,7 +515,7 @@
     // counter follows the timeline playhead, not raw scroll —
     // the scrub keeps easing after scrolling stops
     tl.eventCallback('onUpdate', function () {
-      var idx = Math.max(1, Math.min(relics.length, Math.floor((tl.time() - 0.8) / 2)));
+      var idx = Math.max(1, Math.min(scenes.length, Math.floor((tl.time() - 0.9) / STEP)));
       var txt = '0' + idx;
       if (num.textContent !== txt) num.textContent = txt;
     });
@@ -546,23 +531,32 @@
     });
     tl.to('.works-head', { opacity: 0, y: -60, duration: 0.7, ease: 'none' }, 1.3);
 
-    relics.forEach(function (relic, i) {
-      var at = 2 + i * 2;
-      var off = offsets[i % offsets.length];
-      tl.fromTo(relic,
-        {
-          xPercent: -50, yPercent: -50,
-          x: function () { return window.innerWidth * off; },
-          scale: 0.55, opacity: 0,
-          rotationX: 14, rotationY: off * 60
-        },
-        { scale: 1, opacity: 1, rotationX: 0, rotationY: 0, duration: 0.85, ease: 'power1.inOut' },
+    scenes.forEach(function (scene, i) {
+      var at = 2 + i * STEP;
+      var numEl = scene.querySelector('.wscene-num');
+      var inner = scene.querySelector('.wscene-inner');
+
+      // approach from the deep
+      tl.fromTo(scene,
+        { opacity: 0, scale: 0.5, yPercent: 4 },
+        { opacity: 1, scale: 1, yPercent: 0, duration: 1.05, ease: 'power2.out' },
         at);
-      tl.to(relic,
-        { scale: 1.45, opacity: 0, rotationX: -10, duration: 0.7, ease: 'power1.in' },
-        at + 1.7);
+      // the ghost numeral travels at its own depth the whole time
+      tl.fromTo(numEl,
+        { scale: 0.7, opacity: 0.6 },
+        { scale: 1.5, opacity: 1, duration: STEP + 0.6, ease: 'none' },
+        at);
+      // the copy drifts up slightly slower than the frame — parallax depth
+      tl.fromTo(inner,
+        { y: 30 },
+        { y: -26, duration: STEP + 0.6, ease: 'none' },
+        at);
+      // pass through the camera
+      tl.to(scene,
+        { scale: 2.3, opacity: 0, duration: 0.85, ease: 'power2.in' },
+        at + STEP - 0.55);
     });
-    tl.to({}, { duration: 0.4 });
+    tl.to({}, { duration: 0.5 });
   })();
 
   // ---- 04 · foxfire: the world warms ------------------------------
@@ -581,23 +575,19 @@
 
   // ---- 05 · nine tails: transformation ----------------------------
   (function tails() {
+    var TAILS = 6; // the sitting fox carries six drawn tails — no more, no fewer
     var spirit = document.querySelector('.tails-spirit');
     var spiritImgs = spirit.querySelectorAll('img');
-    var petals = document.querySelectorAll('#tailsExtra .petal');
     var listItems = document.querySelectorAll('#tailsList li');
     var num = document.getElementById('tailNum');
 
     gsap.set(spiritImgs, { opacity: 0 });
-    petals.forEach(function (g) {
-      g.setAttribute('transform', 'scale(0.001)');
-      g.style.opacity = '0';
-    });
 
     var current = -1;
     function setCount(n) {
       if (n === current) return;
       current = n;
-      num.textContent = '0' + Math.max(1, Math.min(9, n + 1));
+      num.textContent = '0' + Math.max(1, Math.min(TAILS, n + 1));
       listItems.forEach(function (li, i) {
         li.classList.toggle('lit', i <= n);
       });
@@ -616,7 +606,7 @@
     });
     tl.eventCallback('onUpdate', function () {
       var p = Math.max(0, tl.progress() - 0.1) / 0.85;
-      setCount(Math.max(0, Math.min(8, Math.floor(p * 9))));
+      setCount(Math.max(0, Math.min(TAILS - 1, Math.floor(p * TAILS))));
     });
 
     // the fox condenses…
@@ -625,25 +615,13 @@
       tl.to(img, { opacity: end, duration: 0.5, ease: 'none' }, i * 0.12);
     });
 
-    // …then the fan sweeps open across the drawn tails…
+    // …then the fan sweeps open across the drawn tails
     tl.to(wipe, {
       p: 112, duration: 6.4, ease: 'none',
       onUpdate: function () {
         spirit.style.setProperty('--wipe', wipe.p + '%');
       }
     }, 0.9);
-
-    // …and the last three tails unfurl beyond the ink
-    petals.forEach(function (g, i) {
-      var proxy = { v: 0.001 };
-      tl.to(proxy, {
-        v: 1, duration: 0.8, ease: 'power2.out',
-        onUpdate: function () {
-          g.setAttribute('transform', 'scale(' + proxy.v + ')');
-          g.style.opacity = Math.min(1, proxy.v * 1.4);
-        }
-      }, 5.0 + i * 0.85);
-    });
 
     tl.to({}, { duration: 0.5 });
   })();

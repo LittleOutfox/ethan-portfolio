@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
 
   <link rel="preload" as="image" href="assets/kitsune/sitting.svg">
-  <link rel="stylesheet" href="css/styles.css?v=8">
+  <link rel="stylesheet" href="css/styles.css?v=9">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -84,6 +84,7 @@
     <!-- 01 · ORIGIN -->
     <section class="chapter origin" id="origin">
       <span class="edge-kanji" aria-hidden="true">目覚め</span>
+      <span class="ch-watermark" aria-hidden="true">目覚</span>
       <div class="ch-grid">
         <header class="ch-head">
           <p class="ch-label" data-reveal>
@@ -155,34 +156,42 @@
           <h2 class="ch-title">Selected works,<br><em>caught mid-air.</em></h2>
         </header>
         <div class="works-fox spirit-mount" data-kfox="diving" aria-hidden="true"></div>
-        <div class="relics">
-          <article class="relic" data-relic>
-            <div class="relic-shard" aria-hidden="true"></div>
-            <p class="relic-meta">Interactive installation · 2025</p>
-            <h3 class="relic-title">Lantern</h3>
-            <p class="relic-line">A room that listens, and answers in light.</p>
-            <p class="relic-role">Design &amp; build</p>
+        <div class="works-scenes">
+          <article class="wscene" data-wscene>
+            <span class="wscene-num" aria-hidden="true">01</span>
+            <div class="wscene-inner">
+              <p class="wscene-meta">Interactive installation · 2025</p>
+              <h3 class="wscene-title">Lantern</h3>
+              <p class="wscene-line">A room that listens, and answers in light.</p>
+              <p class="wscene-role">Design &amp; build</p>
+            </div>
           </article>
-          <article class="relic" data-relic>
-            <div class="relic-shard" aria-hidden="true"></div>
-            <p class="relic-meta">E-commerce experience · 2024</p>
-            <h3 class="relic-title">Paper Moon</h3>
-            <p class="relic-line">Retail, reimagined as a quiet ritual.</p>
-            <p class="relic-role">Art direction &amp; front-end</p>
+          <article class="wscene" data-wscene>
+            <span class="wscene-num" aria-hidden="true">02</span>
+            <div class="wscene-inner">
+              <p class="wscene-meta">E-commerce experience · 2024</p>
+              <h3 class="wscene-title">Paper Moon</h3>
+              <p class="wscene-line">Retail, reimagined as a quiet ritual.</p>
+              <p class="wscene-role">Art direction &amp; front-end</p>
+            </div>
           </article>
-          <article class="relic" data-relic>
-            <div class="relic-shard" aria-hidden="true"></div>
-            <p class="relic-meta">WebGL experiment · 2024</p>
-            <h3 class="relic-title">Hollow</h3>
-            <p class="relic-line">A forest that grows as you type.</p>
-            <p class="relic-role">Everything, badly at first</p>
+          <article class="wscene" data-wscene>
+            <span class="wscene-num" aria-hidden="true">03</span>
+            <div class="wscene-inner">
+              <p class="wscene-meta">WebGL experiment · 2024</p>
+              <h3 class="wscene-title">Hollow</h3>
+              <p class="wscene-line">A forest that grows as you type.</p>
+              <p class="wscene-role">Everything, badly at first</p>
+            </div>
           </article>
-          <article class="relic" data-relic>
-            <div class="relic-shard" aria-hidden="true"></div>
-            <p class="relic-meta">Brand &amp; site · 2023</p>
-            <h3 class="relic-title">Ember</h3>
-            <p class="relic-line">An identity for a studio that never sleeps.</p>
-            <p class="relic-role">Design &amp; build</p>
+          <article class="wscene" data-wscene>
+            <span class="wscene-num" aria-hidden="true">04</span>
+            <div class="wscene-inner">
+              <p class="wscene-meta">Brand &amp; site · 2023</p>
+              <h3 class="wscene-title">Ember</h3>
+              <p class="wscene-line">An identity for a studio that never sleeps.</p>
+              <p class="wscene-role">Design &amp; build</p>
+            </div>
           </article>
         </div>
         <p class="works-count" aria-hidden="true"><span id="relicNum">01</span> / 04</p>
@@ -192,6 +201,7 @@
     <!-- 04 · FOXFIRE (hobbies) -->
     <section class="chapter fire" id="fire">
       <span class="edge-kanji" aria-hidden="true">狐火</span>
+      <span class="ch-watermark ch-watermark-warm" aria-hidden="true">狐火</span>
       <div class="ch-grid">
         <header class="ch-head">
           <p class="ch-label" data-reveal>
@@ -217,27 +227,25 @@
           <p class="ch-label"><span class="ch-num">05</span><span class="ch-rule"></span><span class="ch-name">Transformation</span></p>
           <h2 class="ch-title">Every tail<br><em>is earned.</em></h2>
         </header>
+        <span class="ch-watermark" aria-hidden="true">変化</span>
         <div class="tails-scene" aria-hidden="true">
-          <div class="tails-extra" id="tailsExtra"></div>
           <div class="tails-spirit spirit-mount" data-kfox="sitting"></div>
         </div>
         <ol class="tails-list" id="tailsList">
           <li><span class="tl-year">2018</span><span class="tl-mark">First line of code</span></li>
-          <li><span class="tl-year">2019</span><span class="tl-mark">First design system</span></li>
           <li><span class="tl-year">2020</span><span class="tl-mark">Studio apprenticeship</span></li>
           <li><span class="tl-year">2021</span><span class="tl-mark">First site shipped</span></li>
           <li><span class="tl-year">2022</span><span class="tl-mark">The agency years</span></li>
-          <li><span class="tl-year">2023</span><span class="tl-mark">Award nights</span></li>
           <li><span class="tl-year">2024</span><span class="tl-mark">Independent practice</span></li>
-          <li><span class="tl-year">2025</span><span class="tl-mark">The good work</span></li>
           <li><span class="tl-year">2026</span><span class="tl-mark">Still hungry</span></li>
         </ol>
-        <p class="tails-count" aria-hidden="true"><span id="tailNum">01</span> / 09 <span class="tails-count-kanji">尾</span></p>
+        <p class="tails-count" aria-hidden="true"><span id="tailNum">01</span> / 06 <span class="tails-count-kanji">尾</span></p>
       </div>
     </section>
 
     <!-- 06 · THE MOON POOL (contact) -->
     <section class="chapter pool" id="pool">
+      <span class="ch-watermark" aria-hidden="true">雪</span>
       <canvas id="poolCanvas" aria-hidden="true"></canvas>
       <div class="pool-fox-wrap" aria-hidden="true">
         <div class="pool-fox spirit-mount" data-kfox="standing"></div>
@@ -266,6 +274,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-  <script src="js/main.js?v=11"></script>
+  <script src="js/main.js?v=12"></script>
 </body>
 </html>

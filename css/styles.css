@@ -296,6 +296,23 @@ main { position: relative; z-index: 4; }
   pointer-events: none; user-select: none;
 }
 
+/* giant chapter watermarks — designed negative space */
+.ch-watermark {
+  position: absolute; left: 50%; top: 44%;
+  transform: translate(-50%, -50%);
+  font-family: var(--jp); font-weight: 200;
+  font-size: clamp(220px, 36vmin, 480px); line-height: 1;
+  color: rgba(168, 180, 236, 0.04);
+  white-space: nowrap;
+  pointer-events: none; user-select: none;
+  z-index: 0;
+}
+.ch-watermark-warm { color: rgba(224, 160, 92, 0.05); }
+.origin .ch-watermark { left: 62%; top: 58%; }
+.fire .ch-watermark { left: 40%; top: 46%; }
+.tails .ch-watermark { left: 72%; top: 40%; }
+.pool .ch-watermark { left: 50%; top: 30%; z-index: 0; }
+
 .mut { color: var(--moon-faint); font-size: 0.85em; }
 
 /* ------------------------------------------------------------
@@ -401,7 +418,12 @@ main { position: relative; z-index: 4; }
 }
 .origin-facts dd { font-family: var(--serif); font-size: 17px; color: var(--moon); }
 
-.origin-fox { width: min(38vw, 520px); justify-self: center; margin-top: 4vh; }
+.origin-fox {
+  width: min(44vw, 580px);
+  justify-self: end;
+  margin: -6vh -3vw 0 -8vw; /* interlock with the text column */
+  position: relative; z-index: 1;
+}
 
 /* ------------------------------------------------------------
    02 · the hunt (horizontal)
@@ -492,50 +514,52 @@ main { position: relative; z-index: 4; }
   will-change: transform, opacity;
 }
 
-.relics {
-  position: absolute; inset: 0; pointer-events: none;
-  perspective: 1200px;
-}
+/* each work is a full-screen typographic scene that approaches
+   from the deep and passes through the camera — no boxes */
+.works-scenes { position: absolute; inset: 0; pointer-events: none; }
 
-.relic {
-  position: absolute; left: 50%; top: 50%;
-  width: min(440px, 84vw);
-  transform: translate(-50%, -50%);
-  padding: clamp(28px, 3.4vw, 48px);
-  background: linear-gradient(160deg, rgba(236, 231, 244, 0.055), rgba(236, 231, 244, 0.015));
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  pointer-events: auto;
+.wscene {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
   will-change: transform, opacity;
+  pointer-events: none;
 }
-html.js:not(.reduced) .relic { opacity: 0; }
+html.js:not(.reduced) .wscene { opacity: 0; }
 
-.relic-shard {
-  width: 40px; height: 78px; margin-bottom: 26px;
-  background: linear-gradient(170deg, rgba(200, 208, 244, 0.5), rgba(168, 180, 236, 0.08) 60%, rgba(168, 180, 236, 0.25));
-  clip-path: polygon(50% 0, 100% 30%, 76% 100%, 24% 100%, 0 30%);
-  filter: drop-shadow(0 0 12px rgba(168, 180, 236, 0.35));
+.wscene-num {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -54%);
+  font-family: var(--serif); font-style: italic; font-weight: 300;
+  font-size: clamp(240px, 38vw, 620px); line-height: 1;
+  color: rgba(168, 180, 236, 0.055);
+  user-select: none;
 }
 
-.relic-meta {
-  font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
-  color: var(--moon-faint); margin-bottom: 14px;
+.wscene-inner { position: relative; max-width: 84vw; pointer-events: auto; }
+
+.wscene-meta {
+  font-size: 10px; letter-spacing: 0.4em; text-indent: 0.4em; text-transform: uppercase;
+  color: var(--moon-dim); margin-bottom: 3.4vh;
 }
-.relic-title {
+.wscene-title {
   font-family: var(--serif); font-weight: 300;
-  font-size: clamp(40px, 4.4vw, 62px); line-height: 1;
-  margin-bottom: 14px;
+  font-size: clamp(64px, 11vw, 185px); line-height: 0.95;
+  letter-spacing: 0.015em;
 }
-.relic-line {
+.wscene-line {
   font-family: var(--serif); font-style: italic;
-  font-size: 19px; color: var(--moon-dim);
-  margin-bottom: 26px;
+  font-size: clamp(18px, 1.8vw, 26px); color: var(--moon-dim);
+  margin-top: 3.4vh;
 }
-.relic-role {
-  padding-top: 18px; border-top: 1px solid var(--hairline);
-  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+.wscene-role {
+  display: inline-flex; align-items: center; gap: 18px;
+  margin-top: 4.5vh;
+  font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
   color: var(--moon-faint);
+}
+.wscene-role::before, .wscene-role::after {
+  content: ''; width: 52px; height: 1px; background: var(--hairline);
 }
 
 .works-count {
@@ -554,7 +578,12 @@ html.js:not(.reduced) .relic { opacity: 0; }
 
 .fire-note { margin-top: 3.4vh; max-width: 38ch; color: var(--moon-dim); font-size: 14px; }
 
-.fire-fox { width: min(34vw, 440px); justify-self: center; margin-top: 8vh; }
+.fire-fox {
+  width: min(40vw, 520px);
+  justify-self: end;
+  margin: 2vh -4vw 0 -6vw;
+  position: relative; z-index: 1;
+}
 .fire-fox img.sharp { filter: invert(1) sepia(0.4) saturate(1.4) brightness(1.22); }
 .fire-fox img.bloom { filter: invert(1) sepia(0.55) saturate(1.8) brightness(1.5) blur(5px); }
 .fire-fox img.bloom2 { filter: invert(1) sepia(0.6) saturate(2) brightness(1.8) blur(16px); }
@@ -587,9 +616,9 @@ html.js:not(.reduced) .relic { opacity: 0; }
 .tails-head { position: absolute; left: var(--pad-x); top: 12vh; z-index: 3; }
 
 .tails-scene {
-  position: absolute; left: 4vw; top: 50%;
-  transform: translateY(-46%);
-  width: min(58vw, 740px);
+  position: absolute; left: 3vw; top: 52%;
+  transform: translateY(-48%);
+  width: min(64vw, 840px);
 }
 
 .tails-spirit {
@@ -597,17 +626,6 @@ html.js:not(.reduced) .relic { opacity: 0; }
   --wipe: 55%;
   -webkit-mask-image: linear-gradient(100deg, #000 0%, #000 var(--wipe), transparent calc(var(--wipe) + 14%));
   mask-image: linear-gradient(100deg, #000 0%, #000 var(--wipe), transparent calc(var(--wipe) + 14%));
-}
-
-.tails-extra { position: absolute; inset: 0; z-index: 0; }
-.tails-extra svg {
-  width: 100%; height: auto; display: block; overflow: visible;
-  filter: blur(0.4px) drop-shadow(0 0 16px rgba(168, 180, 236, 0.3));
-}
-.tails-extra .petal path {
-  fill: rgba(205, 213, 246, 0.13);
-  stroke: rgba(222, 227, 250, 0.5);
-  stroke-width: 1.2;
 }
 
 .tails-list {
@@ -724,8 +742,9 @@ html.js:not(.reduced) .relic { opacity: 0; }
   .nav-links a { font-size: 9px; letter-spacing: 0.18em; }
 
   .ch-grid, .origin .ch-grid { grid-template-columns: 1fr; gap: 6vh; }
-  .origin-fox { width: min(62vw, 320px); }
-  .fire-fox { width: min(52vw, 280px); }
+  .origin-fox { width: min(70vw, 380px); margin: 0; justify-self: center; }
+  .fire-fox { width: min(62vw, 340px); margin: 0; justify-self: center; }
+  .ch-watermark { font-size: clamp(140px, 44vw, 260px); }
 
   .hunt-intro { min-width: 80vw; }
   .skill { min-width: 74vw; }
@@ -765,13 +784,12 @@ html.no-js .hunt-ground, html.reduced .hunt-ground { display: none; }
 
 html.no-js .works-pin, html.reduced .works-pin { padding: 20vh var(--pad-x); }
 html.no-js .works-head, html.reduced .works-head { position: static; transform: none; margin-bottom: 8vh; }
-html.no-js .relics, html.reduced .relics {
-  position: static; display: grid; gap: 5vh;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+html.no-js .works-scenes, html.reduced .works-scenes { position: static; }
+html.no-js .wscene, html.reduced .wscene {
+  position: static; opacity: 1 !important; transform: none !important;
+  padding: 8vh 0;
 }
-html.no-js .relic, html.reduced .relic {
-  position: static; transform: none; opacity: 1 !important; width: auto;
-}
+html.no-js .wscene-num, html.reduced .wscene-num { display: none; }
 html.no-js .works-fox, html.reduced .works-fox,
 html.no-js .works-count, html.reduced .works-count { display: none; }
 
