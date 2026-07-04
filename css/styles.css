@@ -514,29 +514,57 @@ main { position: relative; z-index: 4; }
   will-change: transform, opacity;
 }
 
-/* each work is a full-screen typographic scene that approaches
-   from the deep and passes through the camera — no boxes */
-.works-scenes { position: absolute; inset: 0; pointer-events: none; }
+/* three torii gates deep in the forest — each work is a gate
+   you approach, read, and pass through. 千本鳥居, reduced to three,
+   carved from moonlight: the site's own spirit-glass hairlines. */
+.works-gates { position: absolute; inset: 0; pointer-events: none; }
 
-.wscene {
+.wgate {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   text-align: center;
   will-change: transform, opacity;
   pointer-events: none;
 }
-html.js:not(.reduced) .wscene { opacity: 0; }
+html.js:not(.reduced) .wgate { opacity: 0; }
+
+.wgate-frame {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(64vw, 1020px); height: 74vh;
+}
+.wgate-frame span {
+  position: absolute;
+  background: linear-gradient(to bottom, rgba(220, 226, 250, 0.75), rgba(168, 180, 236, 0.4));
+  box-shadow: 0 0 16px rgba(168, 180, 236, 0.3), 0 0 50px rgba(168, 180, 236, 0.1);
+}
+.wg-kasagi { /* top lintel — overhangs, slightly heavier */
+  top: 0; left: -5%; width: 110%; height: 4px;
+  background: linear-gradient(to right, transparent, rgba(200, 208, 244, 0.65) 8%, rgba(236, 231, 244, 0.85) 50%, rgba(200, 208, 244, 0.65) 92%, transparent);
+}
+.wg-shima { /* thin secondary cap under the lintel */
+  top: 13px; left: -2.5%; width: 105%; height: 1px; opacity: 0.7;
+}
+.wg-nuki { /* tie beam */
+  top: 15%; left: 0; width: 100%; height: 2px; opacity: 0.75;
+}
+.wg-pillar {
+  top: 4px; width: 2px; height: 100%;
+  background: linear-gradient(to bottom, rgba(236, 231, 244, 0.8), rgba(168, 180, 236, 0.5) 40%, rgba(168, 180, 236, 0.2) 85%, transparent);
+}
+.wg-l { left: 4%; transform: rotate(1deg); transform-origin: top center; }
+.wg-r { right: 4%; transform: rotate(-1deg); transform-origin: top center; }
 
 .wscene-num {
   position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -54%);
+  transform: translate(-50%, -50%);
   font-family: var(--serif); font-style: italic; font-weight: 300;
-  font-size: clamp(240px, 38vw, 620px); line-height: 1;
-  color: rgba(168, 180, 236, 0.055);
+  font-size: clamp(180px, 26vw, 460px); line-height: 1;
+  color: rgba(168, 180, 236, 0.05);
   user-select: none;
 }
 
-.wscene-inner { position: relative; max-width: 84vw; pointer-events: auto; }
+.wgate-inner { position: relative; max-width: min(52vw, 860px); padding-top: 8vh; pointer-events: auto; }
 
 .wscene-meta {
   font-size: 10px; letter-spacing: 0.4em; text-indent: 0.4em; text-transform: uppercase;
@@ -661,7 +689,7 @@ html.js:not(.reduced) .wscene { opacity: 0; }
    ------------------------------------------------------------ */
 
 .pool {
-  min-height: 140vh; padding: 0;
+  min-height: 112vh; padding: 0;
   display: flex; flex-direction: column; justify-content: center;
   overflow: hidden;
 }
@@ -753,7 +781,8 @@ html.js:not(.reduced) .wscene { opacity: 0; }
 
   .works-head { top: 12vh; transform: none; }
   .works-fox { right: 6vw; top: 6vh; width: 130px; }
-  .relic { top: 54%; }
+  .wgate-frame { width: 88vw; height: 62vh; }
+  .wgate-inner { max-width: 80vw; }
 
   .tails-head { top: 8vh; }
   .tails-scene { width: 88vw; left: 50%; top: 46%; transform: translate(-50%, -50%); opacity: 0.5; }
@@ -784,12 +813,14 @@ html.no-js .hunt-ground, html.reduced .hunt-ground { display: none; }
 
 html.no-js .works-pin, html.reduced .works-pin { padding: 20vh var(--pad-x); }
 html.no-js .works-head, html.reduced .works-head { position: static; transform: none; margin-bottom: 8vh; }
-html.no-js .works-scenes, html.reduced .works-scenes { position: static; }
-html.no-js .wscene, html.reduced .wscene {
+html.no-js .works-gates, html.reduced .works-gates { position: static; }
+html.no-js .wgate, html.reduced .wgate {
   position: static; opacity: 1 !important; transform: none !important;
   padding: 8vh 0;
 }
+html.no-js .wgate-frame, html.reduced .wgate-frame,
 html.no-js .wscene-num, html.reduced .wscene-num { display: none; }
+html.no-js .wgate-inner, html.reduced .wgate-inner { max-width: none; padding-top: 0; }
 html.no-js .works-fox, html.reduced .works-fox,
 html.no-js .works-count, html.reduced .works-count { display: none; }
 

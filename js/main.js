@@ -39,7 +39,7 @@
     if (reducedQuery.matches) { v.remove(); return; }
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests
-    var SRC = 'assets/journey.mp4?v=6';
+    var SRC = 'assets/journey.mp4?v=7';
     fetch(SRC)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
       .then(function (b) { v.src = URL.createObjectURL(b); })
@@ -379,7 +379,8 @@
   });
 
   // ---- continuity: each chapter drifts up as it hands over -------
-  gsap.utils.toArray('.origin .ch-grid, .fire .ch-grid, .pool-content').forEach(function (el) {
+  // (not the pool content — the site must END with it comfortably framed)
+  gsap.utils.toArray('.origin .ch-grid, .fire .ch-grid').forEach(function (el) {
     gsap.to(el, {
       y: -50, ease: 'none',
       scrollTrigger: { trigger: el, start: 'bottom 45%', end: 'bottom -10%', scrub: 1 }
@@ -458,10 +459,10 @@
       trigger: '.hunt-pin', start: 'top 70%', once: true,
       onEnter: function () { foxTl.play(); }
     });
-    // mostly gone already — only the tails still trail in frame,
+    // partly through the edge — hindquarters and tails in frame,
     // and it slips a little further out as you follow
-    gsap.fromTo(foxMount, { x: function () { return window.innerWidth * 0.13; } }, {
-      x: function () { return window.innerWidth * 0.22; },
+    gsap.fromTo(foxMount, { x: function () { return window.innerWidth * 0.055; } }, {
+      x: function () { return window.innerWidth * 0.14; },
       ease: 'none',
       scrollTrigger: {
         trigger: '.hunt-pin', start: 'top top',
@@ -490,17 +491,17 @@
     });
   })();
 
-  // ---- 03 · the leap: works as full-screen scenes ------------------
-  // each project approaches from the deep, fills the viewport,
-  // then passes through the camera as the next one surfaces
+  // ---- 03 · the leap: three torii gates -----------------------------
+  // each work is a gate deep in the forest — approach it, read it,
+  // then pass through as its beams sweep past the edges of the screen
   (function works() {
-    var scenes = gsap.utils.toArray('[data-wscene]');
+    var gates = gsap.utils.toArray('[data-wgate]');
     var foxMount = document.querySelector('.works-fox');
     var foxImgs = foxMount.querySelectorAll('img');
     gsap.set(foxImgs, { opacity: 0 });
 
     var num = document.getElementById('relicNum');
-    var STEP = 2.3;
+    var STEP = 2.6;
 
     var tl = gsap.timeline({
       scrollTrigger: {
@@ -515,7 +516,8 @@
     // counter follows the timeline playhead, not raw scroll —
     // the scrub keeps easing after scrolling stops
     tl.eventCallback('onUpdate', function () {
-      var idx = Math.max(1, Math.min(scenes.length, Math.floor((tl.time() - 0.9) / STEP)));
+      // gate i owns [2 + i*STEP, 2 + (i+1)*STEP); count from just before its arrival
+      var idx = Math.max(1, Math.min(gates.length, Math.floor((tl.time() - 1.7) / STEP) + 1));
       var txt = '0' + idx;
       if (num.textContent !== txt) num.textContent = txt;
     });
@@ -531,32 +533,35 @@
     });
     tl.to('.works-head', { opacity: 0, y: -60, duration: 0.7, ease: 'none' }, 1.3);
 
-    scenes.forEach(function (scene, i) {
+    gates.forEach(function (gate, i) {
       var at = 2 + i * STEP;
-      var numEl = scene.querySelector('.wscene-num');
-      var inner = scene.querySelector('.wscene-inner');
+      var numEl = gate.querySelector('.wscene-num');
+      var inner = gate.querySelector('.wgate-inner');
 
-      // approach from the deep
-      tl.fromTo(scene,
-        { opacity: 0, scale: 0.5, yPercent: 4 },
-        { opacity: 1, scale: 1, yPercent: 0, duration: 1.05, ease: 'power2.out' },
+      // the gate stands far down the path — approach it
+      tl.fromTo(gate,
+        { opacity: 0, scale: 0.3, yPercent: 3 },
+        { opacity: 1, scale: 1, yPercent: 0, duration: 1.15, ease: 'power2.out' },
         at);
-      // the ghost numeral travels at its own depth the whole time
-      tl.fromTo(numEl,
-        { scale: 0.7, opacity: 0.6 },
-        { scale: 1.5, opacity: 1, duration: STEP + 0.6, ease: 'none' },
-        at);
-      // the copy drifts up slightly slower than the frame — parallax depth
+      // its inscription resolves a beat later
       tl.fromTo(inner,
-        { y: 30 },
-        { y: -26, duration: STEP + 0.6, ease: 'none' },
+        { opacity: 0, y: 44 },
+        { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' },
+        at + 0.45);
+      // the ghost numeral drifts at its own depth
+      tl.fromTo(numEl,
+        { scale: 0.75, opacity: 0.5 },
+        { scale: 1.4, opacity: 1, duration: STEP + 0.5, ease: 'none' },
         at);
-      // pass through the camera
-      tl.to(scene,
-        { scale: 2.3, opacity: 0, duration: 0.85, ease: 'power2.in' },
-        at + STEP - 0.55);
+      // step through: the inscription dissolves, the beams sweep past
+      tl.to(inner,
+        { opacity: 0, duration: 0.4, ease: 'none' },
+        at + STEP - 0.75);
+      tl.to(gate,
+        { scale: 3.6, opacity: 0, duration: 1.0, ease: 'power2.in' },
+        at + STEP - 0.7);
     });
-    tl.to({}, { duration: 0.5 });
+    tl.to({}, { duration: 0.6 });
   })();
 
   // ---- 04 · foxfire: the world warms ------------------------------
@@ -575,7 +580,7 @@
 
   // ---- 05 · nine tails: transformation ----------------------------
   (function tails() {
-    var TAILS = 6; // the sitting fox carries six drawn tails — no more, no fewer
+    var TAILS = 5; // the sitting fox carries five drawn tails
     var spirit = document.querySelector('.tails-spirit');
     var spiritImgs = spirit.querySelectorAll('img');
     var listItems = document.querySelectorAll('#tailsList li');
@@ -594,6 +599,9 @@
     }
 
     var wipe = { p: 55 };
+    var applyWipe = function () {
+      spirit.style.setProperty('--wipe', wipe.p + '%');
+    };
 
     var tl = gsap.timeline({
       scrollTrigger: {
@@ -604,10 +612,6 @@
         scrub: 1
       }
     });
-    tl.eventCallback('onUpdate', function () {
-      var p = Math.max(0, tl.progress() - 0.1) / 0.85;
-      setCount(Math.max(0, Math.min(TAILS - 1, Math.floor(p * TAILS))));
-    });
 
     // the fox condenses…
     spiritImgs.forEach(function (img, i) {
@@ -615,15 +619,23 @@
       tl.to(img, { opacity: end, duration: 0.5, ease: 'none' }, i * 0.12);
     });
 
-    // …then the fan sweeps open across the drawn tails
-    tl.to(wipe, {
-      p: 112, duration: 6.4, ease: 'none',
-      onUpdate: function () {
-        spirit.style.setProperty('--wipe', wipe.p + '%');
-      }
-    }, 0.9);
+    // …then each tail is earned one by one: five eased sweeps,
+    // each unfurling one more drawn tail out of the ink
+    var STEP = 1.15, SPAN = (112 - 55) / TAILS;
+    for (var i = 0; i < TAILS; i++) {
+      tl.to(wipe, {
+        p: 55 + SPAN * (i + 1),
+        duration: 0.62, ease: 'power2.inOut',
+        onUpdate: applyWipe
+      }, 1.0 + i * STEP);
+    }
+    // counter follows the same rhythm as the sweeps
+    tl.eventCallback('onUpdate', function () {
+      var n = Math.floor((tl.time() - 0.75) / STEP);
+      setCount(Math.max(0, Math.min(TAILS - 1, n)));
+    });
 
-    tl.to({}, { duration: 0.5 });
+    tl.to({}, { duration: 0.8 });
   })();
 
   // ---- 06 · the snowfield: the plunge -------------------------------
