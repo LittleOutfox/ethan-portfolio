@@ -581,12 +581,10 @@
   // ---- 05 · nine tails: transformation ----------------------------
   (function tails() {
     var TAILS = 5; // the sitting fox carries five drawn tails
+    var STEP = 1.15;
     var spirit = document.querySelector('.tails-spirit');
-    var spiritImgs = spirit.querySelectorAll('img');
     var listItems = document.querySelectorAll('#tailsList li');
     var num = document.getElementById('tailNum');
-
-    gsap.set(spiritImgs, { opacity: 0 });
 
     var current = -1;
     function setCount(n) {
@@ -598,44 +596,207 @@
       });
     }
 
-    var wipe = { p: 55 };
-    var applyWipe = function () {
-      spirit.style.setProperty('--wipe', wipe.p + '%');
-    };
-
-    var tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: '.tails-pin',
-        start: 'top top',
-        end: '+=320%',
-        pin: true,
-        scrub: 1
-      }
-    });
-
-    // the fox condenses…
-    spiritImgs.forEach(function (img, i) {
-      var end = LAYER_OPACITY[img.className] || 1;
-      tl.to(img, { opacity: end, duration: 0.5, ease: 'none' }, i * 0.12);
-    });
-
-    // …then each tail is earned one by one: five eased sweeps,
-    // each unfurling one more drawn tail out of the ink
-    var STEP = 1.15, SPAN = (112 - 55) / TAILS;
-    for (var i = 0; i < TAILS; i++) {
-      tl.to(wipe, {
-        p: 55 + SPAN * (i + 1),
-        duration: 0.62, ease: 'power2.inOut',
-        onUpdate: applyWipe
-      }, 1.0 + i * STEP);
+    function makeTl() {
+      var tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: '.tails-pin',
+          start: 'top top',
+          end: '+=320%',
+          pin: true,
+          scrub: 1
+        }
+      });
+      tl.eventCallback('onUpdate', function () {
+        var n = Math.floor((tl.time() - 0.75) / STEP);
+        setCount(Math.max(0, Math.min(TAILS - 1, n)));
+      });
+      return tl;
     }
-    // counter follows the same rhythm as the sweeps
-    tl.eventCallback('onUpdate', function () {
-      var n = Math.floor((tl.time() - 0.75) / STEP);
-      setCount(Math.max(0, Math.min(TAILS - 1, n)));
-    });
 
-    tl.to({}, { duration: 0.8 });
+    // split the drawing into its five real tails. The traced SVG's paths
+    // are full-canvas layers, so we go one level deeper: every path is
+    // broken into its subpaths (individual ink contours, converted to
+    // absolute coords), each contour is classified by its angle around
+    // the fan base, and contours are re-merged into per-tail paths that
+    // unfurl from the base as their mark is earned.
+    var ORIGIN = { x: 368, y: 322 };      // fan base in sitting.svg viewBox units
+
+    function splitSubpaths(d) {
+      var tokens = d.match(/[MmLlHhVvCcSsQqTtAaZz]|-?(?:\d*\.\d+|\d+\.?\d*)/g) || [];
+      var i = 0, cmd = null;
+      var cx = 0, cy = 0, sx = 0, sy = 0;
+      var subs = [], cur = null;
+      function num() { return parseFloat(tokens[i++]); }
+      function startSub(x, y) {
+        cur = { d: 'M' + x + ' ' + y, minX: x, minY: y, maxX: x, maxY: y };
+        subs.push(cur);
+      }
+      function pt(x, y) {
+        if (x < cur.minX) cur.minX = x; if (x > cur.maxX) cur.maxX = x;
+        if (y < cur.minY) cur.minY = y; if (y > cur.maxY) cur.maxY = y;
+      }
+      while (i < tokens.length) {
+        var t = tokens[i];
+        if (/^[A-Za-z]$/.test(t)) {
+          cmd = t; i++;
+          if (cmd === 'Z' || cmd === 'z') {
+            if (cur) cur.d += 'Z';
+            cx = sx; cy = sy; cur = null;
+            continue;
+          }
+        }
+        if (!cmd) { i++; continue; }
+        var rel = cmd === cmd.toLowerCase();
+        var C = cmd.toUpperCase();
+        var x, y, x1, y1, x2, y2;
+        if (!cur && C !== 'M') startSub(cx, cy);
+        switch (C) {
+          case 'M':
+            x = num(); y = num();
+            if (rel) { x += cx; y += cy; }
+            cx = x; cy = y; sx = x; sy = y;
+            startSub(x, y);
+            cmd = rel ? 'l' : 'L';
+            break;
+          case 'L':
+            x = num(); y = num();
+            if (rel) { x += cx; y += cy; }
+            cur.d += 'L' + x + ' ' + y; pt(x, y); cx = x; cy = y;
+            break;
+          case 'H':
+            x = num(); if (rel) x += cx;
+            cur.d += 'L' + x + ' ' + cy; pt(x, cy); cx = x;
+            break;
+          case 'V':
+            y = num(); if (rel) y += cy;
+            cur.d += 'L' + cx + ' ' + y; pt(cx, y); cy = y;
+            break;
+          case 'C':
+            x1 = num(); y1 = num(); x2 = num(); y2 = num(); x = num(); y = num();
+            if (rel) { x1 += cx; y1 += cy; x2 += cx; y2 += cy; x += cx; y += cy; }
+            cur.d += 'C' + x1 + ' ' + y1 + ' ' + x2 + ' ' + y2 + ' ' + x + ' ' + y;
+            pt(x1, y1); pt(x2, y2); pt(x, y); cx = x; cy = y;
+            break;
+          case 'S':
+            x2 = num(); y2 = num(); x = num(); y = num();
+            if (rel) { x2 += cx; y2 += cy; x += cx; y += cy; }
+            cur.d += 'S' + x2 + ' ' + y2 + ' ' + x + ' ' + y;
+            pt(x2, y2); pt(x, y); cx = x; cy = y;
+            break;
+          case 'Q':
+            x1 = num(); y1 = num(); x = num(); y = num();
+            if (rel) { x1 += cx; y1 += cy; x += cx; y += cy; }
+            cur.d += 'Q' + x1 + ' ' + y1 + ' ' + x + ' ' + y;
+            pt(x1, y1); pt(x, y); cx = x; cy = y;
+            break;
+          case 'T':
+            x = num(); y = num();
+            if (rel) { x += cx; y += cy; }
+            cur.d += 'T' + x + ' ' + y; pt(x, y); cx = x; cy = y;
+            break;
+          case 'A':
+            var rx = num(), ry = num(), rot = num(), laf = num(), sf = num();
+            x = num(); y = num();
+            if (rel) { x += cx; y += cy; }
+            cur.d += 'A' + rx + ' ' + ry + ' ' + rot + ' ' + laf + ' ' + sf + ' ' + x + ' ' + y;
+            pt(x, y); cx = x; cy = y;
+            break;
+          default:
+            i++;
+        }
+      }
+      return subs;
+    }
+
+    function classify(cx, cy) {
+      if (cy > 418) return 'keep';                 // snow ground
+      if (cx < 310) return 'keep';                 // head, chest, forelegs
+      if (cx < 352 && cy > 298) return 'keep';     // rump and hind leg
+      var dx = cx - ORIGIN.x, dy = ORIGIN.y - cy;
+      if (Math.sqrt(dx * dx + dy * dy) < 26) return 'keep'; // fan knot
+      var deg = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (deg > 97) return 0;
+      if (deg > 72) return 1;
+      if (deg > 47) return 2;
+      if (deg > 15) return 3;
+      return 4;
+    }
+
+    fetch('assets/kitsune/sitting.svg')
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function (text) {
+        var parsed = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement;
+        if (!parsed || parsed.nodeName.toLowerCase() !== 'svg') throw new Error('bad svg');
+        spirit.innerHTML = '';
+        spirit.appendChild(document.importNode(parsed, true));
+        spirit.classList.add('tails-inline');
+        var inline = spirit.querySelector('svg');
+        var SVGNS = 'http://www.w3.org/2000/svg';
+
+        var buckets = [[], [], [], [], []];
+        Array.prototype.slice.call(inline.querySelectorAll('path')).forEach(function (p) {
+          var subs = splitSubpaths(p.getAttribute('d') || '');
+          if (!subs.length) return;
+          var groups = { keep: '' , 0: '', 1: '', 2: '', 3: '', 4: '' };
+          subs.forEach(function (s) {
+            var g = classify((s.minX + s.maxX) / 2, (s.minY + s.maxY) / 2);
+            groups[g] += s.d;
+          });
+          var parent = p.parentNode;
+          ['keep', 0, 1, 2, 3, 4].forEach(function (g) {
+            if (!groups[g]) return;
+            var el = document.createElementNS(SVGNS, 'path');
+            el.setAttribute('d', groups[g]);
+            parent.insertBefore(el, p);
+            if (g !== 'keep') buckets[g].push(el);
+          });
+          parent.removeChild(p);
+        });
+
+        var allTail = buckets.reduce(function (a, b) { return a.concat(b); }, []);
+        allTail.forEach(function (p) {
+          p.style.transformBox = 'view-box';
+          p.style.transformOrigin = ORIGIN.x + 'px ' + ORIGIN.y + 'px';
+        });
+        gsap.set(spirit, { opacity: 0, y: 26 });
+        gsap.set(allTail, { opacity: 0, scale: 0.55 });
+
+        var tl = makeTl();
+        tl.to(spirit, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, 0);
+        buckets.forEach(function (bk, i) {
+          if (!bk.length) return;
+          tl.to(bk, {
+            opacity: 1, scale: 1, duration: 0.68,
+            ease: 'power2.out', stagger: 0.01
+          }, 1.0 + i * STEP);
+        });
+        tl.to({}, { duration: 0.8 });
+        ScrollTrigger.refresh();
+      })
+      .catch(function () {
+        // fall back to the stepped mask wipe over the layered images
+        var spiritImgs = spirit.querySelectorAll('img');
+        gsap.set(spiritImgs, { opacity: 0 });
+        var wipe = { p: 55 };
+        var applyWipe = function () {
+          spirit.style.setProperty('--wipe', wipe.p + '%');
+        };
+        var tl = makeTl();
+        spiritImgs.forEach(function (img, i) {
+          var end = LAYER_OPACITY[img.className] || 1;
+          tl.to(img, { opacity: end, duration: 0.5, ease: 'none' }, i * 0.12);
+        });
+        var SPAN = (112 - 55) / TAILS;
+        for (var i = 0; i < TAILS; i++) {
+          tl.to(wipe, {
+            p: 55 + SPAN * (i + 1),
+            duration: 0.62, ease: 'power2.inOut',
+            onUpdate: applyWipe
+          }, 1.0 + i * STEP);
+        }
+        tl.to({}, { duration: 0.8 });
+        ScrollTrigger.refresh();
+      });
   })();
 
   // ---- 06 · the snowfield: the plunge -------------------------------
