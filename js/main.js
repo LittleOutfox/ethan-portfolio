@@ -67,7 +67,7 @@
     if (reducedQuery.matches) { v.remove(); return; }
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests
-    var SRC = 'assets/journey.mp4?v=3';
+    var SRC = 'assets/journey.mp4?v=5';
     fetch(SRC)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
       .then(function (b) { v.src = URL.createObjectURL(b); })
@@ -87,7 +87,7 @@
       if (dur) {
         var max = doc.scrollHeight - window.innerHeight;
         var target = (max > 0 ? window.scrollY / max : 0) * Math.max(0, dur - 0.08);
-        cur += (target - cur) * 0.07;
+        cur += (target - cur) * 0.045;
         if (Math.abs(cur - v.currentTime) > 0.033) {
           try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
         }
