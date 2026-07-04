@@ -613,19 +613,29 @@
       return tl;
     }
 
-    // Five untouched copies of the drawing, each masked to one tail by a
-    // hand-fitted soft wedge following the gaps between the drawn tails.
-    // The artwork's path data is never modified (its traced layers rely
-    // on winding holes — splitting them destroys the ink), so rendering
-    // stays pixel-perfect; the masks only decide WHEN each tail appears.
+    // Five untouched copies of the drawing, each baked down to just one
+    // tail at load time. The artwork's path data is never modified (its
+    // traced layers rely on winding holes — splitting them destroys the
+    // ink). Each copy is clipped to a hand-fitted soft wedge following
+    // the gaps between the drawn tails, and the fox body + ground are
+    // erased from every copy — so the fox appears once, and each earned
+    // point can only ever add its own tail.
+    //
+    // The clipping is done in canvas with explicit alpha compositing
+    // (destination-in keeps the wedge, destination-out erases the body)
+    // and ships as plain bitmaps. CSS mask-image is not trustworthy
+    // here: it treats an SVG source as an ALPHA mask, so a black
+    // "subtract" polygon silently becomes a second reveal — which is
+    // how every piece once showed the entire fox.
     var VB = { w: 674, h: 502 };
     var ORIGIN = { x: 368, y: 322 };
+    var S = 2; // supersample so the baked ink stays crisp on retina
 
     // boundary rays between tails, degrees around the fan base
     // (90 = straight up); tuned against a rendered contact sheet of the
-    // masked pieces — tune again if a stroke pops with its neighbour
+    // baked pieces — tune again if a stroke pops with its neighbour
     var RAYS = [158, 96, 60, 28, 2, -85];
-    var REACH = 430;
+    var REACH = 520; // past every canvas corner, so no tail tip is cut
 
     function ray(deg, r) {
       var a = deg * Math.PI / 180;
@@ -642,50 +652,94 @@
       return pts;
     }
 
-    // the fox itself and the snow ground — visible from the start
+    // the fox itself and the snow ground — visible from the start; the
+    // outer points sit past the canvas edge so the feather never
+    // softens the border of the drawing
     var BASE = [
-      [0, 0], [285, 0], [285, 118], [300, 130], [308, 235], [338, 298],
-      [352, 318], [362, 362], [378, 452], [674, 452], [674, 502], [0, 502]
+      [-24, -24], [285, -24], [285, 118], [300, 130], [308, 235], [338, 298],
+      [352, 318], [362, 362], [378, 452], [698, 452], [698, 526], [-24, 526]
     ];
 
-    function polyStr(points) {
-      return points.map(function (p) { return p[0] + ',' + p[1]; }).join(' ');
+    function shape(poly) {
+      var c = document.createElement('canvas');
+      c.width = VB.w * S;
+      c.height = VB.h * S;
+      var x = c.getContext('2d');
+      if (typeof x.filter === 'string') x.filter = 'blur(' + 8 * S + 'px)'; // feather
+      x.fillStyle = '#fff';
+      x.beginPath();
+      poly.forEach(function (p, i) {
+        if (i) x.lineTo(p[0] * S, p[1] * S); else x.moveTo(p[0] * S, p[1] * S);
+      });
+      x.closePath();
+      x.fill();
+      return c;
     }
 
-    // SVG masks are luminance-based: the white shape reveals, and the
-    // BASE polygon painted black on top subtracts the fox body + ground
-    // from every tail piece, so nothing ever animates twice
-    function maskURI(whitePoly, blackPoly) {
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + VB.w + ' ' + VB.h + '">' +
-        '<defs><filter id="f" x="-15%" y="-15%" width="130%" height="130%">' +
-        '<feGaussianBlur stdDeviation="8"/></filter></defs>' +
-        '<polygon points="' + polyStr(whitePoly) + '" fill="#fff" filter="url(#f)"/>' +
-        (blackPoly ? '<polygon points="' + polyStr(blackPoly) + '" fill="#000" filter="url(#f)"/>' : '') +
-        '</svg>';
-      return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+    function bake(art, keepPoly, erasePoly) {
+      var c = document.createElement('canvas');
+      c.width = VB.w * S;
+      c.height = VB.h * S;
+      var x = c.getContext('2d');
+      x.drawImage(art, 0, 0, c.width, c.height);
+      x.globalCompositeOperation = 'destination-in';
+      x.drawImage(shape(keepPoly), 0, 0);
+      if (erasePoly) {
+        x.globalCompositeOperation = 'destination-out';
+        x.drawImage(shape(erasePoly), 0, 0);
+      }
+      return c;
     }
 
-    function applyMask(el, whitePoly, blackPoly) {
-      var m = maskURI(whitePoly, blackPoly);
-      el.style.webkitMaskImage = m;
-      el.style.maskImage = m;
+    function blobURL(c) {
+      return new Promise(function (resolve, reject) {
+        c.toBlob(function (b) {
+          if (b) resolve(URL.createObjectURL(b)); else reject(new Error('toBlob'));
+        }, 'image/png');
+      });
     }
 
     spirit.classList.add('tails-masked');
-    var sharpBase = spirit.querySelector('img.sharp');
-    if (sharpBase) applyMask(sharpBase, BASE);
 
+    // the wrappers (and the timeline below) exist immediately; the
+    // baked bitmaps drop in a moment later, long before this chapter
+    // scrolls into view
     var pieces = [];
     for (var w = 0; w < TAILS; w++) {
-      var pieceImg = document.createElement('img');
-      pieceImg.src = 'assets/kitsune/sitting.svg';
-      pieceImg.alt = '';
-      pieceImg.draggable = false;
-      pieceImg.className = 'tail-piece';
-      applyMask(pieceImg, wedge(RAYS[w], RAYS[w + 1]), BASE);
-      spirit.appendChild(pieceImg);
-      pieces.push(pieceImg);
+      var wrap = document.createElement('div');
+      wrap.className = 'tail-piece';
+      spirit.appendChild(wrap);
+      pieces.push(wrap);
     }
+
+    var art = new Image();
+    var artLoaded = new Promise(function (resolve, reject) {
+      art.onload = resolve;
+      art.onerror = reject;
+    });
+    art.src = 'assets/kitsune/sitting.svg';
+    artLoaded.then(function () {
+      var baked = [bake(art, BASE, null)];
+      for (var i = 0; i < TAILS; i++) {
+        baked.push(bake(art, wedge(RAYS[i], RAYS[i + 1]), BASE));
+      }
+      return Promise.all(baked.map(blobURL));
+    }).then(function (urls) {
+      // the mount's own three layers (sharp + both blooms) become the
+      // body + ground only — no tail may glow before it is earned
+      Array.prototype.forEach.call(spirit.querySelectorAll(':scope > img'), function (img) {
+        img.src = urls[0];
+      });
+      // each tail gets the same three-layer glow as every other spirit
+      pieces.forEach(function (wrap, i) {
+        wrap.innerHTML =
+          '<img class="bloom2" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">' +
+          '<img class="bloom" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">' +
+          '<img class="sharp" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">';
+      });
+    }).catch(function () {
+      // if baking ever fails, the untouched full drawing simply stays
+    });
 
     gsap.set(spirit, { opacity: 0, y: 26 });
     gsap.set(pieces, { opacity: 0, scale: 0.55, transformOrigin: '54.6% 64.1%' });

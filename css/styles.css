@@ -656,16 +656,15 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   mask-image: linear-gradient(100deg, #000 0%, #000 var(--wipe), transparent calc(var(--wipe) + 14%));
 }
 
-/* masked mode: five untouched copies of the drawing, each clipped to
-   one tail by a feathered wedge — the artwork is never altered */
+/* masked mode: five untouched copies of the drawing, each baked down
+   to one tail at load — the artwork is never altered. Every piece is a
+   wrapper whose children reuse the standard three-layer spirit glow. */
 .tails-spirit.tails-masked {
   -webkit-mask-image: none;
   mask-image: none;
 }
 .tails-spirit .tail-piece {
-  position: absolute; inset: 0 auto auto 0; z-index: 3;
-  width: 100%; height: auto;
-  filter: invert(1) brightness(1.28);
+  position: absolute; inset: 0; z-index: 3;
   will-change: transform, opacity;
 }
 .tails-scene::before {
