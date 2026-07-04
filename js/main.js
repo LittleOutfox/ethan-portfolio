@@ -67,7 +67,7 @@
     if (reducedQuery.matches) { v.remove(); return; }
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests
-    var SRC = 'assets/journey.mp4?v=5';
+    var SRC = 'assets/journey.mp4?v=6';
     fetch(SRC)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
       .then(function (b) { v.src = URL.createObjectURL(b); })
