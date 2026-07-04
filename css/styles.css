@@ -656,18 +656,18 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   mask-image: linear-gradient(100deg, #000 0%, #000 var(--wipe), transparent calc(var(--wipe) + 14%));
 }
 
-/* inline mode: the drawing is split into its five real tails,
-   each unfurling from the fan base — no mask needed */
-.tails-spirit.tails-inline {
+/* masked mode: five untouched copies of the drawing, each clipped to
+   one tail by a feathered wedge — the artwork is never altered */
+.tails-spirit.tails-masked {
   -webkit-mask-image: none;
   mask-image: none;
 }
-/* no filters here: with ~650 animated paths a drop-shadow would
-   re-rasterize every frame. The glow is a static layer underneath. */
-.tails-spirit.tails-inline svg {
-  width: 100%; height: auto; display: block; overflow: visible;
+.tails-spirit .tail-piece {
+  position: absolute; inset: 0 auto auto 0; z-index: 3;
+  width: 100%; height: auto;
+  filter: invert(1) brightness(1.28);
+  will-change: transform, opacity;
 }
-.tails-spirit.tails-inline svg g { fill: #eef0fb; }
 .tails-scene::before {
   content: '';
   position: absolute; inset: -8%;
