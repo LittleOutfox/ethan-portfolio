@@ -1,2 +1,10 @@
 __pycache__/
 *.zip
+
+# local tooling — not needed to run the site
+.claude/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
