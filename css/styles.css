@@ -280,10 +280,12 @@ main { position: relative; z-index: 4; }
 .ch-title em { font-style: italic; color: #cdd5f8; }
 
 /* masked line reveals — each line rises out of its own slot;
-   the slot clips a hair below the baseline grid so serif
-   descenders (g, y, j) keep their tails — the negative margin
-   gives the room back, leaving line spacing untouched */
-.ch-title .tl { display: block; overflow: hidden; padding-bottom: 0.16em; margin-bottom: -0.16em; }
+   the slot clips well below the baseline grid so serif descenders
+   (g, y, j — italic tails run deep in Cormorant) keep their tails;
+   the negative margin gives the room back, leaving line spacing
+   untouched. Hidden lines start at yPercent 135 in main.js so they
+   never peek through this extended window before their reveal. */
+.ch-title .tl { display: block; overflow: hidden; padding-bottom: 0.24em; margin-bottom: -0.24em; }
 .ch-title .tl-i { display: block; }
 
 .ch-rule { transform-origin: left center; }

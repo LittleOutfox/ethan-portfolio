@@ -344,7 +344,9 @@
       return '<span class="tl"><span class="tl-i">' + p + '</span></span>';
     }).join('');
     gsap.fromTo(t.querySelectorAll('.tl-i'),
-      { yPercent: 108 },
+      // 135, not 108: the mask slots clip 0.24em past the line box so
+      // descenders survive — waiting lines must hide below that window
+      { yPercent: 135 },
       {
         yPercent: 0, duration: 1.5, ease: 'power4.out', stagger: 0.14,
         scrollTrigger: { trigger: t, start: 'top 85%', once: true }
