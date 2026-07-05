@@ -466,6 +466,11 @@ main { position: relative; z-index: 4; }
   margin-bottom: 2vh;
 }
 .skill p { color: var(--moon-dim); font-size: 14px; max-width: 30ch; }
+.skill .skill-note {
+  margin-top: 1.4vh;
+  font-family: var(--serif); font-style: italic;
+  font-size: 15px; color: var(--moon-faint);
+}
 
 .hunt-outro {
   min-width: 46vw;
