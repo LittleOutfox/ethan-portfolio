@@ -1,5 +1,5 @@
 /* ============================================================
-   KYŪBI — a nine-tailed portfolio · v2
+   ORIGIN — a nine-tailed portfolio
    spirit ink foxes · scroll-scrubbed forest journey · foxfire
    ============================================================ */
 
@@ -480,8 +480,8 @@
           start: 'left 88%', once: true
         }
       });
-      var kanji = el.querySelector('.skill-kanji');
-      gsap.fromTo(kanji, { y: 50 }, {
+      var hanzi = el.querySelector('.skill-hanzi');
+      gsap.fromTo(hanzi, { y: 50 }, {
         y: -30, ease: 'none',
         scrollTrigger: {
           trigger: el, containerAnimation: horiz,

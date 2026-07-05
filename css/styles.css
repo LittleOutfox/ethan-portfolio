@@ -1,5 +1,5 @@
 /* ============================================================
-   KYŪBI — a nine-tailed portfolio
+   ORIGIN — a nine-tailed portfolio
    deep obsidian · moonlight lilac · ember amber
    ============================================================ */
 
@@ -15,7 +15,7 @@
   --ember: #e0a05c;
   --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --jp: 'Noto Serif JP', 'Yu Mincho', serif;
+  --zh: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
   --pad-x: 8vw;
 }
 
@@ -118,10 +118,10 @@ html.no-js .veil { display: none; }
 
 .veil-inner { position: relative; text-align: center; }
 
-.veil-kanji {
+.veil-hanzi {
   position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -54%);
-  font-family: var(--jp); font-weight: 200;
+  font-family: var(--zh); font-weight: 200;
   font-size: clamp(160px, 34vmin, 300px);
   color: rgba(168, 180, 236, 0.07);
   user-select: none;
@@ -142,7 +142,7 @@ html.no-js .veil { display: none; }
   font-family: var(--serif); font-weight: 400;
   font-size: 24px; letter-spacing: 0.32em; text-indent: 0.32em;
 }
-.veil-word span { color: var(--moon-faint); font-family: var(--jp); font-weight: 200; }
+.veil-word span { color: var(--moon-faint); font-family: var(--zh); font-weight: 200; }
 
 .veil-line {
   position: relative; margin-top: 18px;
@@ -179,7 +179,7 @@ html.no-js .veil { display: none; }
 }
 
 .nav-mark { display: flex; align-items: baseline; gap: 12px; }
-.nav-kanji { font-family: var(--jp); font-weight: 300; font-size: 17px; color: var(--spirit); }
+.nav-hanzi { font-family: var(--zh); font-weight: 300; font-size: 17px; color: var(--spirit); }
 .nav-word { font-family: var(--serif); font-size: 15px; letter-spacing: 0.3em; }
 
 .nav-links { display: flex; gap: clamp(16px, 2.6vw, 40px); }
@@ -205,7 +205,7 @@ html.no-js .veil { display: none; }
 }
 .rail-label {
   writing-mode: vertical-rl;
-  font-family: var(--jp); font-weight: 200; font-size: 12px;
+  font-family: var(--zh); font-weight: 200; font-size: 12px;
   letter-spacing: 0.5em; color: var(--moon-faint);
 }
 .rail-line {
@@ -287,10 +287,10 @@ main { position: relative; z-index: 4; }
 
 .hero-title .hc { display: inline-block; }
 
-.edge-kanji {
+.edge-hanzi {
   position: absolute; right: 3.5vw; top: 22vh;
   writing-mode: vertical-rl;
-  font-family: var(--jp); font-weight: 200;
+  font-family: var(--zh); font-weight: 200;
   font-size: clamp(40px, 6vmin, 72px); letter-spacing: 0.4em;
   color: rgba(236, 231, 244, 0.06);
   pointer-events: none; user-select: none;
@@ -300,7 +300,7 @@ main { position: relative; z-index: 4; }
 .ch-watermark {
   position: absolute; left: 50%; top: 44%;
   transform: translate(-50%, -50%);
-  font-family: var(--jp); font-weight: 200;
+  font-family: var(--zh); font-weight: 200;
   font-size: clamp(220px, 36vmin, 480px); line-height: 1;
   color: rgba(168, 180, 236, 0.04);
   white-space: nowrap;
@@ -340,7 +340,7 @@ main { position: relative; z-index: 4; }
 .hero-watermark {
   position: absolute; left: 50%; top: 44%;
   transform: translate(-50%, -50%);
-  font-family: var(--jp); font-weight: 200;
+  font-family: var(--zh); font-weight: 200;
   font-size: clamp(200px, 46vmin, 520px);
   color: rgba(168, 180, 236, 0.045);
   white-space: nowrap; user-select: none;
@@ -453,9 +453,9 @@ main { position: relative; z-index: 4; }
   padding-left: clamp(24px, 2.4vw, 44px);
   border-left: 1px solid var(--hairline);
 }
-.skill-kanji {
+.skill-hanzi {
   display: block;
-  font-family: var(--jp); font-weight: 200;
+  font-family: var(--zh); font-weight: 200;
   font-size: clamp(48px, 5.4vw, 80px);
   color: rgba(168, 180, 236, 0.2);
   margin-bottom: 2.4vh;
@@ -514,9 +514,9 @@ main { position: relative; z-index: 4; }
   will-change: transform, opacity;
 }
 
-/* three torii gates deep in the forest — each work is a gate
-   you approach, read, and pass through. 千本鳥居, reduced to three,
-   carved from moonlight: the site's own spirit-glass hairlines. */
+/* three spirit gates deep in the forest — each work is a gate
+   you approach, read, and pass through, carved from moonlight:
+   the site's own spirit-glass hairlines. */
 .works-gates { position: absolute; inset: 0; pointer-events: none; }
 
 .wgate {
@@ -709,7 +709,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   color: var(--moon); letter-spacing: 0.04em;
   margin-right: 10px;
 }
-.tails-count-kanji { font-family: var(--jp); color: var(--moon-faint); margin-left: 8px; }
+.tails-count-hanzi { font-family: var(--zh); color: var(--moon-faint); margin-left: 8px; }
 
 /* ------------------------------------------------------------
    06 · the moon pool
@@ -771,7 +771,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   font-family: var(--serif); font-style: italic;
   font-size: 14px; color: var(--moon-dim);
 }
-.pool-whisper span { font-family: var(--jp); font-style: normal; font-size: 12px; margin-left: 10px; }
+.pool-whisper span { font-family: var(--zh); font-style: normal; font-size: 12px; margin-left: 10px; }
 
 .footer {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
@@ -780,7 +780,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
   color: var(--moon-faint);
 }
-.footer p[aria-hidden] { font-family: var(--jp); letter-spacing: 0.4em; }
+.footer p[aria-hidden] { font-family: var(--zh); letter-spacing: 0.4em; }
 
 /* ------------------------------------------------------------
    responsive
@@ -789,10 +789,10 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 @media (max-width: 960px) {
   :root { --pad-x: 6vw; }
 
-  .rail, .edge-kanji { display: none; }
+  .rail, .edge-hanzi { display: none; }
   .nav { padding: 18px 5vw; }
   .nav-word, .nav-links a[data-nav="fire"], .nav-links a[data-nav="tails"] { display: none; }
-  .nav-kanji { font-size: 15px; white-space: nowrap; }
+  .nav-hanzi { font-size: 15px; white-space: nowrap; }
   .nav-links { gap: 16px; }
   .nav-links a { font-size: 9px; letter-spacing: 0.18em; }
 
