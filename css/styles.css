@@ -279,8 +279,11 @@ main { position: relative; z-index: 4; }
 }
 .ch-title em { font-style: italic; color: #cdd5f8; }
 
-/* masked line reveals — each line rises out of its own slot */
-.ch-title .tl { display: block; overflow: hidden; }
+/* masked line reveals — each line rises out of its own slot;
+   the slot clips a hair below the baseline grid so serif
+   descenders (g, y, j) keep their tails — the negative margin
+   gives the room back, leaving line spacing untouched */
+.ch-title .tl { display: block; overflow: hidden; padding-bottom: 0.16em; margin-bottom: -0.16em; }
 .ch-title .tl-i { display: block; }
 
 .ch-rule { transform-origin: left center; }
