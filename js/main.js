@@ -30,18 +30,77 @@
   });
 
   /* ------------------------------------------------------------
-     2 · the journey — a forest that moves as you scroll
+     2 · the loading gate — the forest readies itself before entry
+     The veil counts the journey in as it streams, and only offers
+     Enter once every frame can be summoned instantly.
+     ------------------------------------------------------------ */
+
+  var gate = (function () {
+    var veilEl = document.getElementById('veil');
+    var pctEl = document.getElementById('veilPct');
+    var fillEl = document.getElementById('veilFill');
+    var parts = { video: 0, fonts: 0 };
+    var weights = { video: 0.9, fonts: 0.1 };
+    var ready = false;
+    function paint() {
+      var p = 0, k;
+      for (k in parts) p += parts[k] * weights[k];
+      p = Math.max(0, Math.min(1, p));
+      var pct = Math.round(p * 100);
+      if (pctEl) pctEl.textContent = (pct < 10 ? '0' : '') + pct;
+      if (fillEl) fillEl.style.transform = 'scaleX(' + p + ')';
+      if (p >= 1 && !ready) {
+        ready = true;
+        if (veilEl) veilEl.classList.add('ready');
+      }
+    }
+    // never trap a visitor behind a stalled request
+    setTimeout(function () { parts.video = 1; parts.fonts = 1; paint(); }, 12000);
+    paint();
+    return {
+      set: function (key, val) {
+        if (val > (parts[key] || 0)) { parts[key] = val; paint(); }
+      },
+      isReady: function () { return ready; }
+    };
+  })();
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { gate.set('fonts', 1); });
+  } else {
+    gate.set('fonts', 1);
+  }
+
+  /* ------------------------------------------------------------
+     3 · the journey — a forest that moves as you scroll
      ------------------------------------------------------------ */
 
   (function journey() {
     var v = document.getElementById('journey');
-    if (!v) return;
-    if (reducedQuery.matches) { v.remove(); return; }
+    if (!v) { gate.set('video', 1); return; }
+    if (reducedQuery.matches) { v.remove(); gate.set('video', 1); return; }
     // fetch as blob: object URLs are fully seekable even when the
-    // server (e.g. python http.server) doesn't support range requests
-    var SRC = 'assets/journey.mp4?v=7';
+    // server (e.g. python http.server) doesn't support range requests.
+    // Streamed so the veil can count the download in.
+    var SRC = 'assets/journey.mp4?v=8';
     fetch(SRC)
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.status);
+        var total = +r.headers.get('Content-Length') || 0;
+        if (!r.body || !total) return r.blob();
+        var reader = r.body.getReader(), chunks = [], got = 0;
+        return new Promise(function (resolve, reject) {
+          (function pump() {
+            reader.read().then(function (res) {
+              if (res.done) { resolve(new Blob(chunks, { type: 'video/mp4' })); return; }
+              chunks.push(res.value);
+              got += res.value.length;
+              gate.set('video', Math.min(0.96, got / total)); // last 4% = first frame decoded
+              pump();
+            }).catch(reject);
+          })();
+        });
+      })
       .then(function (b) { v.src = URL.createObjectURL(b); })
       .catch(function () { v.src = SRC; });
     var dur = 0, cur = 0;
@@ -50,17 +109,29 @@
       dur = v.duration || 0;
       v.classList.add('ready');
     });
+    v.addEventListener('loadeddata', function () { gate.set('video', 1); });
     v.addEventListener('error', function () {
       v.classList.remove('ready');
       v.remove();
+      gate.set('video', 1); // the journey is optional; entry is not
     });
 
+    // scrubbing rules: never read layout in the loop (cache the page
+    // height), and never issue a seek while one is in flight — the
+    // video is encoded with a keyframe every 4 frames so each seek
+    // lands almost instantly
+    var maxScroll = 0;
+    function measure() { maxScroll = doc.scrollHeight - window.innerHeight; }
+    window.addEventListener('resize', measure);
+    window.addEventListener('load', measure);
+    if (hasGsap) ScrollTrigger.addEventListener('refresh', measure);
+    measure();
+
     function tick() {
-      if (dur) {
-        var max = doc.scrollHeight - window.innerHeight;
-        var target = (max > 0 ? window.scrollY / max : 0) * Math.max(0, dur - 0.08);
-        cur += (target - cur) * 0.045;
-        if (Math.abs(cur - v.currentTime) > 0.033) {
+      if (dur && maxScroll > 0 && !v.seeking) {
+        var target = (window.scrollY / maxScroll) * Math.max(0, dur - 0.08);
+        cur += (target - cur) * 0.12;
+        if (Math.abs(cur - v.currentTime) > 0.03) {
           try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
         }
       }
@@ -257,7 +328,7 @@
   var lenis = null;
 
   function enter() {
-    if (entered) return;
+    if (entered || !gate.isReady()) return; // the gate holds until the forest is loaded
     entered = true;
     if (veil) veil.classList.add('gone');
     if (lenis) lenis.start();
@@ -266,8 +337,8 @@
 
   if (veil) {
     document.getElementById('veilEnter').addEventListener('click', enter);
-    window.addEventListener('wheel', enter, { once: true, passive: true });
-    window.addEventListener('touchmove', enter, { once: true, passive: true });
+    window.addEventListener('wheel', enter, { passive: true });
+    window.addEventListener('touchmove', enter, { passive: true });
     window.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') enter();
     });
