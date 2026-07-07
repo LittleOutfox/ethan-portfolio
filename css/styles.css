@@ -431,7 +431,7 @@ main { position: relative; z-index: 4; }
 .origin .ch-grid { grid-template-columns: minmax(0, 6.5fr) minmax(0, 4fr); align-items: start; }
 .origin .ch-head { grid-column: 1 / -1; margin-bottom: 8vh; }
 
-.origin-body { max-width: 52ch; }
+.origin-body { max-width: 58ch; }
 .origin-body .lead {
   font-family: var(--serif); font-weight: 400;
   font-size: clamp(21px, 1.9vw, 27px); line-height: 1.55;
@@ -648,9 +648,9 @@ html.js:not(.reduced) .wgate { opacity: 0; }
    ------------------------------------------------------------ */
 
 .fire .ch-num, .fire .ch-name { color: var(--ember); }
-.fire .ch-grid { align-items: start; }
+.fire .ch-grid { align-items: start; gap: 3vh 6vw; /* tight rows: the list rises to meet the fox */ }
 
-.fire-note { margin-top: 3.4vh; max-width: 38ch; color: var(--moon-dim); font-size: 14px; }
+.fire-note { margin-top: 3.4vh; max-width: 46ch; color: var(--moon-dim); font-size: 14px; }
 
 .fire-fox {
   width: min(40vw, 520px);
@@ -662,7 +662,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .fire-fox img.bloom { filter: invert(1) sepia(0.55) saturate(1.8) brightness(1.5) blur(5px); }
 .fire-fox img.bloom2 { filter: invert(1) sepia(0.6) saturate(2) brightness(1.8) blur(16px); }
 
-.fire-list { list-style: none; grid-column: 1 / -1; margin-top: 10vh; }
+.fire-list { list-style: none; grid-column: 1 / -1; margin-top: 4vh; }
 .fire-list li {
   display: flex; align-items: baseline; justify-content: space-between; gap: 24px;
   padding: 3.2vh 0;
@@ -766,8 +766,8 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 
 
 .pool-fox-wrap {
-  position: absolute; right: 22vw; bottom: 10%; z-index: 2;
-  width: min(25vw, 330px);
+  position: absolute; right: 18vw; bottom: 10%; z-index: 2;
+  width: min(28vw, 400px);
   pointer-events: none;
 }
 /* the plunging fox is drawn with very fine lines — lift it */
@@ -780,7 +780,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 
 .pool-card {
   margin-top: 6vh;
-  max-width: 460px;
+  max-width: 500px;
   padding: clamp(26px, 3vw, 40px);
   background: linear-gradient(160deg, rgba(236, 231, 244, 0.05), rgba(236, 231, 244, 0.012));
   border: 1px solid var(--hairline);
@@ -855,6 +855,15 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 
   .pool-fox-wrap { width: 24vw; right: 8vw; }
   .footer { flex-direction: column; gap: 6px; padding-bottom: 16px; }
+}
+
+/* on very wide screens the columns drift apart — hold the
+   composition together and let the spirits grow into the room
+   instead of letting the middle go empty */
+@media (min-width: 1700px) {
+  .ch-grid { max-width: 1460px; margin-inline: auto; }
+  .origin-fox { width: min(44vw, 680px); }
+  .fire-fox { width: min(40vw, 620px); }
 }
 
 /* ------------------------------------------------------------
