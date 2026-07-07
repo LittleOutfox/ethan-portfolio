@@ -380,10 +380,11 @@ main { position: relative; z-index: 4; }
 
 .hero-eyebrow {
   position: relative;
-  font-size: 10px; letter-spacing: 0.42em; text-indent: 0.42em; text-transform: uppercase;
+  font-size: 13px; letter-spacing: 0.34em; text-indent: 0.34em; text-transform: uppercase;
   color: var(--moon-dim);
   margin-bottom: 3vh;
 }
+.hero-eyebrow .hero-name { color: var(--moon); font-weight: 500; }
 
 .hero-title {
   position: relative;
