@@ -82,7 +82,7 @@
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests.
     // Streamed so the veil can count the download in.
-    var SRC = 'assets/journey.mp4?v=8';
+    var SRC = 'assets/journey.mp4?v=9';
     fetch(SRC)
       .then(function (r) {
         if (!r.ok) throw new Error(r.status);
