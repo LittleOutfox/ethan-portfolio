@@ -776,7 +776,13 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .pool-fox-wrap img.bloom2 { filter: invert(1) brightness(2.8) blur(14px); opacity: 0.5; }
 .pool-fox { width: 100%; }
 
-.pool-content { position: relative; z-index: 3; padding: 0 var(--pad-x); max-width: 780px; }
+/* the padding must not eat the content cap — at wide viewports the
+   old 780px box netted barely 500px and smushed the title and card */
+.pool-content {
+  position: relative; z-index: 3;
+  padding: 0 var(--pad-x);
+  max-width: calc(780px + 2 * var(--pad-x));
+}
 
 .pool-card {
   margin-top: 6vh;
