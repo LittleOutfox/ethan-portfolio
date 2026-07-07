@@ -11,6 +11,14 @@
   var hasGsap = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
   var MOTION = hasGsap && !reducedQuery.matches;
 
+  // device tiers — desktop behavior never changes; phones get a
+  // lighter journey (COARSE = any touch device, PHONE = small touch
+  // screen, LEAN = skip heavyweight assets entirely)
+  var COARSE = window.matchMedia('(pointer: coarse)').matches;
+  var PHONE = COARSE && Math.min(window.screen.width, window.screen.height) < 820;
+  var conn = navigator.connection;
+  var LEAN = PHONE || !!(conn && (conn.saveData || /(^|\b)[23]g\b/.test(conn.effectiveType || '')));
+
   if (!MOTION) doc.classList.add('reduced');
 
   /* ------------------------------------------------------------
@@ -24,7 +32,7 @@
     var name = el.getAttribute('data-kfox');
     var src = 'assets/kitsune/' + name + '.svg';
     el.innerHTML =
-      '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false">' +
+      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false">') +
       '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false">' +
       '<img class="sharp" src="' + src + '" alt="" draggable="false">';
   });
@@ -79,6 +87,10 @@
     var v = document.getElementById('journey');
     if (!v) { gate.set('video', 1); return; }
     if (reducedQuery.matches) { v.remove(); gate.set('video', 1); return; }
+    // phones and data-saver connections skip the scrubbed film: the
+    // ink, foxfire and snow carry the atmosphere, entry is instant,
+    // and no megabytes are spent on a background whisper
+    if (LEAN) { v.remove(); gate.set('video', 1); return; }
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests.
     // Streamed so the veil can count the download in.
@@ -110,6 +122,10 @@
       v.classList.add('ready');
     });
     v.addEventListener('loadeddata', function () { gate.set('video', 1); });
+    // iOS often withholds loadeddata for never-played video — canplay
+    // (or even metadata on stubborn builds) opens the gate instead;
+    // gate.set is monotonic so duplicates are harmless
+    v.addEventListener('canplay', function () { gate.set('video', 1); });
     v.addEventListener('error', function () {
       v.classList.remove('ready');
       v.remove();
@@ -120,8 +136,15 @@
     // height), and never issue a seek while one is in flight — the
     // video is encoded with a keyframe every 4 frames so each seek
     // lands almost instantly
-    var maxScroll = 0;
-    function measure() { maxScroll = doc.scrollHeight - window.innerHeight; }
+    var maxScroll = 0, lastW = window.innerWidth;
+    function measure() {
+      // on touch devices the browser chrome collapsing fires
+      // height-only resizes mid-scroll — remeasuring then would make
+      // the film's scrub target jump visibly
+      if (COARSE && window.innerWidth === lastW && maxScroll > 0) return;
+      lastW = window.innerWidth;
+      maxScroll = doc.scrollHeight - window.innerHeight;
+    }
     window.addEventListener('resize', measure);
     window.addEventListener('load', measure);
     if (hasGsap) ScrollTrigger.addEventListener('refresh', measure);
@@ -148,7 +171,7 @@
     var canvas = document.getElementById('foxfire');
     if (!canvas || reducedQuery.matches) { if (canvas) canvas.remove(); return; }
     var ctx = canvas.getContext('2d');
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var dpr = COARSE ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
     var W = 0, H = 0, parts = [];
     var fireSection = document.getElementById('fire');
     var warmth = 0;
@@ -246,7 +269,7 @@
     if (!canvas || !section) return;
     if (reducedQuery.matches) { canvas.remove(); return; }
     var ctx = canvas.getContext('2d');
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var dpr = COARSE ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
     var W = 0, H = 0, flakes = [], visible = false;
     var mx = -9999, my = -9999;
 
@@ -277,6 +300,14 @@
       mx = e.clientX - rect.left; my = e.clientY - rect.top;
     });
     section.addEventListener('mouseleave', function () { mx = -9999; my = -9999; });
+    // fingers stir the snow too — passive, so scrolling stays native
+    section.addEventListener('touchmove', function (e) {
+      var t = e.touches[0];
+      if (!t) return;
+      var rect = canvas.getBoundingClientRect();
+      mx = t.clientX - rect.left; my = t.clientY - rect.top;
+    }, { passive: true });
+    section.addEventListener('touchend', function () { mx = -9999; my = -9999; });
 
     function frame() {
       if (!visible) { requestAnimationFrame(frame); return; }
@@ -330,12 +361,21 @@
   function enter() {
     if (entered || !gate.isReady()) return; // the gate holds until the forest is loaded
     entered = true;
+    doc.classList.remove('gated');
+    window.scrollTo(0, 0); // the journey always begins at the first step
     if (veil) veil.classList.add('gone');
+    // a user gesture unlocks video decoding on iOS, so scrubbing renders
+    var v = document.getElementById('journey');
+    if (v && typeof v.play === 'function') {
+      var p = v.play();
+      if (p && p.then) p.then(function () { v.pause(); }).catch(function () {});
+    }
     if (lenis) lenis.start();
     if (MOTION && window.__heroEntrance) window.__heroEntrance.play();
   }
 
   if (veil) {
+    doc.classList.add('gated'); // scroll is locked while the veil is up
     document.getElementById('veilEnter').addEventListener('click', enter);
     window.addEventListener('wheel', enter, { passive: true });
     window.addEventListener('touchmove', enter, { passive: true });
@@ -354,6 +394,11 @@
   }
 
   gsap.registerPlugin(ScrollTrigger);
+  // touch-device stability: ignore the URL-bar's height-only resizes
+  // and let ScrollTrigger drive touch scroll on the render tick so
+  // pinned scenes stop jittering; both are no-ops with a mouse
+  ScrollTrigger.config({ ignoreMobileResize: true });
+  if (ScrollTrigger.isTouch === 1) ScrollTrigger.normalizeScroll(true);
 
   window.scrollTo(0, 0);
 
@@ -361,13 +406,16 @@
     lenis = new Lenis({ duration: 1.25, smoothWheel: true });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
-    gsap.ticker.lagSmoothing(0);
+    // on touch, default lag smoothing absorbs GC pauses better than 0
+    if (ScrollTrigger.isTouch !== 1) gsap.ticker.lagSmoothing(0);
     lenis.stop(); // held until the veil lifts
   }
 
-  // smooth anchor navigation
+  // smooth anchor navigation (mouse only — on touch the native jump
+  // is instant and always lands true through the pinned scenes)
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
+      if (COARSE) return;
       var target = document.querySelector(a.getAttribute('href'));
       if (!target || !lenis) return; // no Lenis: native anchor jump
       e.preventDefault();
@@ -702,7 +750,7 @@
     // how every piece once showed the entire fox.
     var VB = { w: 674, h: 502 };
     var ORIGIN = { x: 368, y: 322 };
-    var S = 2; // supersample so the baked ink stays crisp on retina
+    var S = PHONE ? 1 : 2; // supersample for retina; phones render the fox far smaller
 
     // boundary rays between tails, degrees around the fan base
     // (90 = straight up); tuned against a rendered contact sheet of the
@@ -806,7 +854,7 @@
       // each tail gets the same three-layer glow as every other spirit
       pieces.forEach(function (wrap, i) {
         wrap.innerHTML =
-          '<img class="bloom2" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">' +
+          (PHONE ? '' : '<img class="bloom2" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">') +
           '<img class="bloom" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">' +
           '<img class="sharp" src="' + urls[i + 1] + '" alt="" aria-hidden="true" draggable="false">';
       });
@@ -869,17 +917,23 @@
       });
     });
 
+    // the halo is a mouse creature — no listener, no ticker on touch
     var halo = document.querySelector('.cursor-halo');
-    var hx = -100, hy = -100, tx = -100, ty = -100, shown = false;
-    window.addEventListener('mousemove', function (e) {
-      tx = e.clientX; ty = e.clientY;
-      if (!shown) { shown = true; gsap.to(halo, { opacity: 1, duration: 0.6 }); }
-    });
-    gsap.ticker.add(function () {
-      hx += (tx - hx) * 0.14;
-      hy += (ty - hy) * 0.14;
-      halo.style.transform = 'translate(' + (hx - 17) + 'px,' + (hy - 17) + 'px)';
-    });
+    if (halo && !COARSE) {
+      var hx = -100, hy = -100, tx = -100, ty = -100, shown = false, tracking = false;
+      window.addEventListener('mousemove', function (e) {
+        tx = e.clientX; ty = e.clientY;
+        if (!shown) { shown = true; gsap.to(halo, { opacity: 1, duration: 0.6 }); }
+        if (!tracking) { // the ticker only spends frames once a mouse exists
+          tracking = true;
+          gsap.ticker.add(function () {
+            hx += (tx - hx) * 0.14;
+            hy += (ty - hy) * 0.14;
+            halo.style.transform = 'translate(' + (hx - 17) + 'px,' + (hy - 17) + 'px)';
+          });
+        }
+      });
+    }
   })();
 
   // keep measurements honest once fonts and images arrive
