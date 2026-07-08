@@ -7,15 +7,36 @@
   <meta name="description" content="Ethan Tiong — RTL &amp; digital design for ASIC and FPGA, told as a nine-tailed fox story. Waterloo EE, open for a Winter 2027 co-op.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Serif+SC:wght@200;300;400&display=swap" rel="stylesheet">
-
+  <!-- self-hosted variable fonts (zh subset to this site's own glyphs):
+       no third-party round trips; preloads + font-display:block keep the
+       veil's first paint in the real faces, never a fallback flash -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/cormorant.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/noto-sc.woff2" crossorigin>
+  <!-- the veil's own fox first, the hero fox second -->
+  <link rel="preload" as="image" href="assets/kitsune/descending.svg">
   <link rel="preload" as="image" href="assets/kitsune/sitting.svg">
-  <link rel="stylesheet" href="css/styles.css?v=33">
+  <link rel="stylesheet" href="css/styles.css?v=34">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // start the gated film download at HTML-parse time — main.js (queued
+    // behind the vendor scripts) adopts this promise, so the veil's
+    // counter never sits at 00 waiting for scripts. The guards mirror
+    // main.js's device tiers: phones/data-saver/reduced-motion never pay
+    // for the film. Keep the ?v in sync with SRC in js/main.js.
+    try {
+      var coarse = matchMedia('(pointer: coarse)').matches;
+      var phone = coarse && Math.min(screen.width, screen.height) < 820;
+      var conn = navigator.connection;
+      var lean = phone || !!(conn && (conn.saveData || /(^|\b)[23]g\b/.test(conn.effectiveType || '')));
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !lean) {
+        window.__journeyFetch = fetch('assets/journey.mp4?v=10', { priority: 'high' });
+        // adopted by main.js — this no-op keeps an early network failure
+        // from logging an unhandled rejection before main.js attaches
+        window.__journeyFetch.catch(function () {});
+      }
+    } catch (e) { /* main.js fetches on its own */ }
   </script>
 </head>
 <body>
@@ -294,10 +315,12 @@
 
   </main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-  <script src="js/main.js?v=26"></script>
+  <!-- self-hosted vendor: same-origin + H2-multiplexed, so no CDN stall
+       can ever freeze the loading gate at 00 -->
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/vendor/lenis.min.js"></script>
+  <script src="js/main.js?v=27"></script>
 
   <!-- Vercel Web Analytics -->
   <script>

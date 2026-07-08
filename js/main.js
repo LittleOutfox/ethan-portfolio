@@ -28,13 +28,18 @@
      inverted to translucent white by CSS filters.
      ------------------------------------------------------------ */
 
+  // veil + hero art loads eagerly (and is counted by the gate below);
+  // every below-fold fox lazy-loads on approach instead, so it never
+  // steals bandwidth from the gated film during the veil
+  var EAGER_FOX = { descending: 1, sitting: 1 };
   document.querySelectorAll('[data-kfox]').forEach(function (el) {
     var name = el.getAttribute('data-kfox');
     var src = 'assets/kitsune/' + name + '.svg';
+    var lazy = EAGER_FOX[name] ? '' : ' loading="lazy" decoding="async"';
     el.innerHTML =
-      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false">') +
-      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false">' +
-      '<img class="sharp" src="' + src + '" alt="" draggable="false">';
+      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + '>') +
+      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + '>' +
+      '<img class="sharp" src="' + src + '" alt="" draggable="false"' + lazy + '>';
   });
 
   /* ------------------------------------------------------------
@@ -47,29 +52,53 @@
     var veilEl = document.getElementById('veil');
     var pctEl = document.getElementById('veilPct');
     var fillEl = document.getElementById('veilFill');
-    var parts = { video: 0, fonts: 0 };
-    var weights = { video: 0.9, fonts: 0.1 };
-    var ready = false;
+    var parts = { video: 0, foxes: 0, fonts: 0 };
+    var weights = { video: 0.75, foxes: 0.15, fonts: 0.1 };
+    var ready = false, readyAt = 0;
+    function open() {
+      if (ready) return;
+      ready = true;
+      readyAt = performance.now();
+      if (veilEl) veilEl.classList.add('ready');
+    }
     function paint() {
       var p = 0, k;
       for (k in parts) p += parts[k] * weights[k];
       p = Math.max(0, Math.min(1, p));
       var pct = Math.round(p * 100);
+      // hold the count at 99 until everything is truly in, then let
+      // 100 land as its own settle beat as the gate opens
+      if (pct > 99 && !ready) pct = 99;
+      if (p >= 1 && !ready) { open(); pct = 100; }
+      if (p >= 1 && slowBtn) {
+        // the forest finished after a failsafe unlock — stop saying it
+        // is still loading
+        if (slowBtn.firstChild) slowBtn.firstChild.nodeValue = 'Enter';
+        slowBtn = null;
+      }
       if (pctEl) pctEl.textContent = (pct < 10 ? '0' : '') + pct;
       if (fillEl) fillEl.style.transform = 'scaleX(' + p + ')';
-      if (p >= 1 && !ready) {
-        ready = true;
-        if (veilEl) veilEl.classList.add('ready');
-      }
     }
-    // never trap a visitor behind a stalled request
-    setTimeout(function () { parts.video = 1; parts.fonts = 1; paint(); }, 12000);
+    // never trap a visitor behind a stalled request — but never lie
+    // either: unlock entry honestly (no fake 100; the count retires at
+    // its true value and the button copy owns the wait)
+    var slowBtn = null;
+    setTimeout(function () {
+      if (ready) return;
+      var btn = document.getElementById('veilEnter');
+      if (btn && btn.firstChild && btn.firstChild.nodeType === 3) {
+        btn.firstChild.nodeValue = 'Enter while the forest loads';
+        slowBtn = btn;
+      }
+      open();
+    }, 12000);
     paint();
     return {
       set: function (key, val) {
         if (val > (parts[key] || 0)) { parts[key] = val; paint(); }
       },
-      isReady: function () { return ready; }
+      isReady: function () { return ready; },
+      readySince: function () { return readyAt; }
     };
   })();
 
@@ -78,6 +107,34 @@
   } else {
     gate.set('fonts', 1);
   }
+
+  // the first-seen artwork joins the gate: the veil fox and hero fox
+  // sharp layers must be fetched, decoded AND rasterized before Enter,
+  // so no fox can ever pop in after the veil lifts
+  (function gateFoxes() {
+    var sharps = document.querySelectorAll('.veil-spirit img.sharp, .hero-spirit img.sharp');
+    if (!sharps.length) { gate.set('foxes', 1); return; }
+    var done = 0;
+    function warm(img) {
+      // draw once at layout size so the first real paint after Enter
+      // finds a warm raster (SVG-as-img rasters are cached per size)
+      try {
+        var dprr = Math.min(window.devicePixelRatio || 1, 2);
+        var w = Math.round((img.clientWidth || 600) * dprr);
+        var h = Math.round((img.clientHeight || 600) * dprr);
+        if (!w || !h) return;
+        var c = document.createElement('canvas');
+        c.width = Math.min(w, 2048); c.height = Math.min(h, 2048);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      } catch (e) { /* warming is best-effort */ }
+    }
+    Array.prototype.forEach.call(sharps, function (img) {
+      var fin = function () { done += 1; gate.set('foxes', done / sharps.length); };
+      if (img.decode) img.decode().then(function () { warm(img); fin(); }, fin);
+      else if (img.complete) fin();
+      else { img.addEventListener('load', fin); img.addEventListener('error', fin); }
+    });
+  })();
 
   /* ------------------------------------------------------------
      3 · the journey — a forest that moves as you scroll
@@ -94,8 +151,10 @@
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests.
     // Streamed so the veil can count the download in.
-    var SRC = 'assets/journey.mp4?v=9';
-    fetch(SRC)
+    // ?v must stay in sync with the head's early-fetch (index.html),
+    // which starts this download at HTML-parse time
+    var SRC = 'assets/journey.mp4?v=10';
+    (window.__journeyFetch || fetch(SRC))
       .then(function (r) {
         if (!r.ok) throw new Error(r.status);
         var total = +r.headers.get('Content-Length') || 0;
@@ -113,12 +172,27 @@
           })();
         });
       })
-      .then(function (b) { v.src = URL.createObjectURL(b); })
+      .then(function (b) {
+        v.src = URL.createObjectURL(b);
+        // late arrival after a failsafe entry: the gesture-time unlock
+        // ran against a src-less video, so re-run the muted play()
+        // trick or iPad scrubbing stays stuck on a blank frame
+        if (entered && typeof v.play === 'function') {
+          var pp = v.play();
+          if (pp && pp.then) pp.then(function () { v.pause(); }).catch(function () {});
+        }
+      })
       .catch(function () { v.src = SRC; });
     var dur = 0, cur = 0, dead = false;
 
     v.addEventListener('loadedmetadata', function () {
       dur = v.duration || 0;
+      // late arrival (honest-failsafe path): open on the scroll-mapped
+      // frame — never visibly fast-forward from frame 0 to catch up
+      if (maxScroll > 0 && window.scrollY > 0) {
+        cur = (window.scrollY / maxScroll) * Math.max(0, dur - 0.08);
+        try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
+      }
       v.classList.add('ready');
     });
     v.addEventListener('loadeddata', function () { gate.set('video', 1); });
@@ -135,8 +209,8 @@
 
     // scrubbing rules: never read layout in the loop (cache the page
     // height), and never issue a seek while one is in flight — the
-    // video is encoded with a keyframe every 4 frames so each seek
-    // lands almost instantly
+    // video is encoded all-intra (every frame a keyframe) so each
+    // seek is a single-frame decode
     var maxScroll = 0, lastW = window.innerWidth;
     function measure() {
       // on touch devices the browser chrome collapsing fires
@@ -405,13 +479,15 @@
     entered = true;
     doc.classList.remove('gated');
     window.scrollTo(0, 0); // the journey always begins at the first step
-    if (veil) {
+    // reap the veil (and its decoded fox rasters) once its exit ends —
+    // visibility:hidden alone pins that memory for the site's lifetime
+    var reap = function () {
+      if (veil && veil.parentNode) { veil.remove(); veil = null; }
+    };
+    if (veil && MOTION) {
+      veilExit(reap); // authored exit: the type steps aside, then ink disperses
+    } else if (veil) {
       veil.classList.add('gone');
-      // reap the veil (and its decoded fox rasters) once the fade ends —
-      // visibility:hidden alone pins that memory for the site's lifetime
-      var reap = function () {
-        if (veil && veil.parentNode) { veil.remove(); veil = null; }
-      };
       // transitionend bubbles — a child's transition (e.g. the Enter
       // button's 0.4s color fade) must not reap the veil mid-dissolve
       veil.addEventListener('transitionend', function (e) {
@@ -426,15 +502,55 @@
       var p = v.play();
       if (p && p.then) p.then(function () { v.pause(); }).catch(function () {});
     }
-    if (lenis) lenis.start();
-    if (MOTION && window.__heroEntrance) window.__heroEntrance.play();
+    if (!veil || !MOTION) {
+      // no authored exit to pace them — release everything at once
+      if (lenis) lenis.start();
+      if (MOTION && window.__heroEntrance) window.__heroEntrance.play();
+    }
+  }
+
+  // the ink-disperse exit: the veil's type steps aside line by line,
+  // then the world is revealed through an expanding feathered aperture
+  // (a mask tween on one custom property; each frame re-rasters the
+  // gradient mask, which is fine — the veil is a flat ink fill by then).
+  // Scroll stays held until the reveal is underway (desktop: Lenis stays
+  // stopped; touch scrolls immediately by design — the entering swipe
+  // carrying into the world feels native there), and the hero entrance
+  // begins while the ink is still dispersing.
+  function veilExit(done) {
+    gsap.timeline({ onComplete: done })
+      // the infinite veil-float CSS animation would override every
+      // inline transform/opacity GSAP writes — kill it first
+      .set('.veil-spirit', { animation: 'none' }, 0)
+      .to('.veil-gate', { opacity: 0, yPercent: 20, duration: 0.5, ease: 'power2.in' }, 0)
+      .to('.veil-line', { opacity: 0, yPercent: 26, duration: 0.5, ease: 'power2.in' }, 0.07)
+      .to('.veil-word', { opacity: 0, yPercent: 28, duration: 0.55, ease: 'power2.in' }, 0.14)
+      .to('.veil-hanzi', { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0.2)
+      .to('.veil-spirit', { y: -30, opacity: 0, duration: 0.65, ease: 'power2.inOut' }, 0.2)
+      .call(function () {
+        if (veil) veil.classList.add('dissolving');
+        if (window.__heroEntrance) window.__heroEntrance.play();
+      }, null, 0.5)
+      .to(veil, { '--veil-r': '160vmax', duration: 1.5, ease: 'power3.inOut' }, 0.5)
+      .call(function () { if (lenis) lenis.start(); }, null, 1.15)
+      .to(veil, { opacity: 0, duration: 0.3, ease: 'none' }, 1.7); // no-mask browsers still dissolve
   }
 
   if (veil) {
     doc.classList.add('gated'); // scroll is locked while the veil is up
     document.getElementById('veilEnter').addEventListener('click', enter);
-    window.addEventListener('wheel', enter, { passive: true });
-    window.addEventListener('touchmove', enter, { passive: true });
+    // scroll-to-enter stays, but leftover trackpad inertia from the
+    // loading wait must not skip the 100% settle and Enter reveal —
+    // require a fresh, deliberate push >400ms after the gate opens
+    var wheelAccum = 0;
+    window.addEventListener('wheel', function (e) {
+      if (!gate.isReady() || performance.now() - gate.readySince() < 400) return;
+      wheelAccum += Math.abs(e.deltaY);
+      if (wheelAccum > 40) enter();
+    }, { passive: true });
+    window.addEventListener('touchmove', function () {
+      if (gate.isReady() && performance.now() - gate.readySince() > 400) enter();
+    }, { passive: true });
     window.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') enter();
     });
@@ -449,6 +565,12 @@
   if (!MOTION) {
     if (veil && reducedQuery.matches) {
       veil.classList.add('gone');
+      // the veil dismisses itself here, so unlock scroll with it and
+      // retire enter() — otherwise reduced-motion visitors sit behind
+      // html.gated's overflow:hidden with no visible gate, and a later
+      // stray enter() would scrollTo(0,0) out from under them
+      doc.classList.remove('gated');
+      entered = true;
       setTimeout(function () {
         if (veil && veil.parentNode) { veil.remove(); veil = null; }
       }, 1600);

@@ -3,6 +3,52 @@
    deep obsidian · moonlight lilac · ember amber
    ============================================================ */
 
+/* ------------------------------------------------------------
+   self-hosted variable fonts — subset, same-origin, display:block.
+   Head preloads land them inside the first-paint window, so the veil
+   never shows fallback type. noto-sc.woff2 is subset to exactly the
+   hanzi this site uses (extracted from index.html) — any NEW hanzi
+   added later must be re-subset or it falls back to Songti SC/SimSun.
+   ------------------------------------------------------------ */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: block;
+  src: url('../assets/fonts/cormorant.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 300 400;
+  font-display: block;
+  src: url('../assets/fonts/cormorant-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: block;
+  src: url('../assets/fonts/inter.woff2') format('woff2');
+}
+/* → and ↗ live outside Google's latin slice — tiny dedicated subset so
+   "Keep scrolling →" and the ↗ visit links render in Inter, not fallback */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: block;
+  src: url('../assets/fonts/inter-arrows.woff2') format('woff2');
+  unicode-range: U+2192, U+2197;
+}
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 200 400;
+  font-display: block;
+  src: url('../assets/fonts/noto-sc.woff2') format('woff2');
+}
+
 :root {
   --ink: #08070d;
   --ink-2: #0d0b16;
@@ -53,9 +99,8 @@ a { color: inherit; text-decoration: none; }
   width: 100%; height: 100%;
   object-fit: cover;
   opacity: 0;
-  /* TODO(pass-2): bake this grade into the mp4 encode and delete the
-     filter — it costs a color pass on every presented frame */
-  filter: brightness(0.9) contrast(1.03);
+  /* the grade (brightness 0.9, contrast 1.03) is baked into the encode
+     itself — no per-frame CSS filter pass (PSNR-verified identical) */
   transition: opacity 2.4s ease;
   pointer-events: none;
   transform: translateZ(0); /* own compositor layer: scrub repaints stay off the page */
@@ -120,6 +165,24 @@ html.gated .grain { animation-play-state: paused; }
   display: flex; align-items: center; justify-content: center;
   transition: opacity 1.1s ease, visibility 1.1s;
   touch-action: none; /* no dragging the page behind the veil */
+  /* -16vmax, not 0: with the 16vmax feather band, a 0 start would open
+     a fully-feathered hole in a single frame the moment the mask lands;
+     from -16vmax the aperture truly grows from nothing */
+  --veil-r: -16vmax;
+}
+/* the ink-disperse exit: enter() tweens --veil-r so the world is
+   revealed through an expanding, feathered aperture — ink dispersing in
+   water. One custom property, but each frame re-rasters the gradient
+   mask and repaints the veil layer — acceptable because the veil is a
+   flat ink fill (its type has already faded) by the time this runs.
+   transition:none so the GSAP exit never fights the CSS fallback;
+   pointer-events:none because masks don't affect hit testing and the
+   dissolving veil must not swallow clicks on the revealed world. */
+.veil.dissolving {
+  transition: none;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle at 50% 58%, transparent var(--veil-r), #000 calc(var(--veil-r) + 16vmax));
+  mask-image: radial-gradient(circle at 50% 58%, transparent var(--veil-r), #000 calc(var(--veil-r) + 16vmax));
 }
 /* while the veil is up, the page itself cannot scroll */
 html.gated, html.gated body { overflow: hidden; }
