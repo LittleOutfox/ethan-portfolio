@@ -278,6 +278,7 @@
     var W = 0, H = 0, parts = [];
     var fireSection = document.getElementById('fire');
     var warmth = 0, targetWarm = 0, externalWarm = false;
+    var energy = 0; // damped |scroll velocity| 0..1 — the embers quicken with travel
 
     function sprite(r, g, b) {
       var s = document.createElement('canvas');
@@ -344,12 +345,13 @@
       for (var i = 0; i < parts.length; i++) {
         var p = parts[i];
         p.sway += p.swaySpeed;
-        p.pulse += 0.015;
+        p.pulse += 0.015 * (1 + energy * 0.8); // travel quickens the pulse
         p.y -= p.v + drift * 0.4 * p.v;
         p.x += Math.sin(p.sway) * 0.25;
         if (p.y < -30) { parts[i] = spawn(false); continue; }
         if (p.y > H + 40) { p.y = -20; p.x = Math.random() * W; }
-        var alpha = p.a * (0.6 + 0.4 * Math.sin(p.pulse));
+        // clamp: globalAlpha silently IGNORES out-of-range assignments
+        var alpha = Math.min(1, p.a * (0.6 + 0.4 * Math.sin(p.pulse)) * (1 + energy * 0.25));
         var size = p.r * 9;
         if (warmth < 0.999) {
           ctx.globalAlpha = alpha * (1 - warmth);
@@ -377,6 +379,8 @@
     };
     // the motion section swaps the warmth source to a #fire trigger
     window.__foxfireWarm = function (w) { externalWarm = true; targetWarm = w; };
+    // ...and feeds the damped scroll energy in from its one shared value
+    window.__foxfireEnergy = function (e) { energy = e; };
   })();
 
   /* ------------------------------------------------------------
@@ -598,6 +602,43 @@
       lenis.scrollTo(target, { duration: 1.6 });
     });
   });
+
+  // ---- the world breathes with your scroll -----------------------
+  // One damped velocity value (the ivress damp idiom); everything
+  // below reads it. Magnitudes are deliberately sub-perceptual —
+  // physics, not effects.
+  (function velocity() {
+    var VEL_LEAN = -14;  // px of fox lean at full normalized velocity
+    var velRaw = 0, velNorm = 0, lastVelY = window.scrollY;
+    if (lenis) lenis.on('scroll', function (e) { velRaw = e.velocity; });
+
+    // the ambient foxes lean on an inner wrapper: the mounts' own y is
+    // scrub-owned (parallax), and two writers on one transform fight.
+    // NEVER wrap .tails-spirit (its rebake reads :scope > img) and the
+    // pool fox is mid-plunge — lag would muddy a choreographed move.
+    var lagSetters = [];
+    ['.origin-fox', '.fire-fox'].forEach(function (sel) {
+      var mount = document.querySelector(sel);
+      if (!mount) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'spirit-lag';
+      while (mount.firstChild) wrap.appendChild(mount.firstChild);
+      mount.appendChild(wrap);
+      lagSetters.push(gsap.quickTo(wrap, 'y', { duration: 0.5, ease: 'power3' }));
+    });
+
+    gsap.ticker.add(function (t, dtMs) {
+      if (!lenis) { // touch: normalizeScroll owns scroll — derive from position
+        var y = window.scrollY;
+        velRaw = velRaw * 0.8 + (y - lastVelY) * 0.2;
+        lastVelY = y;
+      }
+      var norm = Math.max(-1, Math.min(1, (velRaw / window.innerHeight) * 2));
+      velNorm += (norm - velNorm) * (1 - Math.pow(0.9, dtMs / 16.7));
+      if (window.__foxfireEnergy) window.__foxfireEnergy(Math.abs(velNorm));
+      for (var i = 0; i < lagSetters.length; i++) lagSetters[i](velNorm * VEL_LEAN);
+    });
+  })();
 
   // ---- spirit condensation: blooms first, then the ink ----------
   var LAYER_OPACITY = { bloom2: 0.38, bloom: 0.6, sharp: 0.95 };
@@ -1157,19 +1198,63 @@
       });
     });
 
-    // the halo is a mouse creature — no listener, no ticker on touch
+    // the halo is a mouse creature — no listener, no ticker on touch.
+    // It speaks a small language: it grows over anything interactive,
+    // and the key CTAs answer with a gentle magnetic lean. The ticker
+    // below is the ONLY writer of halo.style.transform — never tween it.
     var halo = document.querySelector('.cursor-halo');
     if (halo && !COARSE) {
+      var HALO_GROW = 2.2;    // scale over interactive targets
+      var MAGNET_PULL = 0.15; // halo bias toward a magnetic center
+      var MAGNET_SHIFT = 6;   // px cap for the element's own lean
       var hx = -100, hy = -100, tx = -100, ty = -100, shown = false, tracking = false;
+      var hs = 1, hTarget = 1, hoverEl = null;
+      var magnet = null, magnetRect = null, magnetX = null, magnetY = null;
+
+      document.addEventListener('pointerover', function (e) {
+        var t = e.target.closest && e.target.closest('a, button, [data-cursor]');
+        if (!t) return;
+        hoverEl = t;
+        hTarget = HALO_GROW;
+        // only generous targets magnetize — nav links are 26px tall
+        // under a fixed header and would jitter
+        if (t !== magnet && t.matches && t.matches('.veil-enter, .wscene-visit, .pool-mail')) {
+          magnet = t;
+          magnetRect = t.getBoundingClientRect(); // once, off the hot path
+          magnetX = gsap.quickTo(t, 'x', { duration: 0.4, ease: 'power3' });
+          magnetY = gsap.quickTo(t, 'y', { duration: 0.4, ease: 'power3' });
+        }
+      });
+      document.addEventListener('pointerout', function (e) {
+        if (hoverEl && !hoverEl.contains(e.relatedTarget)) { hoverEl = null; hTarget = 1; }
+        if (magnet && !magnet.contains(e.relatedTarget)) {
+          if (magnetX) { magnetX(0); magnetY(0); }
+          magnet = null; magnetRect = null;
+        }
+      });
+
       window.addEventListener('mousemove', function (e) {
         tx = e.clientX; ty = e.clientY;
         if (!shown) { shown = true; gsap.to(halo, { opacity: 1, duration: 0.6 }); }
         if (!tracking) { // the ticker only spends frames once a mouse exists
           tracking = true;
           gsap.ticker.add(function () {
-            hx += (tx - hx) * 0.14;
-            hy += (ty - hy) * 0.14;
-            halo.style.transform = 'translate(' + (hx - 17) + 'px,' + (hy - 17) + 'px)';
+            // the veil is removed from the DOM — its Enter button can
+            // never fire pointerout, so drop stale targets here
+            if (hoverEl && !hoverEl.isConnected) { hoverEl = null; hTarget = 1; magnet = null; }
+            var ax = tx, ay = ty;
+            if (magnet && magnetRect) {
+              var cx = magnetRect.left + magnetRect.width / 2;
+              var cy = magnetRect.top + magnetRect.height / 2;
+              ax += (cx - tx) * MAGNET_PULL;
+              ay += (cy - ty) * MAGNET_PULL;
+              magnetX(Math.max(-MAGNET_SHIFT, Math.min(MAGNET_SHIFT, (tx - cx) * 0.12)));
+              magnetY(Math.max(-MAGNET_SHIFT, Math.min(MAGNET_SHIFT, (ty - cy) * 0.12)));
+            }
+            hx += (ax - hx) * 0.14;
+            hy += (ay - hy) * 0.14;
+            hs += (hTarget - hs) * 0.12;
+            halo.style.transform = 'translate(' + (hx - 17) + 'px,' + (hy - 17) + 'px) scale(' + hs.toFixed(3) + ')';
           });
         }
       });
