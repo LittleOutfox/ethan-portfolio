@@ -608,10 +608,10 @@
     gsap.set(imgs, { opacity: 0 });
     gsap.set(mount, { y: opts.y === undefined ? 30 : opts.y });
     var tl = gsap.timeline({ paused: true });
-    tl.to(mount, { y: 0, duration: 2.2, ease: 'power2.out' }, 0);
+    tl.to(mount, { y: 0, duration: 2.2, ease: 'power4.out' }, 0);
     imgs.forEach(function (img, i) {
       var end = LAYER_OPACITY[img.className] || 1;
-      tl.to(img, { opacity: end, duration: 1.6, ease: 'power2.out' }, i * 0.45);
+      tl.to(img, { opacity: end, duration: 1.6, ease: 'power4.out' }, i * 0.45);
     });
     return tl;
   }
@@ -643,7 +643,7 @@
       // descenders survive — waiting lines must hide below that window
       { yPercent: 135 },
       {
-        yPercent: 0, duration: 1.5, ease: 'power4.out', stagger: 0.14,
+        yPercent: 0, duration: 1.5, ease: 'expo.out', stagger: 0.14,
         scrollTrigger: { trigger: t, start: 'top 85%', once: true }
       });
   });
@@ -651,7 +651,7 @@
   // hairline rules draw themselves in
   gsap.utils.toArray('.ch-rule').forEach(function (r) {
     gsap.fromTo(r, { scaleX: 0 }, {
-      scaleX: 1, duration: 1.4, ease: 'power3.inOut',
+      scaleX: 1, duration: 1.4, ease: 'power2.inOut',
       scrollTrigger: { trigger: r, start: 'top 88%', once: true }
     });
   });
@@ -670,7 +670,7 @@
   gsap.utils.toArray('[data-reveal]').forEach(function (el) {
     if (el.closest('#hero') || el.classList.contains('ch-title')) return;
     gsap.fromTo(el, { y: 40, opacity: 0 }, {
-      y: 0, opacity: 1, duration: 1.3, ease: 'power3.out',
+      y: 0, opacity: 1, duration: 1.3, ease: 'expo.out',
       scrollTrigger: { trigger: el, start: 'top 87%', once: true }
     });
   });
@@ -701,13 +701,13 @@
 
     var entrance = gsap.timeline({ paused: true });
     entrance
-      .to('.hero-moon', { opacity: 1, scale: 1, duration: 2.4, ease: 'power2.out' }, 0)
+      .to('.hero-moon', { opacity: 1, scale: 1, duration: 2.4, ease: 'power4.out' }, 0)
       .to('.hero-title', { opacity: 1, filter: 'blur(0px)', duration: 1.9, ease: 'expo.out' }, 0.2)
       .fromTo('.hero-title .hc',
         { yPercent: 46, opacity: 0 },
         { yPercent: 0, opacity: 1, stagger: 0.06, duration: 1.5, ease: 'expo.out' }, 0.25)
-      .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.8)
-      .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 1.0)
+      .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 0.8)
+      .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 1.0)
       .add(condense(spirit, { y: 20 }).play(), 0.9);
     window.__heroEntrance = entrance;
 
@@ -779,11 +779,13 @@
         scrub: 1.4, invalidateOnRefresh: true
       }
     });
+    // idle breath, not a gesture — the one deliberate exception to the
+    // expo/power4 voice (a breath should be sinusoidal)
     gsap.to(foxMount, { y: -7, duration: 2.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
 
     gsap.utils.toArray('.skill').forEach(function (el) {
       gsap.fromTo(el, { opacity: 0, y: 70 }, {
-        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+        opacity: 1, y: 0, duration: 1, ease: 'expo.out',
         scrollTrigger: {
           trigger: el, containerAnimation: horiz,
           start: 'left 88%', once: true
