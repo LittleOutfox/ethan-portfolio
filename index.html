@@ -16,7 +16,7 @@
   <!-- the veil's own fox first, the hero fox second -->
   <link rel="preload" as="image" href="assets/kitsune/descending.svg">
   <link rel="preload" as="image" href="assets/kitsune/sitting.svg">
-  <link rel="stylesheet" href="css/styles.css?v=37">
+  <link rel="stylesheet" href="css/styles.css?v=38">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -203,7 +203,7 @@
               <h3 class="wscene-title">Focus or Fry</h3>
               <p class="wscene-line">A fully parameterized UART in Verilog — 16× oversampling, phase-accurate sampling, FIFO buffering and flow control, verified in SystemVerilog.</p>
               <p class="wscene-role">Verilog · FSMs · FIFO · SystemVerilog</p>
-              <a class="wscene-visit" href="https://github.com/LittleOutfox/focus-or-fry/" target="_blank" rel="noopener">GitHub ↗</a>
+              <a class="wscene-visit" href="https://github.com/LittleOutfox/focus-or-fry/" target="_blank" rel="noopener">GitHub <span class="visit-arrow" aria-hidden="true">↗</span></a>
             </div>
           </article>
           <article class="wgate" data-wgate>
@@ -236,7 +236,7 @@
               <h3 class="wscene-title">Calming Teddy Bear</h3>
               <p class="wscene-line">An Arduino bear that sensed racing hearts and answered with a lullaby and a warm tummy — easing anxiety by up to 52% at a care centre and a dental clinic.</p>
               <p class="wscene-role">Arduino · Heart-rate sensing · C++</p>
-              <a class="wscene-visit" href="https://docs.google.com/document/d/1dKNdC3heJWIDP0wO4JZW94xYDHml6rhj4n3I9VjYhfo/edit?usp=sharing" target="_blank" rel="noopener">Documentation ↗</a>
+              <a class="wscene-visit" href="https://docs.google.com/document/d/1dKNdC3heJWIDP0wO4JZW94xYDHml6rhj4n3I9VjYhfo/edit?usp=sharing" target="_blank" rel="noopener">Documentation <span class="visit-arrow" aria-hidden="true">↗</span></a>
             </div>
           </article>
         </div>
@@ -257,10 +257,12 @@
           <p class="fire-note" data-reveal>Some nights are tucked safely in the den. Cooking something warm, playing with friends, or getting lost in a story. Quiet things, but still part of the trail.</p>
         </header>
         <div class="fire-fox spirit-mount" data-kfox="howling" aria-hidden="true"></div>
+        <!-- data-text must exactly equal each fire-name's text: the hover glow
+             is its ::after (content: attr(data-text)) crossfaded on opacity -->
         <ul class="fire-list">
-          <li data-reveal><span class="fire-name">Games with friends</span><span class="fire-desc">Minecraft, Valorant, and League. Fun with friends, painfully boring alone.</span></li>
-          <li data-reveal><span class="fire-name">Tennis</span><span class="fire-desc">Years of competing left their mark. Pickleball just happened to speak the same language.</span></li>
-          <li data-reveal><span class="fire-name">Cooking</span><span class="fire-desc">I know my way around Western comfort food. Lately, the winds have shifted toward Chinese, Korean, and other Asian dishes.</span></li>
+          <li data-reveal><span class="fire-name" data-text="Games with friends">Games with friends</span><span class="fire-desc">Minecraft, Valorant, and League. Fun with friends, painfully boring alone.</span></li>
+          <li data-reveal><span class="fire-name" data-text="Tennis">Tennis</span><span class="fire-desc">Years of competing left their mark. Pickleball just happened to speak the same language.</span></li>
+          <li data-reveal><span class="fire-name" data-text="Cooking">Cooking</span><span class="fire-desc">I know my way around Western comfort food. Lately, the winds have shifted toward Chinese, Korean, and other Asian dishes.</span></li>
         </ul>
       </div>
     </section>

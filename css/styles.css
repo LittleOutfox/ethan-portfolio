@@ -96,6 +96,32 @@ body {
 
 ::selection { background: rgba(var(--spirit-rgb), 0.25); color: var(--moon); }
 
+/* keyboard focus speaks the same language as hover — never the UA's
+   stock blue ring on this obsidian */
+:focus-visible {
+  outline: 1px solid var(--spirit);
+  outline-offset: 4px;
+}
+.veil-enter:focus-visible {
+  outline-offset: 8px;
+  color: var(--spirit);
+}
+.veil-enter:focus-visible .veil-enter-rule { width: 76px; background: var(--spirit); }
+
+/* the scrollbar is part of the world, not the OS chrome */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--spirit-rgb), 0.3) var(--ink);
+}
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--spirit-rgb), 0.28);
+  border-radius: 5px;
+  border: 2px solid var(--ink);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--spirit-rgb), 0.45); }
+
 a { color: inherit; text-decoration: none; }
 
 /* ------------------------------------------------------------
@@ -286,11 +312,15 @@ html.no-js .veil { display: none; }
 .nav-links a::after {
   content: ''; position: absolute; left: 0; bottom: 0;
   width: 100%; height: 1px; background: var(--spirit);
-  transform: scaleX(0); transform-origin: left;
+  /* resting origin is RIGHT so the line exits the way it was going;
+     the hover/active rule swaps to LEFT (untransitioned = instant), so
+     the line enters left and leaves right — it passes through the word */
+  transform: scaleX(0); transform-origin: right;
   transition: transform var(--dur-2) var(--out-expo);
 }
 .nav-links a:hover, .nav-links a.active { color: var(--moon); }
-.nav-links a.active::after { transform: scaleX(1); }
+.nav-links a:hover::after,
+.nav-links a.active::after { transform: scaleX(1); transform-origin: left; }
 
 .rail {
   position: fixed; right: 3vw; top: 50%; z-index: 20;
@@ -722,6 +752,23 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   transition: color var(--dur-2) var(--out-soft), border-color var(--dur-2) var(--out-soft);
 }
 .wscene-visit:hover { color: var(--spirit); border-color: var(--spirit-soft); }
+/* layered hover: a spirit line sweeps over the resting hairline
+   (enter-left / exit-right), and the ↗ answers a beat later */
+.wscene-visit, .pool-mail { position: relative; display: inline-block; }
+.wscene-visit::after, .pool-mail::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--spirit);
+  transform: scaleX(0); transform-origin: right;
+  transition: transform var(--dur-2) var(--out-expo);
+}
+.wscene-visit:hover::after, .pool-mail:hover::after {
+  transform: scaleX(1); transform-origin: left;
+}
+.visit-arrow {
+  display: inline-block;
+  transition: transform var(--dur-1) var(--out-expo) 60ms;
+}
+.wscene-visit:hover .visit-arrow { transform: translate(3px, -3px); }
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
@@ -758,14 +805,25 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .fire-list li:last-child { border-bottom: 1px solid var(--hairline); }
 .fire-name {
+  position: relative;
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(24px, 2.6vw, 38px);
-  transition: color var(--dur-2) var(--out-soft), text-shadow var(--dur-2) var(--out-soft);
+  transition: color var(--dur-2) var(--out-soft);
 }
-.fire-list li:hover .fire-name {
-  color: var(--ember);
+/* the ember glow is pre-painted into a transparent-text ::after and
+   crossfaded on opacity — a transitioned text-shadow would repaint
+   the glyphs with a 24px blur on every frame of the hover */
+.fire-name::after {
+  content: attr(data-text);
+  position: absolute; inset: 0;
+  color: transparent;
   text-shadow: 0 0 24px rgba(var(--ember-rgb), 0.35);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--out-soft);
+  pointer-events: none;
 }
+.fire-list li:hover .fire-name { color: var(--ember); }
+.fire-list li:hover .fire-name::after { opacity: 1; }
 .fire-desc { font-size: 13px; color: var(--moon-dim); text-align: right; }
 
 /* ------------------------------------------------------------
@@ -1064,3 +1122,13 @@ html.reduced .grain { animation: none; }
 html.reduced .veil-spirit { animation: none; }
 html.reduced .hero-cue-line::after { animation: none; }
 html.reduced .cursor-halo { display: none; }
+
+/* native calm-mode safety net: the html.reduced class above depends on
+   main.js having run — this covers the window before it does (and any
+   script failure) for visitors who asked the OS for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .grain { animation: none; }
+  .veil-spirit { animation: none; }
+  .hero-cue-line::after { animation: none; }
+  .cursor-halo { display: none; }
+}
