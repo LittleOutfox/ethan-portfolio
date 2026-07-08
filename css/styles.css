@@ -328,6 +328,22 @@ html.no-js .veil { display: none; }
   filter: invert(1) brightness(2) blur(16px);
   opacity: 0.38;
 }
+/* pre-baked glow layers (assets/kitsune/*-bloom*.webp): the blurs above
+   are rendered into the files offline, so no live filter runs. The
+   negative inset restores the blur spill the live filter drew outside
+   the box (4%/8% padding baked into the files). The tails chapter's
+   runtime-baked pieces stay on the live-filter path — their bitmaps
+   are black ink (main.js strips data-baked when it swaps them in). */
+.spirit-mount img.bloom[data-baked] {
+  /* explicit % size, not auto — an abs-positioned IMAGE with width:auto
+     takes its intrinsic file size, it does not stretch to the insets */
+  top: -4%; left: -4%; width: 108%; height: 108%;
+  filter: none;
+}
+.spirit-mount img.bloom2[data-baked] {
+  top: -8%; left: -8%; width: 116%; height: 116%;
+  filter: none;
+}
 
 /* ------------------------------------------------------------
    shared chapter grammar
@@ -717,8 +733,9 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   position: relative; z-index: 1;
 }
 .fire-fox img.sharp { filter: invert(1) sepia(0.4) saturate(1.4) brightness(1.22); }
-.fire-fox img.bloom { filter: invert(1) sepia(0.55) saturate(1.8) brightness(1.5) blur(5px); }
-.fire-fox img.bloom2 { filter: invert(1) sepia(0.6) saturate(2) brightness(1.8) blur(16px); }
+/* ember tint over the baked white glow — color-matrix only, no blur */
+.fire-fox img.bloom[data-baked] { filter: sepia(0.55) saturate(1.8) brightness(0.94); }
+.fire-fox img.bloom2[data-baked] { filter: sepia(0.6) saturate(2) brightness(0.9); }
 
 .fire-list { list-style: none; grid-column: 1 / -1; margin-top: clamp(24px, 2.5vw, 42px); }
 .fire-list li {
@@ -828,10 +845,11 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   width: min(28vw, 400px);
   pointer-events: none;
 }
-/* the plunging fox is drawn with very fine lines — lift it */
+/* the plunging fox is drawn with very fine lines — lift it
+   (brightness boost over the baked glow; no live blur) */
 .pool-fox-wrap img.sharp { filter: invert(1) brightness(2) contrast(1.15); }
-.pool-fox-wrap img.bloom { filter: invert(1) brightness(2.4) blur(4px); opacity: 0.8; }
-.pool-fox-wrap img.bloom2 { filter: invert(1) brightness(2.8) blur(14px); opacity: 0.5; }
+.pool-fox-wrap img.bloom[data-baked] { filter: brightness(1.5); opacity: 0.8; }
+.pool-fox-wrap img.bloom2[data-baked] { filter: brightness(1.4); opacity: 0.5; }
 .pool-fox { width: 100%; }
 
 /* the padding must not eat the content cap — at wide viewports the

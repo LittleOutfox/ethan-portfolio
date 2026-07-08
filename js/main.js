@@ -46,12 +46,18 @@
   document.querySelectorAll('[data-kfox]').forEach(function (el) {
     var name = el.getAttribute('data-kfox');
     var src = 'assets/kitsune/' + name + '.svg';
+    // the glow layers are pre-baked WebPs (invert+brightness+blur
+    // rendered offline) — scrolling a fox into view never builds a
+    // live Gaussian-blur surface over a megabyte SVG raster, which
+    // was the mid-scroll hitch between chapters. Only the sharp ink
+    // stays vector (its color-matrix filter is cheap).
+    var glow = 'assets/kitsune/' + name + '-bloom';
     var lazy = EAGER_FOX[name] ? '' : ' loading="lazy" decoding="async"';
     var d = FOX_DIMS[name];
     var size = d ? ' width="' + d[0] + '" height="' + d[1] + '"' : '';
     el.innerHTML =
-      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + size + '>') +
-      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + size + '>' +
+      (PHONE ? '' : '<img class="bloom2" data-baked src="' + glow + '2.webp" alt="" aria-hidden="true" draggable="false"' + lazy + '>') +
+      '<img class="bloom" data-baked src="' + glow + '.webp" alt="" aria-hidden="true" draggable="false"' + lazy + '>' +
       '<img class="sharp" src="' + src + '" alt="" draggable="false"' + lazy + size + '>';
   });
 
@@ -1068,8 +1074,13 @@
       return Promise.all(baked.map(blobURL));
     }).then(function (urls) {
       // the mount's own three layers (sharp + both blooms) become the
-      // body + ground only — no tail may glow before it is earned
-      baseImgs.forEach(function (img) { img.src = urls[0]; });
+      // body + ground only — no tail may glow before it is earned.
+      // These runtime-baked bitmaps are black ink again, so restore the
+      // live invert/blur filters that the baked-glow WebPs opted out of
+      baseImgs.forEach(function (img) {
+        img.removeAttribute('data-baked');
+        img.src = urls[0];
+      });
       // reveal only once the body-only bitmap is decoded, so the old
       // five-tailed raster can never flash through the swap
       var show = function () {
