@@ -165,24 +165,6 @@ html.gated .grain { animation-play-state: paused; }
   display: flex; align-items: center; justify-content: center;
   transition: opacity 1.1s ease, visibility 1.1s;
   touch-action: none; /* no dragging the page behind the veil */
-  /* -16vmax, not 0: with the 16vmax feather band, a 0 start would open
-     a fully-feathered hole in a single frame the moment the mask lands;
-     from -16vmax the aperture truly grows from nothing */
-  --veil-r: -16vmax;
-}
-/* the ink-disperse exit: enter() tweens --veil-r so the world is
-   revealed through an expanding, feathered aperture — ink dispersing in
-   water. One custom property, but each frame re-rasters the gradient
-   mask and repaints the veil layer — acceptable because the veil is a
-   flat ink fill (its type has already faded) by the time this runs.
-   transition:none so the GSAP exit never fights the CSS fallback;
-   pointer-events:none because masks don't affect hit testing and the
-   dissolving veil must not swallow clicks on the revealed world. */
-.veil.dissolving {
-  transition: none;
-  pointer-events: none;
-  -webkit-mask-image: radial-gradient(circle at 50% 58%, transparent var(--veil-r), #000 calc(var(--veil-r) + 16vmax));
-  mask-image: radial-gradient(circle at 50% 58%, transparent var(--veil-r), #000 calc(var(--veil-r) + 16vmax));
 }
 /* while the veil is up, the page itself cannot scroll */
 html.gated, html.gated body { overflow: hidden; }

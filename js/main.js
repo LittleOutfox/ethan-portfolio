@@ -32,14 +32,27 @@
   // every below-fold fox lazy-loads on approach instead, so it never
   // steals bandwidth from the gated film during the veil
   var EAGER_FOX = { descending: 1, sitting: 1 };
+  // intrinsic viewBox size of each pose: width/height attributes make
+  // the browser reserve the fox's exact box BEFORE the lazy file loads.
+  // Without them a late-loading in-flow fox (bowing, howling) grows from
+  // zero height mid-scroll, shifting everything below it and stale-dating
+  // every ScrollTrigger pin measured further down — a visible jump at
+  // the tails pin. Keep in sync with the SVGs' viewBox values.
+  var FOX_DIMS = {
+    bowing: [665, 592], descending: [232, 533], diving: [399, 721],
+    howling: [546, 569], sitting: [674, 502], standing: [450, 750],
+    walking: [630, 404]
+  };
   document.querySelectorAll('[data-kfox]').forEach(function (el) {
     var name = el.getAttribute('data-kfox');
     var src = 'assets/kitsune/' + name + '.svg';
     var lazy = EAGER_FOX[name] ? '' : ' loading="lazy" decoding="async"';
+    var d = FOX_DIMS[name];
+    var size = d ? ' width="' + d[0] + '" height="' + d[1] + '"' : '';
     el.innerHTML =
-      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + '>') +
-      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + '>' +
-      '<img class="sharp" src="' + src + '" alt="" draggable="false"' + lazy + '>';
+      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + size + '>') +
+      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false"' + lazy + size + '>' +
+      '<img class="sharp" src="' + src + '" alt="" draggable="false"' + lazy + size + '>';
   });
 
   /* ------------------------------------------------------------
@@ -484,9 +497,7 @@
     var reap = function () {
       if (veil && veil.parentNode) { veil.remove(); veil = null; }
     };
-    if (veil && MOTION) {
-      veilExit(reap); // authored exit: the type steps aside, then ink disperses
-    } else if (veil) {
+    if (veil) {
       veil.classList.add('gone');
       // transitionend bubbles — a child's transition (e.g. the Enter
       // button's 0.4s color fade) must not reap the veil mid-dissolve
@@ -502,38 +513,8 @@
       var p = v.play();
       if (p && p.then) p.then(function () { v.pause(); }).catch(function () {});
     }
-    if (!veil || !MOTION) {
-      // no authored exit to pace them — release everything at once
-      if (lenis) lenis.start();
-      if (MOTION && window.__heroEntrance) window.__heroEntrance.play();
-    }
-  }
-
-  // the ink-disperse exit: the veil's type steps aside line by line,
-  // then the world is revealed through an expanding feathered aperture
-  // (a mask tween on one custom property; each frame re-rasters the
-  // gradient mask, which is fine — the veil is a flat ink fill by then).
-  // Scroll stays held until the reveal is underway (desktop: Lenis stays
-  // stopped; touch scrolls immediately by design — the entering swipe
-  // carrying into the world feels native there), and the hero entrance
-  // begins while the ink is still dispersing.
-  function veilExit(done) {
-    gsap.timeline({ onComplete: done })
-      // the infinite veil-float CSS animation would override every
-      // inline transform/opacity GSAP writes — kill it first
-      .set('.veil-spirit', { animation: 'none' }, 0)
-      .to('.veil-gate', { opacity: 0, yPercent: 20, duration: 0.5, ease: 'power2.in' }, 0)
-      .to('.veil-line', { opacity: 0, yPercent: 26, duration: 0.5, ease: 'power2.in' }, 0.07)
-      .to('.veil-word', { opacity: 0, yPercent: 28, duration: 0.55, ease: 'power2.in' }, 0.14)
-      .to('.veil-hanzi', { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0.2)
-      .to('.veil-spirit', { y: -30, opacity: 0, duration: 0.65, ease: 'power2.inOut' }, 0.2)
-      .call(function () {
-        if (veil) veil.classList.add('dissolving');
-        if (window.__heroEntrance) window.__heroEntrance.play();
-      }, null, 0.5)
-      .to(veil, { '--veil-r': '160vmax', duration: 1.5, ease: 'power3.inOut' }, 0.5)
-      .call(function () { if (lenis) lenis.start(); }, null, 1.15)
-      .to(veil, { opacity: 0, duration: 0.3, ease: 'none' }, 1.7); // no-mask browsers still dissolve
+    if (lenis) lenis.start();
+    if (MOTION && window.__heroEntrance) window.__heroEntrance.play();
   }
 
   if (veil) {
