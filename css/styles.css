@@ -560,7 +560,9 @@ main { position: relative; z-index: 4; }
 .origin-body p + p { color: var(--moon-dim); }
 
 .origin-facts {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  /* auto-fit: keeps three columns where they breathe (>=150px each),
+     drops to two before the values start crushing into ragged wraps */
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px;
   margin-top: clamp(40px, 4.4vw, 74px); padding-top: clamp(20px, 2.1vw, 36px);
   border-top: 1px solid var(--hairline);
 }
@@ -568,7 +570,11 @@ main { position: relative; z-index: 4; }
   font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
   color: var(--moon-faint); margin-bottom: 8px;
 }
-.origin-facts dd { font-family: var(--serif); font-size: 17px; color: var(--moon); }
+.origin-facts dd {
+  font-family: var(--serif); font-size: 17px; color: var(--moon);
+  text-wrap: balance; /* two-line values break evenly, not ragged */
+}
+.nowrap { white-space: nowrap; }
 
 .origin-fox {
   width: min(44vw, 580px);
@@ -756,7 +762,16 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .wscene-visit:hover { color: var(--spirit); border-color: var(--spirit-soft); }
 /* layered hover: a spirit line sweeps over the resting hairline
    (enter-left / exit-right), and the ↗ answers a beat later */
-.wscene-visit, .pool-mail { position: relative; display: inline-block; }
+.wscene-visit, .pool-mail { position: relative; }
+.pool-mail { display: inline-block; }
+/* the visit link owns its own line — as an inline box it shared the
+   line with the role's flanking dashes at wide viewports, and the
+   trailing dash ran straight into the label */
+.wscene-visit {
+  display: block;
+  width: fit-content;
+  margin-left: auto; margin-right: auto;
+}
 .wscene-visit::after, .pool-mail::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
   background: var(--spirit);
