@@ -894,6 +894,10 @@
     });
     tl.to('.works-head', { opacity: 0, y: -60, duration: 0.7, ease: 'none' }, 1.3);
 
+    // autoAlpha (not opacity): an invisible gate's inner keeps
+    // pointer-events:auto, and hit-testing ignores opacity — hidden
+    // gates must also be visibility:hidden or their links capture the
+    // cursor halo through the visible one
     gates.forEach(function (gate, i) {
       var at = 2 + i * STEP;
       var numEl = gate.querySelector('.wscene-num');
@@ -901,13 +905,13 @@
 
       // the gate stands far down the path — approach it
       tl.fromTo(gate,
-        { opacity: 0, scale: 0.3, yPercent: 3 },
-        { opacity: 1, scale: 1, yPercent: 0, duration: 1.15, ease: 'power2.out' },
+        { autoAlpha: 0, scale: 0.3, yPercent: 3 },
+        { autoAlpha: 1, scale: 1, yPercent: 0, duration: 1.15, ease: 'power2.out' },
         at);
       // its inscription resolves a beat later
       tl.fromTo(inner,
-        { opacity: 0, y: 44 },
-        { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' },
+        { autoAlpha: 0, y: 44 },
+        { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power3.out' },
         at + 0.45);
       // the ghost numeral drifts at its own depth
       tl.fromTo(numEl,
@@ -916,10 +920,10 @@
         at);
       // step through: the inscription dissolves, the beams sweep past
       tl.to(inner,
-        { opacity: 0, duration: 0.4, ease: 'none' },
+        { autoAlpha: 0, duration: 0.4, ease: 'none' },
         at + STEP - 0.75);
       tl.to(gate,
-        { scale: 3.6, opacity: 0, duration: 1.0, ease: 'power2.in' },
+        { scale: 3.6, autoAlpha: 0, duration: 1.0, ease: 'power2.in' },
         at + STEP - 0.7);
     });
     tl.to({}, { duration: 0.6 });
@@ -1210,6 +1214,12 @@
       var hx = -100, hy = -100, tx = -100, ty = -100, shown = false, tracking = false;
       var hs = 1, hTarget = 1, hoverEl = null;
       var magnet = null, magnetRect = null, magnetX = null, magnetY = null;
+      var magnetCache = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+      function releaseMagnet() {
+        if (magnetX) { magnetX(0); magnetY(0); }
+        magnet = null; magnetRect = null;
+      }
 
       document.addEventListener('pointerover', function (e) {
         var t = e.target.closest && e.target.closest('a, button, [data-cursor]');
@@ -1221,17 +1231,32 @@
         if (t !== magnet && t.matches && t.matches('.veil-enter, .wscene-visit, .pool-mail')) {
           magnet = t;
           magnetRect = t.getBoundingClientRect(); // once, off the hot path
-          magnetX = gsap.quickTo(t, 'x', { duration: 0.4, ease: 'power3' });
-          magnetY = gsap.quickTo(t, 'y', { duration: 0.4, ease: 'power3' });
+          var pair = magnetCache && magnetCache.get(t);
+          if (!pair) {
+            // one setter pair per element, forever — re-creating them on
+            // every hover leaves the old return-to-zero tween writing
+            // the same properties
+            pair = {
+              x: gsap.quickTo(t, 'x', { duration: 0.4, ease: 'power3' }),
+              y: gsap.quickTo(t, 'y', { duration: 0.4, ease: 'power3' })
+            };
+            if (magnetCache) magnetCache.set(t, pair);
+          }
+          magnetX = pair.x; magnetY = pair.y;
         }
       });
       document.addEventListener('pointerout', function (e) {
         if (hoverEl && !hoverEl.contains(e.relatedTarget)) { hoverEl = null; hTarget = 1; }
-        if (magnet && !magnet.contains(e.relatedTarget)) {
-          if (magnetX) { magnetX(0); magnetY(0); }
-          magnet = null; magnetRect = null;
-        }
+        if (magnet && !magnet.contains(e.relatedTarget)) releaseMagnet();
       });
+      // Safari/Firefox fire no boundary events when the page scrolls
+      // under a stationary cursor — the cached rect (and the lean)
+      // would go stale, pulling toward a point the element left.
+      // Release on scroll; the next real pointer event re-establishes.
+      window.addEventListener('scroll', function () {
+        if (magnet) releaseMagnet();
+        if (hoverEl) { hoverEl = null; hTarget = 1; }
+      }, { passive: true });
 
       window.addEventListener('mousemove', function (e) {
         tx = e.clientX; ty = e.clientY;

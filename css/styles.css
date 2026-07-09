@@ -108,19 +108,15 @@ body {
 }
 .veil-enter:focus-visible .veil-enter-rule { width: 76px; background: var(--spirit); }
 
-/* the scrollbar is part of the world, not the OS chrome */
+/* the scrollbar is part of the world, not the OS chrome.
+   Standard properties only: modern engines (Chromium 121+, Safari
+   18.2+, Firefox) all honor them, and a ::-webkit-scrollbar block
+   would force macOS Safari's overlay scrollbars into a permanent
+   classic gutter — a regression, not a polish. */
 html {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--spirit-rgb), 0.3) var(--ink);
 }
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: var(--ink); }
-::-webkit-scrollbar-thumb {
-  background: rgba(var(--spirit-rgb), 0.28);
-  border-radius: 5px;
-  border: 2px solid var(--ink);
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(var(--spirit-rgb), 0.45); }
 
 a { color: inherit; text-decoration: none; }
 
@@ -139,7 +135,9 @@ a { color: inherit; text-decoration: none; }
   object-fit: cover;
   opacity: 0;
   /* the grade (brightness 0.9, contrast 1.03) is baked into the encode
-     itself — no per-frame CSS filter pass (PSNR-verified identical) */
+     itself — no per-frame CSS filter pass (PSNR-verified identical).
+     2.4s is deliberately off the --dur scale: a cinematic backdrop
+     fade, like the hunt fox's sine idle, sits outside the voice. */
   transition: opacity 2.4s var(--out-soft);
   pointer-events: none;
   transform: translateZ(0); /* own compositor layer: scrub repaints stay off the page */
@@ -319,8 +317,12 @@ html.no-js .veil { display: none; }
   transition: transform var(--dur-2) var(--out-expo);
 }
 .nav-links a:hover, .nav-links a.active { color: var(--moon); }
-.nav-links a:hover::after,
 .nav-links a.active::after { transform: scaleX(1); transform-origin: left; }
+/* hover-only choreography stays behind a capability guard — on touch,
+   :hover latches after a tap and the state would stick */
+@media (hover: hover) {
+  .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+}
 
 .rail {
   position: fixed; right: 3vw; top: 50%; z-index: 20;
@@ -761,14 +763,17 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   transform: scaleX(0); transform-origin: right;
   transition: transform var(--dur-2) var(--out-expo);
 }
-.wscene-visit:hover::after, .pool-mail:hover::after {
-  transform: scaleX(1); transform-origin: left;
-}
 .visit-arrow {
   display: inline-block;
   transition: transform var(--dur-1) var(--out-expo) 60ms;
 }
-.wscene-visit:hover .visit-arrow { transform: translate(3px, -3px); }
+/* hover-only: on touch, :hover latches after a tap and would stick */
+@media (hover: hover) {
+  .wscene-visit:hover::after, .pool-mail:hover::after {
+    transform: scaleX(1); transform-origin: left;
+  }
+  .wscene-visit:hover .visit-arrow { transform: translate(3px, -3px); }
+}
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
@@ -822,8 +827,10 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   transition: opacity var(--dur-2) var(--out-soft);
   pointer-events: none;
 }
-.fire-list li:hover .fire-name { color: var(--ember); }
-.fire-list li:hover .fire-name::after { opacity: 1; }
+@media (hover: hover) {
+  .fire-list li:hover .fire-name { color: var(--ember); }
+  .fire-list li:hover .fire-name::after { opacity: 1; }
+}
 .fire-desc { font-size: 13px; color: var(--moon-dim); text-align: right; }
 
 /* ------------------------------------------------------------
