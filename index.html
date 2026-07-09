@@ -5,17 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ORIGIN — Ethan Tiong · A Nine-Tailed Portfolio</title>
   <meta name="description" content="Ethan Tiong — RTL &amp; digital design for ASIC and FPGA, told as a nine-tailed fox story. Waterloo EE, open for a Winter 2027 co-op.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>">
+  <meta name="theme-color" content="#08070d">
+  <link rel="canonical" href="https://www.etiong.com/">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Serif+SC:wght@200;300;400&display=swap" rel="stylesheet">
+  <!-- the unfurl card — the cheapest wow surface there is -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ORIGIN — Ethan Tiong">
+  <meta property="og:description" content="RTL &amp; digital design for ASIC and FPGA, told as a nine-tailed fox story. Waterloo EE, open for a Winter 2027 co-op.">
+  <meta property="og:url" content="https://www.etiong.com/">
+  <meta property="og:image" content="https://www.etiong.com/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://www.etiong.com/assets/og.png">
 
+  <!-- self-hosted variable fonts (zh subset to this site's own glyphs):
+       no third-party round trips; preloads + font-display:block keep the
+       veil's first paint in the real faces, never a fallback flash -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/cormorant.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/noto-sc.woff2" crossorigin>
+  <!-- the veil's own fox first, the hero fox second -->
+  <link rel="preload" as="image" href="assets/kitsune/descending.svg">
   <link rel="preload" as="image" href="assets/kitsune/sitting.svg">
-  <link rel="stylesheet" href="css/styles.css?v=32">
+  <link rel="stylesheet" href="css/styles.css?v=39">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // start the gated film download at HTML-parse time — main.js (queued
+    // behind the vendor scripts) adopts this promise, so the veil's
+    // counter never sits at 00 waiting for scripts. The guards mirror
+    // main.js's device tiers: phones/data-saver/reduced-motion never pay
+    // for the film. Keep the ?v in sync with SRC in js/main.js.
+    try {
+      var coarse = matchMedia('(pointer: coarse)').matches;
+      var phone = coarse && Math.min(screen.width, screen.height) < 820;
+      var conn = navigator.connection;
+      var lean = phone || !!(conn && (conn.saveData || /(^|\b)[23]g\b/.test(conn.effectiveType || '')));
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !lean) {
+        window.__journeyFetch = fetch('assets/journey.mp4?v=10', { priority: 'high' });
+        // adopted by main.js — this no-op keeps an early network failure
+        // from logging an unhandled rejection before main.js attaches
+        window.__journeyFetch.catch(function () {});
+      }
+    } catch (e) { /* main.js fetches on its own */ }
   </script>
 </head>
 <body>
@@ -104,7 +139,7 @@
           <dl class="origin-facts" data-reveal>
             <div><dt>Based</dt><dd>Greater Toronto · open to relocate</dd></div>
             <div><dt>Speciality</dt><dd>RTL · ASIC &amp; FPGA</dd></div>
-            <div><dt>Status</dt><dd>Open · Winter 2027 co-op</dd></div>
+            <div><dt>Status</dt><dd>Open · Winter 2027 <span class="nowrap">co-op</span></dd></div>
           </dl>
         </div>
         <div class="origin-fox spirit-mount" data-kfox="bowing" aria-hidden="true"></div>
@@ -182,7 +217,7 @@
               <h3 class="wscene-title">Focus or Fry</h3>
               <p class="wscene-line">A fully parameterized UART in Verilog — 16× oversampling, phase-accurate sampling, FIFO buffering and flow control, verified in SystemVerilog.</p>
               <p class="wscene-role">Verilog · FSMs · FIFO · SystemVerilog</p>
-              <a class="wscene-visit" href="https://github.com/LittleOutfox/focus-or-fry/" target="_blank" rel="noopener">GitHub ↗</a>
+              <a class="wscene-visit" href="https://github.com/LittleOutfox/focus-or-fry/" target="_blank" rel="noopener">GitHub <span class="visit-arrow" aria-hidden="true">↗</span></a>
             </div>
           </article>
           <article class="wgate" data-wgate>
@@ -215,7 +250,7 @@
               <h3 class="wscene-title">Calming Teddy Bear</h3>
               <p class="wscene-line">An Arduino bear that sensed racing hearts and answered with a lullaby and a warm tummy — easing anxiety by up to 52% at a care centre and a dental clinic.</p>
               <p class="wscene-role">Arduino · Heart-rate sensing · C++</p>
-              <a class="wscene-visit" href="https://docs.google.com/document/d/1dKNdC3heJWIDP0wO4JZW94xYDHml6rhj4n3I9VjYhfo/edit?usp=sharing" target="_blank" rel="noopener">Documentation ↗</a>
+              <a class="wscene-visit" href="https://docs.google.com/document/d/1dKNdC3heJWIDP0wO4JZW94xYDHml6rhj4n3I9VjYhfo/edit?usp=sharing" target="_blank" rel="noopener">Documentation <span class="visit-arrow" aria-hidden="true">↗</span></a>
             </div>
           </article>
         </div>
@@ -236,10 +271,12 @@
           <p class="fire-note" data-reveal>Some nights are tucked safely in the den. Cooking something warm, playing with friends, or getting lost in a story. Quiet things, but still part of the trail.</p>
         </header>
         <div class="fire-fox spirit-mount" data-kfox="howling" aria-hidden="true"></div>
+        <!-- data-text must exactly equal each fire-name's text: the hover glow
+             is its ::after (content: attr(data-text)) crossfaded on opacity -->
         <ul class="fire-list">
-          <li data-reveal><span class="fire-name">Games with friends</span><span class="fire-desc">Minecraft, Valorant, and League. Fun with friends, painfully boring alone.</span></li>
-          <li data-reveal><span class="fire-name">Tennis</span><span class="fire-desc">Years of competing left their mark. Pickleball just happened to speak the same language.</span></li>
-          <li data-reveal><span class="fire-name">Cooking</span><span class="fire-desc">I know my way around Western comfort food. Lately, the winds have shifted toward Chinese, Korean, and other Asian dishes.</span></li>
+          <li data-reveal><span class="fire-name" data-text="Games with friends">Games with friends</span><span class="fire-desc">Minecraft, Valorant, and League. Fun with friends, painfully boring alone.</span></li>
+          <li data-reveal><span class="fire-name" data-text="Tennis">Tennis</span><span class="fire-desc">Years of competing left their mark. Pickleball just happened to speak the same language.</span></li>
+          <li data-reveal><span class="fire-name" data-text="Cooking">Cooking</span><span class="fire-desc">I know my way around Western comfort food. Lately, the winds have shifted toward Chinese, Korean, and other Asian dishes.</span></li>
         </ul>
       </div>
     </section>
@@ -294,10 +331,12 @@
 
   </main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-  <script src="js/main.js?v=25"></script>
+  <!-- self-hosted vendor: same-origin + H2-multiplexed, so no CDN stall
+       can ever freeze the loading gate at 00 -->
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/vendor/lenis.min.js"></script>
+  <script src="js/main.js?v=31"></script>
 
   <!-- Vercel Web Analytics -->
   <script>

@@ -3,16 +3,75 @@
    deep obsidian · moonlight lilac · ember amber
    ============================================================ */
 
+/* ------------------------------------------------------------
+   self-hosted variable fonts — subset, same-origin, display:block.
+   Head preloads land them inside the first-paint window, so the veil
+   never shows fallback type. noto-sc.woff2 is subset to exactly the
+   hanzi this site uses (extracted from index.html) — any NEW hanzi
+   added later must be re-subset or it falls back to Songti SC/SimSun.
+   ------------------------------------------------------------ */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: block;
+  src: url('../assets/fonts/cormorant.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 300 400;
+  font-display: block;
+  src: url('../assets/fonts/cormorant-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: block;
+  src: url('../assets/fonts/inter.woff2') format('woff2');
+}
+/* → and ↗ live outside Google's latin slice — tiny dedicated subset so
+   "Keep scrolling →" and the ↗ visit links render in Inter, not fallback */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: block;
+  src: url('../assets/fonts/inter-arrows.woff2') format('woff2');
+  unicode-range: U+2192, U+2197;
+}
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 200 400;
+  font-display: block;
+  src: url('../assets/fonts/noto-sc.woff2') format('woff2');
+}
+
 :root {
   --ink: #08070d;
   --ink-2: #0d0b16;
   --moon: #ece7f4;
-  --moon-dim: rgba(236, 231, 244, 0.55);
-  --moon-faint: rgba(236, 231, 244, 0.3);
-  --hairline: rgba(236, 231, 244, 0.1);
+  /* channel tokens — retune a hue once, every alpha follows */
+  --spirit-rgb: 168, 180, 236;
+  --moon-rgb: 236, 231, 244;
+  --ember-rgb: 224, 160, 92;
+  --moon-dim: rgba(var(--moon-rgb), 0.55);
+  --moon-faint: rgba(var(--moon-rgb), 0.3);
+  --hairline: rgba(var(--moon-rgb), 0.1);
   --spirit: #a8b4ec;
-  --spirit-soft: rgba(168, 180, 236, 0.28);
+  --spirit-soft: rgba(var(--spirit-rgb), 0.28);
   --ember: #e0a05c;
+  /* THE MOTION VOICE — two curves, three durations, site-wide.
+     Anything that MOVES takes --out-expo (fast attack, long settle);
+     pure opacity/color crossfades take --out-soft. The same two-curve
+     restraint that carries the reference sites. */
+  --out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --out-soft: cubic-bezier(0.25, 1, 0.5, 1);
+  --dur-1: 0.35s; /* micro: fills, arrow nudges */
+  --dur-2: 0.6s;  /* hover / state changes */
+  --dur-3: 1.1s;  /* scene: veil, big reveals */
   --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
   --zh: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
@@ -35,7 +94,29 @@ body {
   overflow-x: hidden;
 }
 
-::selection { background: rgba(168, 180, 236, 0.25); color: var(--moon); }
+::selection { background: rgba(var(--spirit-rgb), 0.25); color: var(--moon); }
+
+/* keyboard focus speaks the same language as hover — never the UA's
+   stock blue ring on this obsidian */
+:focus-visible {
+  outline: 1px solid var(--spirit);
+  outline-offset: 4px;
+}
+.veil-enter:focus-visible {
+  outline-offset: 8px;
+  color: var(--spirit);
+}
+.veil-enter:focus-visible .veil-enter-rule { width: 76px; background: var(--spirit); }
+
+/* the scrollbar is part of the world, not the OS chrome.
+   Standard properties only: modern engines (Chromium 121+, Safari
+   18.2+, Firefox) all honor them, and a ::-webkit-scrollbar block
+   would force macOS Safari's overlay scrollbars into a permanent
+   classic gutter — a regression, not a polish. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--spirit-rgb), 0.3) var(--ink);
+}
 
 a { color: inherit; text-decoration: none; }
 
@@ -53,8 +134,11 @@ a { color: inherit; text-decoration: none; }
   width: 100%; height: 100%;
   object-fit: cover;
   opacity: 0;
-  filter: brightness(0.9) saturate(1) contrast(1.03);
-  transition: opacity 2.4s ease;
+  /* the grade (brightness 0.9, contrast 1.03) is baked into the encode
+     itself — no per-frame CSS filter pass (PSNR-verified identical).
+     2.4s is deliberately off the --dur scale: a cinematic backdrop
+     fade, like the hunt fox's sine idle, sits outside the voice. */
+  transition: opacity 2.4s var(--out-soft);
   pointer-events: none;
   transform: translateZ(0); /* own compositor layer: scrub repaints stay off the page */
 }
@@ -77,27 +161,31 @@ a { color: inherit; text-decoration: none; }
 .tint {
   position: fixed; inset: 0; z-index: 3;
   pointer-events: none; opacity: 0;
-  background: radial-gradient(60% 55% at 68% 62%, rgba(224, 160, 92, 0.22), transparent 70%);
+  background: radial-gradient(60% 55% at 68% 62%, rgba(var(--ember-rgb), 0.22), transparent 70%);
 }
 
 .grain {
-  position: fixed; inset: -50%; z-index: 40;
+  /* -64px overscan is all the shake below ever needs — the old -50%
+     inset made this a 200vw x 200vh composited texture (4x viewport) */
+  position: fixed; inset: -64px; z-index: 40;
   pointer-events: none; opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation: grain-shift 1.4s steps(4) infinite;
 }
+/* the intro veil is opaque — don't shimmer behind it */
+html.gated .grain { animation-play-state: paused; }
 @keyframes grain-shift {
   0% { transform: translate(0, 0); }
-  25% { transform: translate(-2%, 1%); }
-  50% { transform: translate(1%, -2%); }
-  75% { transform: translate(-1%, 2%); }
-  100% { transform: translate(2%, -1%); }
+  25% { transform: translate(-48px, 24px); }
+  50% { transform: translate(24px, -48px); }
+  75% { transform: translate(-24px, 48px); }
+  100% { transform: translate(48px, -24px); }
 }
 
 .cursor-halo {
   position: fixed; top: 0; left: 0; z-index: 60;
   width: 34px; height: 34px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(168, 180, 236, 0.35), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--spirit-rgb), 0.35), transparent 70%);
   pointer-events: none; mix-blend-mode: screen;
   transform: translate(-50%, -50%);
   opacity: 0;
@@ -112,7 +200,7 @@ a { color: inherit; text-decoration: none; }
   position: fixed; inset: 0; z-index: 100;
   background: var(--ink);
   display: flex; align-items: center; justify-content: center;
-  transition: opacity 1.1s ease, visibility 1.1s;
+  transition: opacity var(--dur-3) var(--out-soft), visibility var(--dur-3);
   touch-action: none; /* no dragging the page behind the veil */
 }
 /* while the veil is up, the page itself cannot scroll */
@@ -127,7 +215,7 @@ html.no-js .veil { display: none; }
   transform: translate(-50%, -54%);
   font-family: var(--zh); font-weight: 200;
   font-size: clamp(160px, 34vmin, 300px);
-  color: rgba(168, 180, 236, 0.07);
+  color: rgba(var(--spirit-rgb), 0.07);
   user-select: none;
 }
 
@@ -160,7 +248,7 @@ html.no-js .veil { display: none; }
   position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; gap: 13px;
-  transition: opacity 0.7s ease;
+  transition: opacity var(--dur-2) var(--out-soft);
 }
 .veil-pct {
   font-family: var(--serif); font-weight: 300;
@@ -174,7 +262,7 @@ html.no-js .veil { display: none; }
 .veil-fill {
   display: block; height: 100%; background: var(--spirit-soft);
   transform: scaleX(0); transform-origin: left center;
-  transition: transform 0.35s ease-out;
+  transition: transform var(--dur-1) var(--out-expo);
 }
 .veil.ready .veil-progress { opacity: 0; pointer-events: none; }
 .veil.ready .veil-enter { opacity: 1; pointer-events: auto; }
@@ -187,13 +275,13 @@ html.no-js .veil { display: none; }
   font-size: 11px; letter-spacing: 0.45em; text-indent: 0.45em; text-transform: uppercase;
   padding: 10px 6px;
   opacity: 0; pointer-events: none;
-  transition: letter-spacing 0.6s ease, color 0.4s, opacity 0.9s ease 0.2s;
+  transition: letter-spacing var(--dur-2) var(--out-expo), color var(--dur-2) var(--out-soft), opacity var(--dur-3) var(--out-soft) 0.2s;
 }
 .veil-enter:hover { letter-spacing: 0.6em; color: var(--spirit); }
 .veil-enter-rule {
   display: block; margin: 12px auto 0;
   width: 46px; height: 1px; background: var(--moon-faint);
-  transition: width 0.6s ease;
+  transition: width var(--dur-2) var(--out-expo);
 }
 .veil-enter:hover .veil-enter-rule { width: 76px; background: var(--spirit); }
 
@@ -216,17 +304,25 @@ html.no-js .veil { display: none; }
 .nav-links a {
   font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
   color: var(--moon-dim);
-  transition: color 0.4s;
+  transition: color var(--dur-2) var(--out-soft);
   position: relative; padding-bottom: 6px;
 }
 .nav-links a::after {
   content: ''; position: absolute; left: 0; bottom: 0;
   width: 100%; height: 1px; background: var(--spirit);
-  transform: scaleX(0); transform-origin: left;
-  transition: transform 0.5s ease;
+  /* resting origin is RIGHT so the line exits the way it was going;
+     the hover/active rule swaps to LEFT (untransitioned = instant), so
+     the line enters left and leaves right — it passes through the word */
+  transform: scaleX(0); transform-origin: right;
+  transition: transform var(--dur-2) var(--out-expo);
 }
 .nav-links a:hover, .nav-links a.active { color: var(--moon); }
-.nav-links a.active::after { transform: scaleX(1); }
+.nav-links a.active::after { transform: scaleX(1); transform-origin: left; }
+/* hover-only choreography stays behind a capability guard — on touch,
+   :hover latches after a tap and the state would stick */
+@media (hover: hover) {
+  .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+}
 
 .rail {
   position: fixed; right: 3vw; top: 50%; z-index: 20;
@@ -276,6 +372,22 @@ html.no-js .veil { display: none; }
   position: absolute; inset: 0; z-index: 0; height: 100%;
   filter: invert(1) brightness(2) blur(16px);
   opacity: 0.38;
+}
+/* pre-baked glow layers (assets/kitsune/*-bloom*.webp): the blurs above
+   are rendered into the files offline, so no live filter runs. The
+   negative inset restores the blur spill the live filter drew outside
+   the box (4%/8% padding baked into the files). The tails chapter's
+   runtime-baked pieces stay on the live-filter path — their bitmaps
+   are black ink (main.js strips data-baked when it swaps them in). */
+.spirit-mount img.bloom[data-baked] {
+  /* explicit % size, not auto — an abs-positioned IMAGE with width:auto
+     takes its intrinsic file size, it does not stretch to the insets */
+  top: -4%; left: -4%; width: 108%; height: 108%;
+  filter: none;
+}
+.spirit-mount img.bloom2[data-baked] {
+  top: -8%; left: -8%; width: 116%; height: 116%;
+  filter: none;
 }
 
 /* ------------------------------------------------------------
@@ -327,7 +439,7 @@ main { position: relative; z-index: 4; }
   writing-mode: vertical-rl;
   font-family: var(--zh); font-weight: 200;
   font-size: clamp(40px, 6vmin, 72px); letter-spacing: 0.4em;
-  color: rgba(236, 231, 244, 0.06);
+  color: rgba(var(--moon-rgb), 0.06);
   pointer-events: none; user-select: none;
 }
 
@@ -337,12 +449,12 @@ main { position: relative; z-index: 4; }
   transform: translate(-50%, -50%);
   font-family: var(--zh); font-weight: 200;
   font-size: clamp(220px, 36vmin, 480px); line-height: 1;
-  color: rgba(168, 180, 236, 0.04);
+  color: rgba(var(--spirit-rgb), 0.04);
   white-space: nowrap;
   pointer-events: none; user-select: none;
   z-index: 0;
 }
-.ch-watermark-warm { color: rgba(224, 160, 92, 0.05); }
+.ch-watermark-warm { color: rgba(var(--ember-rgb), 0.05); }
 .origin .ch-watermark { left: 62%; top: 58%; }
 .fire .ch-watermark { left: 40%; top: 46%; }
 .tails .ch-watermark { left: 72%; top: 40%; }
@@ -369,7 +481,7 @@ main { position: relative; z-index: 4; }
   width: 52vmin; height: 52vmin;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(236, 231, 244, 0.09) 0%, rgba(168, 180, 236, 0.05) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--moon-rgb), 0.09) 0%, rgba(var(--spirit-rgb), 0.05) 45%, transparent 70%);
 }
 
 .hero-watermark {
@@ -377,7 +489,7 @@ main { position: relative; z-index: 4; }
   transform: translate(-50%, -50%);
   font-family: var(--zh); font-weight: 200;
   font-size: clamp(200px, 46vmin, 520px);
-  color: rgba(168, 180, 236, 0.045);
+  color: rgba(var(--spirit-rgb), 0.045);
   white-space: nowrap; user-select: none;
 }
 
@@ -420,12 +532,16 @@ main { position: relative; z-index: 4; }
   background: var(--hairline);
 }
 .hero-cue-line::after {
-  content: ''; position: absolute; left: 0; top: -100%;
+  content: ''; position: absolute; left: 0; top: 0;
   width: 100%; height: 100%; background: var(--spirit);
+  /* drip via transform, not `top` — an infinite `top` animation runs
+     layout on the main thread every frame, forever */
+  transform: translateY(-100%);
   animation: cue-drip 2.2s ease-in-out infinite;
 }
 @keyframes cue-drip {
-  0% { top: -100%; } 60% { top: 100%; } 100% { top: 100%; }
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(100%); }
 }
 
 /* ------------------------------------------------------------
@@ -444,7 +560,9 @@ main { position: relative; z-index: 4; }
 .origin-body p + p { color: var(--moon-dim); }
 
 .origin-facts {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  /* auto-fit: keeps three columns where they breathe (>=150px each),
+     drops to two before the values start crushing into ragged wraps */
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px;
   margin-top: clamp(40px, 4.4vw, 74px); padding-top: clamp(20px, 2.1vw, 36px);
   border-top: 1px solid var(--hairline);
 }
@@ -452,7 +570,11 @@ main { position: relative; z-index: 4; }
   font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
   color: var(--moon-faint); margin-bottom: 8px;
 }
-.origin-facts dd { font-family: var(--serif); font-size: 17px; color: var(--moon); }
+.origin-facts dd {
+  font-family: var(--serif); font-size: 17px; color: var(--moon);
+  text-wrap: balance; /* two-line values break evenly, not ragged */
+}
+.nowrap { white-space: nowrap; }
 
 .origin-fox {
   width: min(44vw, 580px);
@@ -493,7 +615,7 @@ main { position: relative; z-index: 4; }
   display: block;
   font-family: var(--zh); font-weight: 200;
   font-size: clamp(48px, 5.4vw, 80px);
-  color: rgba(168, 180, 236, 0.2);
+  color: rgba(var(--spirit-rgb), 0.2);
   margin-bottom: clamp(14px, 1.5vw, 26px);
 }
 .skill h3 {
@@ -530,7 +652,7 @@ main { position: relative; z-index: 4; }
   width: 100%; height: 2px;
 }
 .hunt-ground path {
-  fill: none; stroke: rgba(236, 231, 244, 0.14);
+  fill: none; stroke: rgba(var(--moon-rgb), 0.14);
   stroke-width: 0.4; stroke-dasharray: 0.8 1.6;
   vector-effect: non-scaling-stroke;
 }
@@ -542,17 +664,17 @@ main { position: relative; z-index: 4; }
 .works { padding: 0; }
 .works-pin { height: 100vh; height: 100svh; position: relative; overflow: hidden; }
 
+/* will-change for the corridor is set from JS only while the works pin
+   is active — held permanently it pins GPU texture memory site-wide */
 .works-head {
   position: absolute; left: var(--pad-x); top: 50%;
   transform: translateY(-50%);
-  will-change: transform, opacity;
 }
 
 .works-fox {
   position: absolute; right: 12vw; top: 8vh;
   width: clamp(200px, 21vw, 310px);
   pointer-events: none;
-  will-change: transform, opacity;
 }
 
 /* three spirit gates deep in the forest — each work is a gate
@@ -564,7 +686,6 @@ main { position: relative; z-index: 4; }
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   text-align: center;
-  will-change: transform, opacity;
   pointer-events: none;
 }
 html.js:not(.reduced) .wgate { opacity: 0; }
@@ -576,12 +697,12 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .wgate-frame span {
   position: absolute;
-  background: linear-gradient(to bottom, rgba(220, 226, 250, 0.75), rgba(168, 180, 236, 0.4));
-  box-shadow: 0 0 16px rgba(168, 180, 236, 0.3), 0 0 50px rgba(168, 180, 236, 0.1);
+  background: linear-gradient(to bottom, rgba(220, 226, 250, 0.75), rgba(var(--spirit-rgb), 0.4));
+  box-shadow: 0 0 16px rgba(var(--spirit-rgb), 0.3), 0 0 50px rgba(var(--spirit-rgb), 0.1);
 }
 .wg-kasagi { /* top lintel — overhangs, slightly heavier */
   top: 0; left: -5%; width: 110%; height: 4px;
-  background: linear-gradient(to right, transparent, rgba(200, 208, 244, 0.65) 8%, rgba(236, 231, 244, 0.85) 50%, rgba(200, 208, 244, 0.65) 92%, transparent);
+  background: linear-gradient(to right, transparent, rgba(200, 208, 244, 0.65) 8%, rgba(var(--moon-rgb), 0.85) 50%, rgba(200, 208, 244, 0.65) 92%, transparent);
 }
 .wg-shima { /* thin secondary cap under the lintel */
   top: 13px; left: -2.5%; width: 105%; height: 1px; opacity: 0.7;
@@ -591,7 +712,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .wg-pillar {
   top: 4px; width: 2px; height: 100%;
-  background: linear-gradient(to bottom, rgba(236, 231, 244, 0.8), rgba(168, 180, 236, 0.5) 40%, rgba(168, 180, 236, 0.2) 85%, transparent);
+  background: linear-gradient(to bottom, rgba(var(--moon-rgb), 0.8), rgba(var(--spirit-rgb), 0.5) 40%, rgba(var(--spirit-rgb), 0.2) 85%, transparent);
 }
 .wg-l { left: 4%; transform: rotate(1deg); transform-origin: top center; }
 .wg-r { right: 4%; transform: rotate(-1deg); transform-origin: top center; }
@@ -601,7 +722,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   transform: translate(-50%, -50%);
   font-family: var(--serif); font-style: italic; font-weight: 300;
   font-size: clamp(180px, 26vw, 460px); line-height: 1;
-  color: rgba(168, 180, 236, 0.05);
+  color: rgba(var(--spirit-rgb), 0.05);
   user-select: none;
 }
 
@@ -636,9 +757,38 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   color: var(--moon-dim);
   border-bottom: 1px solid var(--hairline);
   padding-bottom: 3px;
-  transition: color 0.4s, border-color 0.4s;
+  transition: color var(--dur-2) var(--out-soft), border-color var(--dur-2) var(--out-soft);
 }
 .wscene-visit:hover { color: var(--spirit); border-color: var(--spirit-soft); }
+/* layered hover: a spirit line sweeps over the resting hairline
+   (enter-left / exit-right), and the ↗ answers a beat later */
+.wscene-visit, .pool-mail { position: relative; }
+.pool-mail { display: inline-block; }
+/* the visit link owns its own line — as an inline box it shared the
+   line with the role's flanking dashes at wide viewports, and the
+   trailing dash ran straight into the label */
+.wscene-visit {
+  display: block;
+  width: fit-content;
+  margin-left: auto; margin-right: auto;
+}
+.wscene-visit::after, .pool-mail::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--spirit);
+  transform: scaleX(0); transform-origin: right;
+  transition: transform var(--dur-2) var(--out-expo);
+}
+.visit-arrow {
+  display: inline-block;
+  transition: transform var(--dur-1) var(--out-expo) 60ms;
+}
+/* hover-only: on touch, :hover latches after a tap and would stick */
+@media (hover: hover) {
+  .wscene-visit:hover::after, .pool-mail:hover::after {
+    transform: scaleX(1); transform-origin: left;
+  }
+  .wscene-visit:hover .visit-arrow { transform: translate(3px, -3px); }
+}
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
@@ -663,8 +813,9 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   position: relative; z-index: 1;
 }
 .fire-fox img.sharp { filter: invert(1) sepia(0.4) saturate(1.4) brightness(1.22); }
-.fire-fox img.bloom { filter: invert(1) sepia(0.55) saturate(1.8) brightness(1.5) blur(5px); }
-.fire-fox img.bloom2 { filter: invert(1) sepia(0.6) saturate(2) brightness(1.8) blur(16px); }
+/* ember tint over the baked white glow — color-matrix only, no blur */
+.fire-fox img.bloom[data-baked] { filter: sepia(0.55) saturate(1.8) brightness(0.94); }
+.fire-fox img.bloom2[data-baked] { filter: sepia(0.6) saturate(2) brightness(0.9); }
 
 .fire-list { list-style: none; grid-column: 1 / -1; margin-top: clamp(24px, 2.5vw, 42px); }
 .fire-list li {
@@ -674,13 +825,26 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .fire-list li:last-child { border-bottom: 1px solid var(--hairline); }
 .fire-name {
+  position: relative;
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(24px, 2.6vw, 38px);
-  transition: color 0.5s, text-shadow 0.5s;
+  transition: color var(--dur-2) var(--out-soft);
 }
-.fire-list li:hover .fire-name {
-  color: var(--ember);
-  text-shadow: 0 0 24px rgba(224, 160, 92, 0.35);
+/* the ember glow is pre-painted into a transparent-text ::after and
+   crossfaded on opacity — a transitioned text-shadow would repaint
+   the glyphs with a 24px blur on every frame of the hover */
+.fire-name::after {
+  content: attr(data-text);
+  position: absolute; inset: 0;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(var(--ember-rgb), 0.35);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--out-soft);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .fire-list li:hover .fire-name { color: var(--ember); }
+  .fire-list li:hover .fire-name::after { opacity: 1; }
 }
 .fire-desc { font-size: 13px; color: var(--moon-dim); text-align: right; }
 
@@ -720,7 +884,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .tails-scene::before {
   content: '';
   position: absolute; inset: -8%;
-  background: radial-gradient(55% 52% at 48% 55%, rgba(168, 180, 236, 0.12), transparent 72%);
+  background: radial-gradient(55% 52% at 48% 55%, rgba(var(--spirit-rgb), 0.12), transparent 72%);
   pointer-events: none;
 }
 
@@ -735,7 +899,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   padding: 1.35vh 0;
   border-bottom: 1px solid var(--hairline);
   opacity: 0.22;
-  transition: opacity 0.5s;
+  transition: opacity var(--dur-2) var(--out-soft);
 }
 .tails-list li.lit { opacity: 1; }
 .tl-year { font-size: 10px; letter-spacing: 0.2em; color: var(--spirit); min-width: 42px; }
@@ -774,10 +938,11 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   width: min(28vw, 400px);
   pointer-events: none;
 }
-/* the plunging fox is drawn with very fine lines — lift it */
+/* the plunging fox is drawn with very fine lines — lift it
+   (brightness boost over the baked glow; no live blur) */
 .pool-fox-wrap img.sharp { filter: invert(1) brightness(2) contrast(1.15); }
-.pool-fox-wrap img.bloom { filter: invert(1) brightness(2.4) blur(4px); opacity: 0.8; }
-.pool-fox-wrap img.bloom2 { filter: invert(1) brightness(2.8) blur(14px); opacity: 0.5; }
+.pool-fox-wrap img.bloom[data-baked] { filter: brightness(1.5); opacity: 0.8; }
+.pool-fox-wrap img.bloom2[data-baked] { filter: brightness(1.4); opacity: 0.5; }
 .pool-fox { width: 100%; }
 
 /* the padding must not eat the content cap — at wide viewports the
@@ -792,23 +957,23 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   margin-top: clamp(34px, 3.75vw, 62px);
   max-width: 500px;
   padding: clamp(26px, 3vw, 40px);
-  background: linear-gradient(160deg, rgba(236, 231, 244, 0.05), rgba(236, 231, 244, 0.012));
+  /* frost baked into the fill — a live backdrop-filter here re-blurred
+     the video + snow canvas behind the card on every animated frame */
+  background: linear-gradient(160deg, rgba(30, 27, 44, 0.72), rgba(13, 11, 22, 0.58));
   border: 1px solid var(--hairline);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .pool-mail {
   font-family: var(--serif); font-size: clamp(20px, 2.2vw, 27px);
   border-bottom: 1px solid var(--spirit-soft);
   padding-bottom: 4px;
-  transition: color 0.4s, border-color 0.4s;
+  transition: color var(--dur-2) var(--out-soft), border-color var(--dur-2) var(--out-soft);
 }
 .pool-mail:hover { color: var(--spirit); border-color: var(--spirit); }
 
 .pool-links { display: flex; gap: 28px; margin-top: 26px; }
 .pool-links a {
   font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--moon-dim); transition: color 0.4s;
+  color: var(--moon-dim); transition: color var(--dur-2) var(--out-soft);
 }
 .pool-links a:hover { color: var(--moon); }
 
@@ -979,3 +1144,13 @@ html.reduced .grain { animation: none; }
 html.reduced .veil-spirit { animation: none; }
 html.reduced .hero-cue-line::after { animation: none; }
 html.reduced .cursor-halo { display: none; }
+
+/* native calm-mode safety net: the html.reduced class above depends on
+   main.js having run — this covers the window before it does (and any
+   script failure) for visitors who asked the OS for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .grain { animation: none; }
+  .veil-spirit { animation: none; }
+  .hero-cue-line::after { animation: none; }
+  .cursor-halo { display: none; }
+}

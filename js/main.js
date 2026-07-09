@@ -28,13 +28,37 @@
      inverted to translucent white by CSS filters.
      ------------------------------------------------------------ */
 
+  // veil + hero art loads eagerly (and is counted by the gate below);
+  // every below-fold fox lazy-loads on approach instead, so it never
+  // steals bandwidth from the gated film during the veil
+  var EAGER_FOX = { descending: 1, sitting: 1 };
+  // intrinsic viewBox size of each pose: width/height attributes make
+  // the browser reserve the fox's exact box BEFORE the lazy file loads.
+  // Without them a late-loading in-flow fox (bowing, howling) grows from
+  // zero height mid-scroll, shifting everything below it and stale-dating
+  // every ScrollTrigger pin measured further down — a visible jump at
+  // the tails pin. Keep in sync with the SVGs' viewBox values.
+  var FOX_DIMS = {
+    bowing: [665, 592], descending: [232, 533], diving: [399, 721],
+    howling: [546, 569], sitting: [674, 502], standing: [450, 750],
+    walking: [630, 404]
+  };
   document.querySelectorAll('[data-kfox]').forEach(function (el) {
     var name = el.getAttribute('data-kfox');
     var src = 'assets/kitsune/' + name + '.svg';
+    // the glow layers are pre-baked WebPs (invert+brightness+blur
+    // rendered offline) — scrolling a fox into view never builds a
+    // live Gaussian-blur surface over a megabyte SVG raster, which
+    // was the mid-scroll hitch between chapters. Only the sharp ink
+    // stays vector (its color-matrix filter is cheap).
+    var glow = 'assets/kitsune/' + name + '-bloom';
+    var lazy = EAGER_FOX[name] ? '' : ' loading="lazy" decoding="async"';
+    var d = FOX_DIMS[name];
+    var size = d ? ' width="' + d[0] + '" height="' + d[1] + '"' : '';
     el.innerHTML =
-      (PHONE ? '' : '<img class="bloom2" src="' + src + '" alt="" aria-hidden="true" draggable="false">') +
-      '<img class="bloom" src="' + src + '" alt="" aria-hidden="true" draggable="false">' +
-      '<img class="sharp" src="' + src + '" alt="" draggable="false">';
+      (PHONE ? '' : '<img class="bloom2" data-baked src="' + glow + '2.webp" alt="" aria-hidden="true" draggable="false"' + lazy + '>') +
+      '<img class="bloom" data-baked src="' + glow + '.webp" alt="" aria-hidden="true" draggable="false"' + lazy + '>' +
+      '<img class="sharp" src="' + src + '" alt="" draggable="false"' + lazy + size + '>';
   });
 
   /* ------------------------------------------------------------
@@ -47,29 +71,53 @@
     var veilEl = document.getElementById('veil');
     var pctEl = document.getElementById('veilPct');
     var fillEl = document.getElementById('veilFill');
-    var parts = { video: 0, fonts: 0 };
-    var weights = { video: 0.9, fonts: 0.1 };
-    var ready = false;
+    var parts = { video: 0, foxes: 0, fonts: 0 };
+    var weights = { video: 0.75, foxes: 0.15, fonts: 0.1 };
+    var ready = false, readyAt = 0;
+    function open() {
+      if (ready) return;
+      ready = true;
+      readyAt = performance.now();
+      if (veilEl) veilEl.classList.add('ready');
+    }
     function paint() {
       var p = 0, k;
       for (k in parts) p += parts[k] * weights[k];
       p = Math.max(0, Math.min(1, p));
       var pct = Math.round(p * 100);
+      // hold the count at 99 until everything is truly in, then let
+      // 100 land as its own settle beat as the gate opens
+      if (pct > 99 && !ready) pct = 99;
+      if (p >= 1 && !ready) { open(); pct = 100; }
+      if (p >= 1 && slowBtn) {
+        // the forest finished after a failsafe unlock — stop saying it
+        // is still loading
+        if (slowBtn.firstChild) slowBtn.firstChild.nodeValue = 'Enter';
+        slowBtn = null;
+      }
       if (pctEl) pctEl.textContent = (pct < 10 ? '0' : '') + pct;
       if (fillEl) fillEl.style.transform = 'scaleX(' + p + ')';
-      if (p >= 1 && !ready) {
-        ready = true;
-        if (veilEl) veilEl.classList.add('ready');
-      }
     }
-    // never trap a visitor behind a stalled request
-    setTimeout(function () { parts.video = 1; parts.fonts = 1; paint(); }, 12000);
+    // never trap a visitor behind a stalled request — but never lie
+    // either: unlock entry honestly (no fake 100; the count retires at
+    // its true value and the button copy owns the wait)
+    var slowBtn = null;
+    setTimeout(function () {
+      if (ready) return;
+      var btn = document.getElementById('veilEnter');
+      if (btn && btn.firstChild && btn.firstChild.nodeType === 3) {
+        btn.firstChild.nodeValue = 'Enter while the forest loads';
+        slowBtn = btn;
+      }
+      open();
+    }, 12000);
     paint();
     return {
       set: function (key, val) {
         if (val > (parts[key] || 0)) { parts[key] = val; paint(); }
       },
-      isReady: function () { return ready; }
+      isReady: function () { return ready; },
+      readySince: function () { return readyAt; }
     };
   })();
 
@@ -78,6 +126,34 @@
   } else {
     gate.set('fonts', 1);
   }
+
+  // the first-seen artwork joins the gate: the veil fox and hero fox
+  // sharp layers must be fetched, decoded AND rasterized before Enter,
+  // so no fox can ever pop in after the veil lifts
+  (function gateFoxes() {
+    var sharps = document.querySelectorAll('.veil-spirit img.sharp, .hero-spirit img.sharp');
+    if (!sharps.length) { gate.set('foxes', 1); return; }
+    var done = 0;
+    function warm(img) {
+      // draw once at layout size so the first real paint after Enter
+      // finds a warm raster (SVG-as-img rasters are cached per size)
+      try {
+        var dprr = Math.min(window.devicePixelRatio || 1, 2);
+        var w = Math.round((img.clientWidth || 600) * dprr);
+        var h = Math.round((img.clientHeight || 600) * dprr);
+        if (!w || !h) return;
+        var c = document.createElement('canvas');
+        c.width = Math.min(w, 2048); c.height = Math.min(h, 2048);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      } catch (e) { /* warming is best-effort */ }
+    }
+    Array.prototype.forEach.call(sharps, function (img) {
+      var fin = function () { done += 1; gate.set('foxes', done / sharps.length); };
+      if (img.decode) img.decode().then(function () { warm(img); fin(); }, fin);
+      else if (img.complete) fin();
+      else { img.addEventListener('load', fin); img.addEventListener('error', fin); }
+    });
+  })();
 
   /* ------------------------------------------------------------
      3 · the journey — a forest that moves as you scroll
@@ -94,8 +170,10 @@
     // fetch as blob: object URLs are fully seekable even when the
     // server (e.g. python http.server) doesn't support range requests.
     // Streamed so the veil can count the download in.
-    var SRC = 'assets/journey.mp4?v=9';
-    fetch(SRC)
+    // ?v must stay in sync with the head's early-fetch (index.html),
+    // which starts this download at HTML-parse time
+    var SRC = 'assets/journey.mp4?v=10';
+    (window.__journeyFetch || fetch(SRC))
       .then(function (r) {
         if (!r.ok) throw new Error(r.status);
         var total = +r.headers.get('Content-Length') || 0;
@@ -113,12 +191,27 @@
           })();
         });
       })
-      .then(function (b) { v.src = URL.createObjectURL(b); })
+      .then(function (b) {
+        v.src = URL.createObjectURL(b);
+        // late arrival after a failsafe entry: the gesture-time unlock
+        // ran against a src-less video, so re-run the muted play()
+        // trick or iPad scrubbing stays stuck on a blank frame
+        if (entered && typeof v.play === 'function') {
+          var pp = v.play();
+          if (pp && pp.then) pp.then(function () { v.pause(); }).catch(function () {});
+        }
+      })
       .catch(function () { v.src = SRC; });
-    var dur = 0, cur = 0;
+    var dur = 0, cur = 0, dead = false;
 
     v.addEventListener('loadedmetadata', function () {
       dur = v.duration || 0;
+      // late arrival (honest-failsafe path): open on the scroll-mapped
+      // frame — never visibly fast-forward from frame 0 to catch up
+      if (maxScroll > 0 && window.scrollY > 0) {
+        cur = (window.scrollY / maxScroll) * Math.max(0, dur - 0.08);
+        try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
+      }
       v.classList.add('ready');
     });
     v.addEventListener('loadeddata', function () { gate.set('video', 1); });
@@ -129,13 +222,14 @@
     v.addEventListener('error', function () {
       v.classList.remove('ready');
       v.remove();
+      dead = true; // stop the scrub loop — its element is gone
       gate.set('video', 1); // the journey is optional; entry is not
     });
 
     // scrubbing rules: never read layout in the loop (cache the page
     // height), and never issue a seek while one is in flight — the
-    // video is encoded with a keyframe every 4 frames so each seek
-    // lands almost instantly
+    // video is encoded all-intra (every frame a keyframe) so each
+    // seek is a single-frame decode
     var maxScroll = 0, lastW = window.innerWidth;
     function measure() {
       // on touch devices the browser chrome collapsing fires
@@ -150,11 +244,20 @@
     if (hasGsap) ScrollTrigger.addEventListener('refresh', measure);
     measure();
 
-    function tick() {
+    var lastT = 0, lastSeek = 0;
+    function tick(t) {
+      if (dead) return;
+      var dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 1 / 60;
+      lastT = t;
       if (dur && maxScroll > 0 && !v.seeking) {
         var target = (window.scrollY / maxScroll) * Math.max(0, dur - 0.08);
-        cur += (target - cur) * 0.12;
-        if (Math.abs(cur - v.currentTime) > 0.03) {
+        // frame-rate-independent damp: identical glide at 60Hz and 120Hz
+        cur += (target - cur) * (1 - Math.pow(0.88, dt * 60));
+        // seek in whole-frame steps (file is 24fps) at most ~30x/s —
+        // fewer, frame-sized seeks present far smoother than the old
+        // per-rAF micro-seeks, whose completion jitter read as stutter
+        if (Math.abs(cur - v.currentTime) > 1 / 24 && t - lastSeek > 33) {
+          lastSeek = t;
           try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
         }
       }
@@ -174,7 +277,8 @@
     var dpr = COARSE ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
     var W = 0, H = 0, parts = [];
     var fireSection = document.getElementById('fire');
-    var warmth = 0;
+    var warmth = 0, targetWarm = 0, externalWarm = false;
+    var energy = 0; // damped |scroll velocity| 0..1 — the embers quicken with travel
 
     function sprite(r, g, b) {
       var s = document.createElement('canvas');
@@ -204,7 +308,12 @@
       };
     }
 
+    var lastCW = 0;
     function resize() {
+      // mobile URL-bar collapse fires height-only resizes mid-scroll —
+      // a canvas realloc then is a visible hitch (same guard as measure())
+      if (COARSE && window.innerWidth === lastCW && W > 0) return;
+      lastCW = window.innerWidth;
       W = window.innerWidth; H = window.innerHeight;
       canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -221,25 +330,28 @@
       drift *= 0.92;
       lastY = sy;
 
-      if (fireSection) {
+      if (!externalWarm && fireSection) {
+        // no-GSAP fallback only: with motion on, a #fire trigger feeds
+        // targetWarm instead — never read layout inside this loop
         var r = fireSection.getBoundingClientRect();
         var mid = r.top + r.height / 2;
         var d = Math.abs(mid - H / 2) / (r.height / 2 + H / 2);
-        var targetWarm = Math.max(0, 1 - d * 1.6);
-        warmth += (targetWarm - warmth) * 0.04;
+        targetWarm = Math.max(0, 1 - d * 1.6);
       }
+      warmth += (targetWarm - warmth) * 0.04;
 
       ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
       for (var i = 0; i < parts.length; i++) {
         var p = parts[i];
         p.sway += p.swaySpeed;
-        p.pulse += 0.015;
+        p.pulse += 0.015 * (1 + energy * 0.8); // travel quickens the pulse
         p.y -= p.v + drift * 0.4 * p.v;
         p.x += Math.sin(p.sway) * 0.25;
         if (p.y < -30) { parts[i] = spawn(false); continue; }
         if (p.y > H + 40) { p.y = -20; p.x = Math.random() * W; }
-        var alpha = p.a * (0.6 + 0.4 * Math.sin(p.pulse));
+        // clamp: globalAlpha silently IGNORES out-of-range assignments
+        var alpha = Math.min(1, p.a * (0.6 + 0.4 * Math.sin(p.pulse)) * (1 + energy * 0.25));
         var size = p.r * 9;
         if (warmth < 0.999) {
           ctx.globalAlpha = alpha * (1 - warmth);
@@ -254,9 +366,21 @@
       requestAnimationFrame(frame);
     }
 
-    resize();
-    window.addEventListener('resize', resize);
-    requestAnimationFrame(frame);
+    var started = false;
+    // the embers only spend frames once the veil lifts (enter() calls
+    // this) — before that they'd paint at full tilt behind an opaque
+    // screen, competing with the gated video download
+    window.__foxfireStart = function () {
+      if (started) return;
+      started = true;
+      resize();
+      window.addEventListener('resize', resize);
+      requestAnimationFrame(frame);
+    };
+    // the motion section swaps the warmth source to a #fire trigger
+    window.__foxfireWarm = function (w) { externalWarm = true; targetWarm = w; };
+    // ...and feeds the damped scroll energy in from its one shared value
+    window.__foxfireEnergy = function (e) { energy = e; };
   })();
 
   /* ------------------------------------------------------------
@@ -272,6 +396,7 @@
     var dpr = COARSE ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
     var W = 0, H = 0, flakes = [], visible = false;
     var mx = -9999, my = -9999;
+    var pageLeft = 0, pageTop = 0, raf = 0, lastCW = 0;
 
     function spawn(anywhere) {
       return {
@@ -285,8 +410,17 @@
       };
     }
 
-    function resize() {
+    function resize(force) {
+      // width-only guard: mobile URL-bar collapse fires height-only
+      // resizes mid-scroll; the IO below force-resyncs on re-entry
+      if (!force && COARSE && window.innerWidth === lastCW && H > 0) return;
+      lastCW = window.innerWidth;
       var rect = canvas.getBoundingClientRect();
+      // cache page-space offsets so the pointer handlers below never
+      // read layout (the section is static-positioned, so these are
+      // scroll-invariant; each IO re-entry recomputes them)
+      pageLeft = rect.left + window.scrollX;
+      pageTop = rect.top + window.scrollY;
       W = rect.width; H = rect.height;
       canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -296,21 +430,18 @@
     }
 
     section.addEventListener('mousemove', function (e) {
-      var rect = canvas.getBoundingClientRect();
-      mx = e.clientX - rect.left; my = e.clientY - rect.top;
+      mx = e.pageX - pageLeft; my = e.pageY - pageTop;
     });
     section.addEventListener('mouseleave', function () { mx = -9999; my = -9999; });
     // fingers stir the snow too — passive, so scrolling stays native
     section.addEventListener('touchmove', function (e) {
       var t = e.touches[0];
       if (!t) return;
-      var rect = canvas.getBoundingClientRect();
-      mx = t.clientX - rect.left; my = t.clientY - rect.top;
+      mx = t.pageX - pageLeft; my = t.pageY - pageTop;
     }, { passive: true });
     section.addEventListener('touchend', function () { mx = -9999; my = -9999; });
 
     function frame() {
-      if (!visible) { requestAnimationFrame(frame); return; }
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = 'rgba(236,238,248,1)';
       for (var i = 0; i < flakes.length; i++) {
@@ -336,18 +467,26 @@
         ctx.fill();
       }
       ctx.globalAlpha = 1;
-      requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     }
 
+    // the loop only exists while the section is near the viewport —
+    // no idle rAF spin for a snowfield nobody can see
     var io = new IntersectionObserver(function (entries) {
-      visible = entries[0].isIntersecting;
-      if (visible) resize();
+      var vis = entries[0].isIntersecting;
+      if (vis && !visible) {
+        visible = true;
+        resize(true); // re-sync offsets/size skipped while away
+        raf = requestAnimationFrame(frame);
+      } else if (!vis && visible) {
+        visible = false;
+        cancelAnimationFrame(raf);
+      }
     }, { rootMargin: '100px' });
     io.observe(section);
 
-    window.addEventListener('resize', resize);
-    resize();
-    requestAnimationFrame(frame);
+    window.addEventListener('resize', function () { resize(false); });
+    resize(true);
   })();
 
   /* ------------------------------------------------------------
@@ -363,7 +502,21 @@
     entered = true;
     doc.classList.remove('gated');
     window.scrollTo(0, 0); // the journey always begins at the first step
-    if (veil) veil.classList.add('gone');
+    // reap the veil (and its decoded fox rasters) once its exit ends —
+    // visibility:hidden alone pins that memory for the site's lifetime
+    var reap = function () {
+      if (veil && veil.parentNode) { veil.remove(); veil = null; }
+    };
+    if (veil) {
+      veil.classList.add('gone');
+      // transitionend bubbles — a child's transition (e.g. the Enter
+      // button's 0.4s color fade) must not reap the veil mid-dissolve
+      veil.addEventListener('transitionend', function (e) {
+        if (e.target === e.currentTarget && e.propertyName === 'opacity') reap();
+      });
+      setTimeout(reap, 1600); // fallback if transitionend never fires
+    }
+    if (window.__foxfireStart) window.__foxfireStart(); // embers wake with the world
     // a user gesture unlocks video decoding on iOS, so scrubbing renders
     var v = document.getElementById('journey');
     if (v && typeof v.play === 'function') {
@@ -377,11 +530,23 @@
   if (veil) {
     doc.classList.add('gated'); // scroll is locked while the veil is up
     document.getElementById('veilEnter').addEventListener('click', enter);
-    window.addEventListener('wheel', enter, { passive: true });
-    window.addEventListener('touchmove', enter, { passive: true });
+    // scroll-to-enter stays, but leftover trackpad inertia from the
+    // loading wait must not skip the 100% settle and Enter reveal —
+    // require a fresh, deliberate push >400ms after the gate opens
+    var wheelAccum = 0;
+    window.addEventListener('wheel', function (e) {
+      if (!gate.isReady() || performance.now() - gate.readySince() < 400) return;
+      wheelAccum += Math.abs(e.deltaY);
+      if (wheelAccum > 40) enter();
+    }, { passive: true });
+    window.addEventListener('touchmove', function () {
+      if (gate.isReady() && performance.now() - gate.readySince() > 400) enter();
+    }, { passive: true });
     window.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') enter();
     });
+  } else if (window.__foxfireStart) {
+    window.__foxfireStart(); // no veil to wait behind
   }
 
   /* ------------------------------------------------------------
@@ -389,7 +554,18 @@
      ------------------------------------------------------------ */
 
   if (!MOTION) {
-    if (veil && reducedQuery.matches) veil.classList.add('gone');
+    if (veil && reducedQuery.matches) {
+      veil.classList.add('gone');
+      // the veil dismisses itself here, so unlock scroll with it and
+      // retire enter() — otherwise reduced-motion visitors sit behind
+      // html.gated's overflow:hidden with no visible gate, and a later
+      // stray enter() would scrollTo(0,0) out from under them
+      doc.classList.remove('gated');
+      entered = true;
+      setTimeout(function () {
+        if (veil && veil.parentNode) { veil.remove(); veil = null; }
+      }, 1600);
+    }
     return;
   }
 
@@ -402,12 +578,16 @@
 
   window.scrollTo(0, 0);
 
-  if (typeof window.Lenis === 'function') {
+  // one scroll owner per input class: normalizeScroll(true) already
+  // drives touch scroll above — layering Lenis on top gives two systems
+  // fighting over intent (GSAP's docs warn against exactly this pairing)
+  if (typeof window.Lenis === 'function' && ScrollTrigger.isTouch !== 1) {
     lenis = new Lenis({ duration: 1.25, smoothWheel: true });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
-    // on touch, default lag smoothing absorbs GC pauses better than 0
-    if (ScrollTrigger.isTouch !== 1) gsap.ticker.lagSmoothing(0);
+    // touch never reaches this block, so it keeps GSAP's default lag
+    // smoothing (which absorbs GC pauses better than 0 there)
+    gsap.ticker.lagSmoothing(0);
     lenis.stop(); // held until the veil lifts
   }
 
@@ -423,6 +603,43 @@
     });
   });
 
+  // ---- the world breathes with your scroll -----------------------
+  // One damped velocity value (the ivress damp idiom); everything
+  // below reads it. Magnitudes are deliberately sub-perceptual —
+  // physics, not effects.
+  (function velocity() {
+    var VEL_LEAN = -14;  // px of fox lean at full normalized velocity
+    var velRaw = 0, velNorm = 0, lastVelY = window.scrollY;
+    if (lenis) lenis.on('scroll', function (e) { velRaw = e.velocity; });
+
+    // the ambient foxes lean on an inner wrapper: the mounts' own y is
+    // scrub-owned (parallax), and two writers on one transform fight.
+    // NEVER wrap .tails-spirit (its rebake reads :scope > img) and the
+    // pool fox is mid-plunge — lag would muddy a choreographed move.
+    var lagSetters = [];
+    ['.origin-fox', '.fire-fox'].forEach(function (sel) {
+      var mount = document.querySelector(sel);
+      if (!mount) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'spirit-lag';
+      while (mount.firstChild) wrap.appendChild(mount.firstChild);
+      mount.appendChild(wrap);
+      lagSetters.push(gsap.quickTo(wrap, 'y', { duration: 0.5, ease: 'power3' }));
+    });
+
+    gsap.ticker.add(function (t, dtMs) {
+      if (!lenis) { // touch: normalizeScroll owns scroll — derive from position
+        var y = window.scrollY;
+        velRaw = velRaw * 0.8 + (y - lastVelY) * 0.2;
+        lastVelY = y;
+      }
+      var norm = Math.max(-1, Math.min(1, (velRaw / window.innerHeight) * 2));
+      velNorm += (norm - velNorm) * (1 - Math.pow(0.9, dtMs / 16.7));
+      if (window.__foxfireEnergy) window.__foxfireEnergy(Math.abs(velNorm));
+      for (var i = 0; i < lagSetters.length; i++) lagSetters[i](velNorm * VEL_LEAN);
+    });
+  })();
+
   // ---- spirit condensation: blooms first, then the ink ----------
   var LAYER_OPACITY = { bloom2: 0.38, bloom: 0.6, sharp: 0.95 };
 
@@ -432,10 +649,10 @@
     gsap.set(imgs, { opacity: 0 });
     gsap.set(mount, { y: opts.y === undefined ? 30 : opts.y });
     var tl = gsap.timeline({ paused: true });
-    tl.to(mount, { y: 0, duration: 2.2, ease: 'power2.out' }, 0);
+    tl.to(mount, { y: 0, duration: 2.2, ease: 'power4.out' }, 0);
     imgs.forEach(function (img, i) {
       var end = LAYER_OPACITY[img.className] || 1;
-      tl.to(img, { opacity: end, duration: 1.6, ease: 'power2.out' }, i * 0.45);
+      tl.to(img, { opacity: end, duration: 1.6, ease: 'power4.out' }, i * 0.45);
     });
     return tl;
   }
@@ -467,7 +684,7 @@
       // descenders survive — waiting lines must hide below that window
       { yPercent: 135 },
       {
-        yPercent: 0, duration: 1.5, ease: 'power4.out', stagger: 0.14,
+        yPercent: 0, duration: 1.5, ease: 'expo.out', stagger: 0.14,
         scrollTrigger: { trigger: t, start: 'top 85%', once: true }
       });
   });
@@ -475,7 +692,7 @@
   // hairline rules draw themselves in
   gsap.utils.toArray('.ch-rule').forEach(function (r) {
     gsap.fromTo(r, { scaleX: 0 }, {
-      scaleX: 1, duration: 1.4, ease: 'power3.inOut',
+      scaleX: 1, duration: 1.4, ease: 'power2.inOut',
       scrollTrigger: { trigger: r, start: 'top 88%', once: true }
     });
   });
@@ -494,7 +711,7 @@
   gsap.utils.toArray('[data-reveal]').forEach(function (el) {
     if (el.closest('#hero') || el.classList.contains('ch-title')) return;
     gsap.fromTo(el, { y: 40, opacity: 0 }, {
-      y: 0, opacity: 1, duration: 1.3, ease: 'power3.out',
+      y: 0, opacity: 1, duration: 1.3, ease: 'expo.out',
       scrollTrigger: { trigger: el, start: 'top 87%', once: true }
     });
   });
@@ -525,13 +742,13 @@
 
     var entrance = gsap.timeline({ paused: true });
     entrance
-      .to('.hero-moon', { opacity: 1, scale: 1, duration: 2.4, ease: 'power2.out' }, 0)
+      .to('.hero-moon', { opacity: 1, scale: 1, duration: 2.4, ease: 'power4.out' }, 0)
       .to('.hero-title', { opacity: 1, filter: 'blur(0px)', duration: 1.9, ease: 'expo.out' }, 0.2)
       .fromTo('.hero-title .hc',
         { yPercent: 46, opacity: 0 },
         { yPercent: 0, opacity: 1, stagger: 0.06, duration: 1.5, ease: 'expo.out' }, 0.25)
-      .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 0.8)
-      .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' }, 1.0)
+      .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 0.8)
+      .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 1.0)
       .add(condense(spirit, { y: 20 }).play(), 0.9);
     window.__heroEntrance = entrance;
 
@@ -541,11 +758,23 @@
         start: 'top top',
         end: '+=160%',
         pin: true,
-        scrub: 0.8
+        scrub: 0.8,
+        invalidateOnRefresh: true // the per-glyph spread below is font-size-relative
       }
     })
       .to(zoom, { scale: 1.55, ease: 'power1.in' }, 0)
-      .to('.hero-title', { letterSpacing: '0.22em', ease: 'power1.in' }, 0)
+      // the wordmark tracks apart via per-glyph transforms, NOT
+      // letter-spacing: scrubbing letter-spacing reflows the char-split
+      // title on every frame of the visit's first scroll gesture.
+      // 0.17em spread = the old 0.22em target minus the 0.05em CSS base.
+      .to('.hero-title .hc', {
+        x: function (i, el, arr) {
+          var mid = (arr.length - 1) / 2;
+          var spread = 0.17 * parseFloat(getComputedStyle(ht).fontSize);
+          return (i - mid) * spread;
+        },
+        ease: 'power1.in'
+      }, 0)
       .to(zoom, { opacity: 0, ease: 'none' }, 0.45)
       .to('.hero-cue', { opacity: 0, ease: 'none', duration: 0.2 }, 0);
   })();
@@ -591,11 +820,13 @@
         scrub: 1.4, invalidateOnRefresh: true
       }
     });
+    // idle breath, not a gesture — the one deliberate exception to the
+    // expo/power4 voice (a breath should be sinusoidal)
     gsap.to(foxMount, { y: -7, duration: 2.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
 
     gsap.utils.toArray('.skill').forEach(function (el) {
       gsap.fromTo(el, { opacity: 0, y: 70 }, {
-        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+        opacity: 1, y: 0, duration: 1, ease: 'expo.out',
         scrollTrigger: {
           trigger: el, containerAnimation: horiz,
           start: 'left 88%', once: true
@@ -631,7 +862,16 @@
         end: '+=400%',
         pin: true,
         scrub: 1,
-        invalidateOnRefresh: true
+        invalidateOnRefresh: true,
+        // promote the gate layers only while the corridor is active —
+        // held permanently (CSS will-change) they'd pin GPU texture
+        // memory for the site's whole life. Toggled at the pin
+        // boundary so promotion never churns mid-scrub.
+        onToggle: function (self) {
+          gsap.set([gates, foxMount, '.works-head'], {
+            willChange: self.isActive ? 'transform, opacity' : 'auto'
+          });
+        }
       }
     });
     // counter follows the timeline playhead, not raw scroll —
@@ -654,6 +894,10 @@
     });
     tl.to('.works-head', { opacity: 0, y: -60, duration: 0.7, ease: 'none' }, 1.3);
 
+    // autoAlpha (not opacity): an invisible gate's inner keeps
+    // pointer-events:auto, and hit-testing ignores opacity — hidden
+    // gates must also be visibility:hidden or their links capture the
+    // cursor halo through the visible one
     gates.forEach(function (gate, i) {
       var at = 2 + i * STEP;
       var numEl = gate.querySelector('.wscene-num');
@@ -661,13 +905,13 @@
 
       // the gate stands far down the path — approach it
       tl.fromTo(gate,
-        { opacity: 0, scale: 0.3, yPercent: 3 },
-        { opacity: 1, scale: 1, yPercent: 0, duration: 1.15, ease: 'power2.out' },
+        { autoAlpha: 0, scale: 0.3, yPercent: 3 },
+        { autoAlpha: 1, scale: 1, yPercent: 0, duration: 1.15, ease: 'power2.out' },
         at);
       // its inscription resolves a beat later
       tl.fromTo(inner,
-        { opacity: 0, y: 44 },
-        { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' },
+        { autoAlpha: 0, y: 44 },
+        { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power3.out' },
         at + 0.45);
       // the ghost numeral drifts at its own depth
       tl.fromTo(numEl,
@@ -676,16 +920,26 @@
         at);
       // step through: the inscription dissolves, the beams sweep past
       tl.to(inner,
-        { opacity: 0, duration: 0.4, ease: 'none' },
+        { autoAlpha: 0, duration: 0.4, ease: 'none' },
         at + STEP - 0.75);
       tl.to(gate,
-        { scale: 3.6, opacity: 0, duration: 1.0, ease: 'power2.in' },
+        { scale: 3.6, autoAlpha: 0, duration: 1.0, ease: 'power2.in' },
         at + STEP - 0.7);
     });
     tl.to({}, { duration: 0.6 });
   })();
 
   // ---- 04 · foxfire: the world warms ------------------------------
+  // warmth follows the chapter from here — replaces the canvas loop's
+  // per-frame getBoundingClientRect (identical curve: d = |1 - 2p|)
+  if (window.__foxfireWarm) {
+    ScrollTrigger.create({
+      trigger: '#fire', start: 'top bottom', end: 'bottom top',
+      onUpdate: function (self) {
+        window.__foxfireWarm(Math.max(0, 1 - 1.6 * Math.abs(1 - 2 * self.progress)));
+      }
+    });
+  }
   gsap.fromTo('.tint', { opacity: 0 }, {
     opacity: 1, ease: 'none',
     scrollTrigger: { trigger: '#fire', start: 'top 75%', end: 'top 15%', scrub: true }
@@ -822,6 +1076,13 @@
 
     spirit.classList.add('tails-masked');
 
+    // "no tail may glow before it is earned" must hold even if the
+    // visitor anchor-jumps straight here while the bake below is still
+    // deferred — hide the full drawing until the body-only bake lands
+    // (the catch at the bottom restores it if baking ever fails)
+    var baseImgs = Array.prototype.slice.call(spirit.querySelectorAll(':scope > img'));
+    baseImgs.forEach(function (img) { img.style.visibility = 'hidden'; });
+
     // the wrappers (and the timeline below) exist immediately; the
     // baked bitmaps drop in a moment later, long before this chapter
     // scrolls into view
@@ -840,6 +1101,19 @@
     });
     art.src = 'assets/kitsune/sitting.svg';
     artLoaded.then(function () {
+      // defer the six supersampled bakes off the startup path — they
+      // cost one long main-thread task right around the visitor's
+      // entrance; bake early only if the journey nears this chapter
+      return new Promise(function (resolve) {
+        var fired = false;
+        function go() { if (!fired) { fired = true; resolve(); } }
+        if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 8000 });
+        else setTimeout(go, 3500);
+        // '#works' (two pinned chapters early) so even an anchor glide
+        // toward #tails leaves the bake time to finish en route
+        ScrollTrigger.create({ trigger: '#works', start: 'top bottom', once: true, onEnter: go });
+      });
+    }).then(function () {
       var baked = [bake(art, BASE, null)];
       for (var i = 0; i < TAILS; i++) {
         baked.push(bake(art, wedge(RAYS[i], RAYS[i + 1]), BASE));
@@ -847,10 +1121,20 @@
       return Promise.all(baked.map(blobURL));
     }).then(function (urls) {
       // the mount's own three layers (sharp + both blooms) become the
-      // body + ground only — no tail may glow before it is earned
-      Array.prototype.forEach.call(spirit.querySelectorAll(':scope > img'), function (img) {
+      // body + ground only — no tail may glow before it is earned.
+      // These runtime-baked bitmaps are black ink again, so restore the
+      // live invert/blur filters that the baked-glow WebPs opted out of
+      baseImgs.forEach(function (img) {
+        img.removeAttribute('data-baked');
         img.src = urls[0];
       });
+      // reveal only once the body-only bitmap is decoded, so the old
+      // five-tailed raster can never flash through the swap
+      var show = function () {
+        baseImgs.forEach(function (img) { img.style.visibility = ''; });
+      };
+      if (baseImgs[0] && baseImgs[0].decode) baseImgs[0].decode().then(show, show);
+      else show();
       // each tail gets the same three-layer glow as every other spirit
       pieces.forEach(function (wrap, i) {
         wrap.innerHTML =
@@ -860,6 +1144,7 @@
       });
     }).catch(function () {
       // if baking ever fails, the untouched full drawing simply stays
+      baseImgs.forEach(function (img) { img.style.visibility = ''; });
     });
 
     gsap.set(spirit, { opacity: 0, y: 26 });
@@ -917,19 +1202,84 @@
       });
     });
 
-    // the halo is a mouse creature — no listener, no ticker on touch
+    // the halo is a mouse creature — no listener, no ticker on touch.
+    // It speaks a small language: it grows over anything interactive,
+    // and the key CTAs answer with a gentle magnetic lean. The ticker
+    // below is the ONLY writer of halo.style.transform — never tween it.
     var halo = document.querySelector('.cursor-halo');
     if (halo && !COARSE) {
+      var HALO_GROW = 2.2;    // scale over interactive targets
+      var MAGNET_PULL = 0.15; // halo bias toward a magnetic center
+      var MAGNET_SHIFT = 6;   // px cap for the element's own lean
       var hx = -100, hy = -100, tx = -100, ty = -100, shown = false, tracking = false;
+      var hs = 1, hTarget = 1, hoverEl = null;
+      var magnet = null, magnetRect = null, magnetX = null, magnetY = null;
+      var magnetCache = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+      function releaseMagnet() {
+        if (magnetX) { magnetX(0); magnetY(0); }
+        magnet = null; magnetRect = null;
+      }
+
+      document.addEventListener('pointerover', function (e) {
+        var t = e.target.closest && e.target.closest('a, button, [data-cursor]');
+        if (!t) return;
+        hoverEl = t;
+        hTarget = HALO_GROW;
+        // only generous targets magnetize — nav links are 26px tall
+        // under a fixed header and would jitter
+        if (t !== magnet && t.matches && t.matches('.veil-enter, .wscene-visit, .pool-mail')) {
+          magnet = t;
+          magnetRect = t.getBoundingClientRect(); // once, off the hot path
+          var pair = magnetCache && magnetCache.get(t);
+          if (!pair) {
+            // one setter pair per element, forever — re-creating them on
+            // every hover leaves the old return-to-zero tween writing
+            // the same properties
+            pair = {
+              x: gsap.quickTo(t, 'x', { duration: 0.4, ease: 'power3' }),
+              y: gsap.quickTo(t, 'y', { duration: 0.4, ease: 'power3' })
+            };
+            if (magnetCache) magnetCache.set(t, pair);
+          }
+          magnetX = pair.x; magnetY = pair.y;
+        }
+      });
+      document.addEventListener('pointerout', function (e) {
+        if (hoverEl && !hoverEl.contains(e.relatedTarget)) { hoverEl = null; hTarget = 1; }
+        if (magnet && !magnet.contains(e.relatedTarget)) releaseMagnet();
+      });
+      // Safari/Firefox fire no boundary events when the page scrolls
+      // under a stationary cursor — the cached rect (and the lean)
+      // would go stale, pulling toward a point the element left.
+      // Release on scroll; the next real pointer event re-establishes.
+      window.addEventListener('scroll', function () {
+        if (magnet) releaseMagnet();
+        if (hoverEl) { hoverEl = null; hTarget = 1; }
+      }, { passive: true });
+
       window.addEventListener('mousemove', function (e) {
         tx = e.clientX; ty = e.clientY;
         if (!shown) { shown = true; gsap.to(halo, { opacity: 1, duration: 0.6 }); }
         if (!tracking) { // the ticker only spends frames once a mouse exists
           tracking = true;
           gsap.ticker.add(function () {
-            hx += (tx - hx) * 0.14;
-            hy += (ty - hy) * 0.14;
-            halo.style.transform = 'translate(' + (hx - 17) + 'px,' + (hy - 17) + 'px)';
+            // the veil is removed from the DOM — its Enter button can
+            // never fire pointerout, so drop stale targets here
+            if (hoverEl && !hoverEl.isConnected) { hoverEl = null; hTarget = 1; magnet = null; }
+            var ax = tx, ay = ty;
+            if (magnet && magnetRect) {
+              var cx = magnetRect.left + magnetRect.width / 2;
+              var cy = magnetRect.top + magnetRect.height / 2;
+              ax += (cx - tx) * MAGNET_PULL;
+              ay += (cy - ty) * MAGNET_PULL;
+              magnetX(Math.max(-MAGNET_SHIFT, Math.min(MAGNET_SHIFT, (tx - cx) * 0.12)));
+              magnetY(Math.max(-MAGNET_SHIFT, Math.min(MAGNET_SHIFT, (ty - cy) * 0.12)));
+            }
+            hx += (ax - hx) * 0.14;
+            hy += (ay - hy) * 0.14;
+            hs += (hTarget - hs) * 0.12;
+            halo.style.transform = 'translate(' + (hx - 17) + 'px,' + (hy - 17) + 'px) scale(' + hs.toFixed(3) + ')';
           });
         }
       });
