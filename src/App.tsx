@@ -1,7 +1,36 @@
+import { useEffect } from 'react'
+import { Nav } from './components/Nav'
+import { Atmosphere } from './components/Atmosphere'
+import { Hero } from './sections/hero/Hero'
+import { About } from './sections/about/About'
+import { Experience } from './sections/experience/Experience'
+import { Projects } from './sections/projects/Projects'
+import { Skills } from './sections/skills/Skills'
+import { OffTheClock } from './sections/off-the-clock/OffTheClock'
+import { Contact } from './sections/contact/Contact'
+import { hydrateMotionPrefs } from './motion/motionPrefs'
+
 export function App() {
+  useEffect(() => {
+    hydrateMotionPrefs()
+  }, [])
+
   return (
-    <main id="main">
-      <h1>Ethan Tiong</h1>
-    </main>
+    <>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+      <Atmosphere />
+      <Nav />
+      <main id="main" className="page">
+        <Hero />
+        <About />
+        <Experience />
+        <Projects />
+        <Skills />
+        <OffTheClock />
+        <Contact />
+      </main>
+    </>
   )
 }

@@ -184,3 +184,9 @@ body {
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--col-gap);
 }
+
+/* content stacks above the fixed atmosphere and the field */
+.page {
+  position: relative;
+  z-index: 1;
+}

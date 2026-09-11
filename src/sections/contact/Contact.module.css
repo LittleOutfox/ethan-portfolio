@@ -1,0 +1,128 @@
+.contact {
+  position: relative;
+  padding-top: var(--space-section);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  align-items: end;
+}
+
+.block {
+  grid-column: 1 / span 5;
+  padding-bottom: var(--s-7);
+}
+
+.email {
+  display: inline-block;
+  margin-top: var(--s-2);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  line-height: 1.2;
+  color: var(--moon);
+  text-decoration: underline;
+  text-decoration-color: var(--ice-deep);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  overflow-wrap: anywhere;
+  transition: text-decoration-color var(--t-1) var(--ease-fade);
+}
+
+@media (hover: hover) {
+  .email:hover {
+    text-decoration-color: var(--ice);
+  }
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-6);
+  margin-top: var(--s-5);
+}
+
+.links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+}
+
+.status {
+  margin-top: var(--s-3);
+}
+
+.plate {
+  grid-column: 7 / -1;
+  position: relative;
+}
+
+.cell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 512 / 456;
+}
+
+.poster {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  max-width: none;
+  object-fit: fill;
+  opacity: 0.85;
+  transition: opacity var(--t-3) var(--ease-fade);
+}
+
+.cell[data-live] .poster {
+  opacity: 0;
+}
+
+.rule {
+  height: 1px;
+  background: var(--hairline-strong);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-6);
+  padding: var(--s-6) 0 max(var(--s-6), env(safe-area-inset-bottom));
+  margin-top: var(--s-9);
+  border-top: 1px solid var(--hairline);
+}
+
+.footer p:nth-child(2) {
+  flex: 1 1 24rem;
+}
+
+.signature {
+  font-family: var(--font-cjk);
+  font-weight: 300;
+  font-size: var(--fs-meta);
+  letter-spacing: 0.3em;
+  color: var(--text-3);
+  margin-left: auto;
+}
+
+@media (max-width: 959px) {
+  .block,
+  .plate {
+    grid-column: 1 / -1;
+  }
+  .plate {
+    margin-top: var(--s-7);
+    max-width: 24rem;
+  }
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .signature {
+    margin-left: 0;
+  }
+}

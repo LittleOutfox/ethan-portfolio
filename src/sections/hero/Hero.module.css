@@ -1,0 +1,158 @@
+.hero {
+  position: relative;
+  min-height: 100svh;
+  padding-top: var(--nav-h);
+  scroll-margin-top: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  min-height: calc(100svh - var(--nav-h));
+  align-items: end;
+}
+
+/* title block: columns 1–5, vertically centred with a quiet lower-left beneath the actions */
+.block {
+  position: relative;
+  grid-column: 1 / span 5;
+  align-self: center;
+  padding-block: var(--s-8) 14svh;
+  max-width: 34rem;
+}
+
+/* a feathered navy scrim under the type block so field points never pass under text below 4.5:1 */
+.block::before {
+  content: '';
+  position: absolute;
+  inset: -4rem -8rem -4rem calc(-1 * var(--gutter) - 2rem);
+  background: radial-gradient(ellipse 70% 60% at 35% 50%, var(--scrim), transparent 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.role {
+  margin-top: var(--s-4);
+  font-weight: 500;
+  font-size: var(--fs-role);
+  line-height: var(--lh-tight);
+  color: var(--ice);
+}
+
+.standfirst {
+  margin-top: var(--s-5);
+  max-width: var(--measure-hero);
+}
+
+/* run-in facts: one hairline under the whole group */
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: var(--s-5);
+  row-gap: var(--s-2);
+  margin-top: var(--s-6);
+  padding-bottom: var(--s-5);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.facts > div {
+  display: contents;
+}
+
+.facts dt {
+  font-size: var(--fs-meta);
+  color: var(--text-3);
+  line-height: 1.55;
+}
+
+.facts dd {
+  font-size: var(--fs-body);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4) var(--s-6);
+  margin-top: var(--s-5);
+}
+
+.actions .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+}
+
+/* the plate: columns 6–12, standing on a hairline ground rule */
+.plate {
+  grid-column: 6 / -1;
+  align-self: end;
+  margin-bottom: 15svh;
+  position: relative;
+}
+
+.cell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 512 / 381;
+}
+
+.poster {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  max-width: none;
+  object-fit: fill;
+  opacity: 0.9;
+  transition: opacity var(--t-3) var(--ease-fade);
+}
+
+.cell[data-live] .poster {
+  opacity: 0;
+}
+
+.rule {
+  height: 1px;
+  background: var(--hairline-strong);
+}
+
+@media (max-width: 1279px) {
+  .block {
+    grid-column: 1 / span 6;
+  }
+  .plate {
+    grid-column: 7 / -1;
+  }
+}
+
+@media (max-width: 959px) {
+  .hero {
+    min-height: auto;
+  }
+  .grid {
+    min-height: auto;
+    row-gap: var(--s-7);
+  }
+  .block {
+    grid-column: 1 / -1;
+    max-width: none;
+    padding-block: var(--s-8) 0;
+  }
+  .block::before {
+    display: none;
+  }
+  .plate {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+    order: 3;
+  }
+  .standfirst {
+    max-width: none;
+  }
+}
