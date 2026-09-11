@@ -26,16 +26,16 @@
 - [x] Sampler with seeded PRNG + Hilbert order + tests (`src/webgl/sample.ts`, `sample.test.ts`)
 - [x] Screen-space point shader, single draw call (`src/webgl/FoxPoints.tsx`, `shaders/`)
 - [x] Spike page renders sitting → bowing morph; fox reads as a drawing at 40k points
-- [ ] Contact pose chosen (bowing vs howling) — decided in Phase 3 after both are seen at page scale
+- [x] Contact pose chosen: bowing (wide, low, a greeting beside the email block)
 
 ## Phase 2 — Foundation and the whole page in HTML/CSS
 
-- [ ] Task 2.1 Content data: `src/content/{profile,experience,projects,skills,offTheClock,links,types}.ts` with verbatim copy; `npm run typecheck`.
-- [ ] Task 2.2 Global styles: tokens, fonts, reset, base roles, utilities (`src/styles/*`) — done in spike commit; verify in browser.
-- [ ] Task 2.3 Shell: `App.tsx` with skip link, `<Nav>` (wordmark, links, Résumé, Pause motion button, Menu sheet on mobile), `<main>`, footer.
-- [ ] Task 2.4 Hero section: title block (h1, role line, standfirst, run-in dl, actions) + fox plate cell with poster `<img>` and ground rule.
-- [ ] Task 2.5 About, Experience, Projects (plate + rows, figure placeholder), Skills, Off the clock, Contact sections with real copy.
-- [ ] Task 2.6 Prerender pipeline (`vite build` → `--ssr` → `scripts/prerender.mjs`), verify dist/index.html contains full content; `npm run build` clean.
+- [x] Task 2.1 Content data: `src/content/{profile,experience,projects,skills,offTheClock,links,types}.ts` with verbatim copy; `npm run typecheck`.
+- [x] Task 2.2 Global styles: tokens, fonts, reset, base roles, utilities (`src/styles/*`) — done in spike commit; verify in browser.
+- [x] Task 2.3 Shell: `App.tsx` with skip link, `<Nav>` (wordmark, links, Résumé, Pause motion button, Menu sheet on mobile), `<main>`, footer.
+- [x] Task 2.4 Hero section: title block (h1, role line, standfirst, run-in dl, actions) + fox plate cell with poster `<img>` and ground rule.
+- [x] Task 2.5 About, Experience, Projects (plate + rows, figure placeholder), Skills, Off the clock, Contact sections with real copy.
+- [x] Task 2.6 Prerender pipeline (`vite build` → `--ssr` → `scripts/prerender.mjs`), verify dist/index.html contains full content; `npm run build` clean.
 - [ ] Task 2.7 Screenshots at 1440/1280/1024/768/390, JS-off render, keyboard walk; critique and fix. ★ review workflow.
 - [ ] Commit.
 
@@ -52,7 +52,7 @@
 
 ## Phase 4 — Projects figure and tables
 
-- [ ] Task 4.1 `src/figures/uart.ts` frame generator + tests (idle high, start low, LSB first, stop high, 16 ticks/cell).
+- [x] Task 4.1 `src/figures/uart.ts` frame generator + tests (idle high, start low, LSB first, stop high, 16 ticks/cell).
 - [ ] Task 4.2 `UartFigure.tsx` SVG with byte input and caption; hairline rows for Experience/Skills/Off the clock; Contact.
 - [ ] Commit.
 

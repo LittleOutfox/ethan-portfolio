@@ -1,5 +1,6 @@
 import { projects } from '../../content/projects'
 import { Icon } from '../../components/Icon'
+import { UartFigure } from '../../figures/UartFigure'
 import styles from './Projects.module.css'
 
 export function Projects() {
@@ -37,7 +38,9 @@ export function Projects() {
                   ))}
                 </ul>
               ) : null}
-              <div className={styles.figure} data-figure="uart" />
+              <div className={styles.figure}>
+                <UartFigure id="uart" />
+              </div>
             </div>
           </article>
 

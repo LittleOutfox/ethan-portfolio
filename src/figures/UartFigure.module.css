@@ -1,0 +1,60 @@
+/* UART timing figure: two lanes, 1px strokes, no fill, no radius, no glow. */
+
+.figure {
+  display: grid;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+}
+
+.input {
+  width: 3.5rem;
+  height: var(--control-h);
+  padding: 0;
+  text-align: center;
+  font-family: var(--font-data);
+  font-size: 1rem; /* 16px floor: iOS does not zoom the page on focus */
+  line-height: 1;
+  color: var(--text);
+  background: var(--ground-2);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  appearance: none;
+  transition: border-color var(--t-1) var(--ease-fade);
+}
+
+@media (hover: hover) {
+  .input:hover {
+    border-color: rgb(var(--ice-rgb) / 0.45);
+  }
+}
+
+.readout {
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* the diagram scrolls sideways rather than squashing its labels */
+.scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+  height: auto;
+}
+
+/* user units of the 960-wide viewBox: 15 here renders as 10px at the 640px minimum */
+.svgText {
+  font-size: 15px;
+}

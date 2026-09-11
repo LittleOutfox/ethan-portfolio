@@ -153,6 +153,41 @@ for (const name of names) {
     }
   }
 
+  // drop tiny connected components: autotrace specks are not drawing
+  const MIN_COMPONENT = 24 // px at render scale: specks, not the short dashes of a sketched stroke
+  {
+    const label = new Int32Array(W * H)
+    const stack = new Int32Array(W * H)
+    let nextLabel = 1
+    for (let i = 0; i < W * H; i++) {
+      if (ink[i] <= 0.15 || label[i]) continue
+      let sp = 0
+      let size = 0
+      stack[sp++] = i
+      label[i] = nextLabel
+      const members = []
+      while (sp > 0) {
+        const j = stack[--sp]
+        members.push(j)
+        size++
+        const x = j % W
+        const y = (j / W) | 0
+        const nb = [x > 0 ? j - 1 : -1, x < W - 1 ? j + 1 : -1, y > 0 ? j - W : -1, y < H - 1 ? j + W : -1]
+        for (const q of nb) {
+          if (q >= 0 && ink[q] > 0.15 && !label[q]) {
+            label[q] = nextLabel
+            stack[sp++] = q
+          }
+        }
+      }
+      if (size < MIN_COMPONENT) for (const j of members) ink[j] = 0
+      nextLabel++
+    }
+  }
+
+  let kept = 0
+  for (let i = 0; i < W * H; i++) if (ink[i] > 0.15) kept++
+
   // px at render scale per px at mask scale
   const outW = W >= H ? LONG_EDGE : Math.round((LONG_EDGE * W) / H)
   const outH = W >= H ? Math.round((LONG_EDGE * H) / W) : LONG_EDGE
@@ -166,7 +201,7 @@ for (const name of names) {
   let wmax = 1e-6
   for (let i = 0; i < W * H; i++) {
     // isolated specks (little local ink mass) are autotrace noise, not drawing: drop them
-    const w = ink[i] > 0.15 && mass[i] > 0.02 ? (ink[i] / (local[i] + 0.04)) * (0.35 + 0.65 * Math.min(1, edge[i] * 1.5)) : 0
+    const w = ink[i] > 0.15 && mass[i] > 0.004 ? (ink[i] / (local[i] + 0.04)) * (0.35 + 0.65 * Math.min(1, edge[i] * 1.5)) : 0
     weight[i] = w
     if (w > wmax) wmax = w
   }
@@ -238,6 +273,6 @@ for (const name of names) {
   }
   writeFileSync(resolve(OUT, `${name}.json`), JSON.stringify(side, null, 2))
   console.log(
-    `${name}: ${W}x${H} -> ${outW}x${outH}, ink px ${count}, nose (${side.nose.x.toFixed(3)}, ${side.nose.y.toFixed(3)}), maxGeo ${maxD}`,
+    `${name}: ${W}x${H} -> ${outW}x${outH}, ink px ${count} (kept ${kept}), nose (${side.nose.x.toFixed(3)}, ${side.nose.y.toFixed(3)}), maxGeo ${maxD}`,
   )
 }

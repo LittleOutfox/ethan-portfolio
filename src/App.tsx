@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Nav } from './components/Nav'
 import { Atmosphere } from './components/Atmosphere'
+import { FieldMount } from './components/FieldMount'
 import { Hero } from './sections/hero/Hero'
 import { About } from './sections/about/About'
 import { Experience } from './sections/experience/Experience'
@@ -21,6 +22,7 @@ export function App() {
         Skip to content
       </a>
       <Atmosphere />
+      <FieldMount />
       <Nav />
       <main id="main" className="page">
         <Hero />

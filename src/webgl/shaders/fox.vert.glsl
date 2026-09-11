@@ -24,6 +24,8 @@ uniform vec3 uColorSnow;
 uniform vec3 uColorCore;
 uniform float uIdlePulse;  // 0 or 1
 uniform float uDrift;      // 0..1 global drift amplitude (0 under reduced motion)
+uniform float uFade;       // 0..1 global opacity
+uniform vec2 uAssert;      // y in page px, amplitude: brighten the trace beside a hovered row
 
 varying vec4 vColorAlpha;
 
@@ -55,7 +57,11 @@ void main() {
                     cos(uTime * 0.27 + ph * 1.3)) * (10.0 + 24.0 * aSeed.z) * uDrift;
   scatter += drift * wS;
 
-  vec2 pPage = scatter * wS + posA * wA + posB * wB;
+  // the path between formed and released is an arc, not a straight line: each point bows
+  // sideways by its own amount and settles back, so a release reads as a drift, not a fountain
+  float travel = sin(clamp(wS, 0.0, 1.0) * 3.14159265);
+  vec2 arc = vec2(cos(ph), sin(ph * 1.7)) * (40.0 + 90.0 * aSeed.z) * travel * uDrift;
+  vec2 pPage = scatter * wS + posA * wA + posB * wB + arc;
   // snow stays in viewport space; formed/page points subtract scroll
   float pageAnchored = (1.0 - isSnow) + isSnow * (wA + wB);
   vec2 p = pPage - vec2(0.0, uScrollY) * pageAnchored;
@@ -73,7 +79,13 @@ void main() {
   float ring = exp(-pow((distance(pPage, uPulse.xy) - radius) / 60.0, 2.0)) * exp(-age * 1.4) * step(0.0, age) * uPulse.w * formed;
   float lit = 1.0 + 0.12 * (1.0 - abs(p.x / uViewport.x - uLightX) * 1.6);
   float depth = 0.65 + 0.35 * hash11(aSeed.x * 91.7);
-  float lum = (0.95 * depth + 0.5 * idle + 0.9 * ring) * lit;
+  // released trace points carry slow luminance packets and answer to a hovered row
+  float isTrace = step(0.25, aSeed.w) * (1.0 - step(0.75, aSeed.w));
+  float tp = hash11(floor((position.y + 2.5) / 5.0) * 0.37 + 1.0);
+  float px = mod(uTime * (90.0 + 70.0 * tp) + tp * 5000.0, uViewport.x + 800.0) - 400.0;
+  float packet = exp(-pow((pPage.x - px) / 110.0, 2.0)) * isTrace * wS;
+  float assertLum = exp(-pow((pPage.y - uAssert.x) / 26.0, 2.0)) * uAssert.y * isTrace * wS;
+  float lum = (0.95 * depth + 0.5 * idle + 0.9 * ring + 0.7 * packet + 0.9 * assertLum) * lit;
 
   // colour: cold body, violet only at the tail tips, snow colour when released
   vec3 formedColor = mix(uColorBody, uColorTip, smoothstep(0.82, 1.0, geo));
@@ -86,6 +98,6 @@ void main() {
   float alpha = mix(1.0, 0.3, big) * (0.7 + 0.3 * depth);
   alpha *= mix(0.45, 1.0, formed); // released points are quieter
 
-  vColorAlpha = vec4(color * lum, alpha);
+  vColorAlpha = vec4(color * lum, alpha * uFade);
   gl_PointSize = clamp(uPointSize * sizeMul * uDpr, 1.0, uMaxPointSize);
 }

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ShaderMaterial, Sphere, Vector3, Vector2, Vector4 } from 'three'
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ShaderMaterial, Sphere, Vector2, Vector3, Vector4 } from 'three'
 import vert from './shaders/fox.vert.glsl?raw'
 import frag from './shaders/fox.frag.glsl?raw'
-import { live, target, plates, pulse, flags, smooth } from './bus'
+import { assert, flags, live, plates, pulse, smooth, target } from './bus'
 
 export interface FieldBuffers {
   count: number
@@ -12,9 +12,9 @@ export interface FieldBuffers {
   /** pose A xy in mask space, uint16 normalized */
   foxA: Uint16Array
   foxB: Uint16Array
-  /** phase, size, drift, class — uint8 normalized */
+  /** phase, size, drift, class: uint8 normalized */
   seed: Uint8Array
-  /** geodesic A, B — uint8 normalized */
+  /** geodesic A, B: uint8 normalized */
   geo: Uint8Array
 }
 
@@ -31,14 +31,18 @@ interface Props {
   pointSize: number
   /** shader clock offset so uTime stays small */
   epoch: number
+  /** called once the first frame with these buffers has been drawn */
+  onFirstFrame?: () => void
 }
 
 const TIME_WRAP = 600
+const liveAssert = { y: 0, amp: 0 }
 
 /** One THREE.Points, one geometry, one material, one draw call. */
-export function FoxPoints({ buffers, colors, pointSize, epoch }: Props) {
+export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: Props) {
   const gl = useThree((s) => s.gl)
   const materialRef = useRef<ShaderMaterial>(null)
+  const frames = useRef(0)
 
   const geometry = useMemo(() => {
     const g = new BufferGeometry()
@@ -53,7 +57,9 @@ export function FoxPoints({ buffers, colors, pointSize, epoch }: Props) {
   }, [buffers])
 
   const uniforms = useMemo(() => {
-    const maxSize = (gl.getContext().getParameter(gl.getContext().ALIASED_POINT_SIZE_RANGE) as Float32Array)[1] ?? 64
+    const ctx = gl.getContext()
+    const range = ctx.getParameter(ctx.ALIASED_POINT_SIZE_RANGE) as Float32Array | null
+    const maxSize = range ? range[1] : 64
     return {
       uViewport: { value: new Vector2(1, 1) },
       uScrollY: { value: 0 },
@@ -73,23 +79,33 @@ export function FoxPoints({ buffers, colors, pointSize, epoch }: Props) {
       uColorCore: { value: new Color(colors.core) },
       uIdlePulse: { value: 1 },
       uDrift: { value: 1 },
+      uFade: { value: 1 },
+      uAssert: { value: new Vector2(0, 0) },
     }
     // colours and point size are fixed for the life of the material
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gl])
 
   useEffect(() => () => geometry.dispose(), [geometry])
+  useEffect(() => {
+    frames.current = 0
+  }, [buffers])
 
   useFrame((state, delta) => {
     const m = materialRef.current
     if (!m) return
     const u = m.uniforms
     const dt = Math.min(delta, 0.1)
-    const k = smooth(dt)
+    const now = performance.now() / 1000 - epoch
+    // the arrival: a slower settle while the fox first resolves
+    const k = now < flags.introUntil ? smooth(dt * 0.28) : smooth(dt)
     live.formA += (target.formA - live.formA) * k
     live.formB += (target.formB - live.formB) * k
     live.lightX += (target.lightX - live.lightX) * k
     live.drift += (target.drift - live.drift) * k
+    live.fade += (target.fade - live.fade) * k
+    liveAssert.y = assert.y
+    liveAssert.amp += (assert.amp - liveAssert.amp) * smooth(dt * 1.5)
 
     const w = state.size.width
     const h = state.size.height
@@ -102,9 +118,14 @@ export function FoxPoints({ buffers, colors, pointSize, epoch }: Props) {
     u.uLightX.value = live.lightX
     u.uDrift.value = flags.reducedMotion ? 0 : live.drift
     u.uIdlePulse.value = flags.reducedMotion ? 0 : 1
-    u.uTime.value = (performance.now() / 1000 - epoch) % TIME_WRAP
+    u.uFade.value = live.fade
+    u.uTime.value = now % TIME_WRAP
     u.uDpr.value = gl.getPixelRatio()
     ;(u.uPulse.value as Vector4).set(pulse.x, pulse.y, pulse.t0, pulse.amp)
+    ;(u.uAssert.value as Vector2).set(liveAssert.y, liveAssert.amp)
+
+    frames.current += 1
+    if (frames.current === 2 && onFirstFrame) onFirstFrame()
   })
 
   return (

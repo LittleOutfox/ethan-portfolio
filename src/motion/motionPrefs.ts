@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { flags } from '../webgl/bus'
+import { applyGates, flags } from '../webgl/bus'
 
 const KEY = 'motion'
 type Listener = () => void
@@ -27,6 +27,7 @@ export function hydrateMotionPrefs() {
 export function setPaused(next: boolean) {
   paused = next
   flags.paused = next
+  applyGates()
   try {
     localStorage.setItem(KEY, next ? 'paused' : 'on')
   } catch {
