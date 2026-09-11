@@ -1,4 +1,5 @@
 import { links, profile, site } from '../../content/profile'
+import { ExternalLink } from '../../components/ExternalLink'
 import styles from './Contact.module.css'
 
 export function Contact() {
@@ -14,19 +15,19 @@ export function Contact() {
           </a>
           <ul className={styles.links}>
             <li>
-              <a className="link" href={links.github.href} target="_blank" rel="noopener">
+              <ExternalLink className="link" href={links.github.href}>
                 GitHub
-              </a>
+              </ExternalLink>
             </li>
             <li>
-              <a className="link" href={links.linkedin.href} target="_blank" rel="noopener">
+              <ExternalLink className="link" href={links.linkedin.href}>
                 LinkedIn
-              </a>
+              </ExternalLink>
             </li>
             <li>
-              <a className="link" href={links.resume.href} target="_blank" rel="noopener">
+              <ExternalLink className="link" href={links.resume.href}>
                 Résumé
-              </a>
+              </ExternalLink>
             </li>
           </ul>
           <p className={`t-meta ${styles.status}`}>
@@ -41,14 +42,19 @@ export function Contact() {
           <div className={styles.rule} />
         </div>
       </div>
-
-      <footer className={`container ${styles.footer}`}>
-        <p className="t-meta">{site.copyright}</p>
-        <p className="t-meta">{site.colophon}</p>
-        <p className={styles.signature} aria-hidden="true">
-          {site.signature}
-        </p>
-      </footer>
     </section>
+  )
+}
+
+/** The site footer sits after main so it is the page's contentinfo landmark. */
+export function SiteFooter() {
+  return (
+    <footer className={`container ${styles.footer}`}>
+      <p className="t-meta">{site.copyright}</p>
+      <p className="t-meta">{site.colophon}</p>
+      <p className={styles.signature} aria-hidden="true">
+        {site.signature}
+      </p>
+    </footer>
   )
 }

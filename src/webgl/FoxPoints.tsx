@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ShaderMaterial, Sphere, Vector2, Vector3, Vector4 } from 'three'
 import vert from './shaders/fox.vert.glsl?raw'
 import frag from './shaders/fox.frag.glsl?raw'
-import { assert, control, flags, live, plates, pulse, smooth, target } from './bus'
+import { assert, control, flags, isStill, live, plates, pulse, smooth, target } from './bus'
 
 export interface FieldBuffers {
   count: number
@@ -97,13 +97,23 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
     const u = m.uniforms
     const dt = Math.min(delta, 0.1)
     const now = performance.now() / 1000 - epoch
-    // the arrival: a slower settle while the fox first resolves
-    const k = now < flags.introUntil ? smooth(dt * 0.28) : smooth(dt)
-    live.formA += (target.formA - live.formA) * k
-    live.formB += (target.formB - live.formB) * k
-    live.lightX += (target.lightX - live.lightX) * k
-    live.drift += (target.drift - live.drift) * k
-    live.fade += (target.fade - live.fade) * k
+    const still = isStill()
+    if (still) {
+      // no clock: snap to the scroll-written target so each redraw is exactly one still frame
+      live.formA = target.formA
+      live.formB = target.formB
+      live.lightX = target.lightX
+      live.fade = target.fade
+      live.drift = 0
+    } else {
+      // the arrival: a slower settle while the fox first resolves
+      const k = now < flags.introUntil ? smooth(dt * 0.28) : smooth(dt)
+      live.formA += (target.formA - live.formA) * k
+      live.formB += (target.formB - live.formB) * k
+      live.lightX += (target.lightX - live.lightX) * k
+      live.drift += (target.drift - live.drift) * k
+      live.fade += (target.fade - live.fade) * k
+    }
     liveAssert.y = assert.y
     liveAssert.amp += (assert.amp - liveAssert.amp) * smooth(dt * 1.5)
 
@@ -116,22 +126,23 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
     u.uFormA.value = live.formA
     u.uFormB.value = live.formB
     u.uLightX.value = live.lightX
-    u.uDrift.value = flags.reducedMotion ? 0 : live.drift
-    u.uIdlePulse.value = flags.reducedMotion ? 0 : 1
+    u.uDrift.value = still ? 0 : live.drift
+    u.uIdlePulse.value = still ? 0 : 1
     u.uFade.value = live.fade
     // the quiet band: sleep only once the field has actually faded out
-    if (flags.idle && !flags.reducedMotion && target.fade < 0.001 && live.fade < 0.004) {
+    if (flags.idle && !still && target.fade < 0.001 && live.fade < 0.004) {
       live.fade = 0
       u.uFade.value = 0
       control.setFrameloop('never')
     }
-    u.uTime.value = now % TIME_WRAP
+    // a still field keeps its last clock so snow and trace packets do not re-place per scroll
+    if (!still) u.uTime.value = now % TIME_WRAP
     u.uDpr.value = gl.getPixelRatio()
-    ;(u.uPulse.value as Vector4).set(pulse.x, pulse.y, pulse.t0, pulse.amp)
+    ;(u.uPulse.value as Vector4).set(pulse.x, pulse.y, pulse.t0, still ? 0 : pulse.amp)
     ;(u.uAssert.value as Vector2).set(liveAssert.y, liveAssert.amp)
 
     frames.current += 1
-    if (frames.current === (flags.reducedMotion ? 1 : 2) && onFirstFrame) onFirstFrame()
+    if (frames.current === (still ? 1 : 2) && onFirstFrame) onFirstFrame()
   })
 
   return (

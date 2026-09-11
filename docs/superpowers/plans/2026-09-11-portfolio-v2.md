@@ -64,8 +64,9 @@
 
 - [x] Review round one applied (recruiter, design jury, creative technologist lenses): hero facts, heading margins, rhythm tokens, mono creep, release band, clock ticks, blending, loop gates, reduced motion, pruning.
 - [x] Favicons from the drawing, fonts instanced and subset, lazy Three chunk, robots/sitemap/llms.txt, README, `impeccable detect --json` clean, Lighthouse mobile 92 / desktop 100.
-- [ ] Lenis decision: native scroll kept (the lerp smooths the field; keyboard and anchors stay native).
-- [ ] OG image from the finished hero; a11y lens + synthesis results; contrast on rendered pixels.
+- [x] Lenis decision: native scroll kept (the lerp smooths the field; keyboard and anchors stay native).
+- [x] OG image from the finished hero (1200×630, 166 KB).
+- [ ] a11y lens + synthesis results; contrast on rendered pixels; reduced-motion check.
 
 ## Phase 7 — Final audit
 

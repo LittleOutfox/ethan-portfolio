@@ -70,7 +70,7 @@
   margin-left: var(--s-4);
 }
 
-.pause[aria-pressed='true'] {
+.pause[data-paused] {
   color: var(--ice);
 }
 
@@ -142,6 +142,10 @@
   color: var(--text-2);
 }
 
+.sheetPause[data-paused] {
+  color: var(--ice);
+}
+
 @media (max-width: 959px) {
   .links,
   .desktopOnly {
@@ -150,5 +154,26 @@
   .menuButton {
     display: inline-flex;
     align-items: center;
+  }
+  /* no JavaScript: the Menu button needs showModal(), so the section links stay in the bar and wrap */
+  :global(html.no-js) .menuButton {
+    display: none;
+  }
+  :global(html.no-js) .links {
+    display: block;
+  }
+  :global(html.no-js) .links ul {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0;
+  }
+  :global(html.no-js) .header {
+    height: auto;
+    min-height: var(--nav-h);
+    background: var(--ground);
+  }
+  :global(html.no-js) .bar {
+    flex-wrap: wrap;
+    padding-bottom: var(--s-2);
   }
 }

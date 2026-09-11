@@ -1,5 +1,6 @@
 import { projects } from '../../content/projects'
 import { Icon } from '../../components/Icon'
+import { ExternalLink } from '../../components/ExternalLink'
 import { UartFigure } from '../../figures/UartFigure'
 import styles from './Projects.module.css'
 
@@ -22,10 +23,10 @@ export function Projects() {
               <p className={`t-body ${styles.desc}`}>{lead.description}</p>
               <p className={`data ${styles.stack}`}>{lead.stack}</p>
               {lead.link ? (
-                <a className={`link ${styles.projectLink}`} href={lead.link.href} target="_blank" rel="noopener">
+                <ExternalLink className={`link ${styles.projectLink}`} href={lead.link.href}>
                   {lead.link.label}
                   <Icon name="external" size={14} />
-                </a>
+                </ExternalLink>
               ) : null}
             </div>
             <div className={styles.plateSide}>
@@ -66,10 +67,10 @@ export function Projects() {
           <div className={styles.rowMeta}>
             <p className="t-meta">{third.meta}</p>
             {third.link ? (
-              <a className={`link ${styles.projectLink}`} href={third.link.href} target="_blank" rel="noopener">
+              <ExternalLink className={`link ${styles.projectLink}`} href={third.link.href}>
                 {third.link.label}
                 <Icon name="external" size={14} />
-              </a>
+              </ExternalLink>
             ) : null}
           </div>
         </article>

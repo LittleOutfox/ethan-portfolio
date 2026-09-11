@@ -5,6 +5,8 @@ html {
   font-size: 100%;
   caret-color: var(--ice);
   -webkit-tap-highlight-color: rgb(var(--ice-rgb) / 0.15);
+  /* every scroll-into-view (anchor, skip link, keyboard focus) clears the fixed nav: WCAG 2.4.11 */
+  scroll-padding-top: calc(var(--nav-h) + 1rem);
 }
 
 body {
@@ -167,7 +169,6 @@ body {
 /* sections and headings: more space above a heading than below it */
 .section {
   padding-block: var(--space-section) 0;
-  scroll-margin-top: calc(var(--nav-h) + 1rem);
 }
 
 .container > .t-heading {

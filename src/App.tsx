@@ -8,7 +8,7 @@ import { Experience } from './sections/experience/Experience'
 import { Projects } from './sections/projects/Projects'
 import { Skills } from './sections/skills/Skills'
 import { OffTheClock } from './sections/off-the-clock/OffTheClock'
-import { Contact } from './sections/contact/Contact'
+import { Contact, SiteFooter } from './sections/contact/Contact'
 import { hydrateMotionPrefs } from './motion/motionPrefs'
 
 export function App() {
@@ -24,7 +24,7 @@ export function App() {
       <Atmosphere />
       <FieldMount />
       <Nav />
-      <main id="main" className="page">
+      <main id="main" className="page" tabIndex={-1}>
         <Hero />
         <About />
         <Experience />
@@ -33,6 +33,7 @@ export function App() {
         <OffTheClock />
         <Contact />
       </main>
+      <SiteFooter />
     </>
   )
 }

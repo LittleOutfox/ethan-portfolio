@@ -70,7 +70,13 @@ export function UartFigure({ id }: { id: string }) {
         </output>
       </div>
 
-      <div className={styles.scroll}>
+      <div
+        className={styles.scroll}
+        tabIndex={0}
+        role="group"
+        aria-label="UART timing diagram, scrolls sideways"
+        aria-describedby={captionId}
+      >
         <svg className={styles.svg} viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" aria-hidden="true" focusable="false">
           {/* cell boundaries */}
           <g fill="none" stroke="var(--hairline)" strokeWidth={1} shapeRendering="crispEdges" strokeLinecap="square">

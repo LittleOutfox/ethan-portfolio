@@ -2,7 +2,7 @@
 // the quiet-band gate. ScrollTriggers write the plain `target` object; the render loop lerps.
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { applyGates, control, flags, target } from './bus'
+import { applyGates, control, flags, isStill, target } from './bus'
 import type { TierSpec } from './tiers'
 
 let registered = false
@@ -16,16 +16,25 @@ export function setupScroll(spec: TierSpec): () => void {
   const wash = document.querySelector<HTMLElement>('[data-wash]')
   const triggers: ScrollTrigger[] = []
 
+  // a still field (Pause or reduced motion) is redrawn on scroll and resize so the page-anchored
+  // poses leave with their sections instead of riding the viewport over the text below
+  const redraw = () => {
+    if (isStill()) control.invalidate()
+  }
+  window.addEventListener('scroll', redraw, { passive: true })
+  window.addEventListener('resize', redraw, { passive: true })
+  const stopRedraw = () => {
+    window.removeEventListener('scroll', redraw)
+    window.removeEventListener('resize', redraw)
+  }
+
   if (flags.reducedMotion) {
-    // one still frame of the formed fox; the moon rests; scrolling redraws so the page-anchored
-    // fox leaves with the hero instead of riding the viewport
+    // one still frame of the formed fox; the moon rests
     target.formA = 1.3
     target.formB = -0.3
     target.fade = 1
     applyGates()
-    const onScroll = () => control.invalidate()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return stopRedraw
   }
 
   target.formA = 1.3
@@ -118,6 +127,7 @@ export function setupScroll(spec: TierSpec): () => void {
   )
 
   if (spec.gather) {
+    const plateB = document.querySelector<HTMLElement>('[data-plate="b"]')
     triggers.push(
       ScrollTrigger.create({
         trigger: '#contact',
@@ -126,6 +136,8 @@ export function setupScroll(spec: TierSpec): () => void {
         onUpdate: (self) => {
           target.fade = Math.min(1, self.progress * 3)
           target.formB = -0.3 + 1.6 * self.progress
+          // the poster hands over once the pose is a third formed; scrolling back brings it back
+          plateB?.toggleAttribute('data-live', self.progress > 0.35)
         },
       }),
     )
@@ -137,5 +149,6 @@ export function setupScroll(spec: TierSpec): () => void {
   return () => {
     triggers.forEach((t) => t.kill())
     window.removeEventListener('load', refresh)
+    stopRedraw()
   }
 }

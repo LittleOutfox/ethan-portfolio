@@ -11,7 +11,7 @@
 }
 
 .skip-link {
-  position: absolute;
+  position: fixed;
   top: var(--s-3);
   left: var(--s-3);
   z-index: 100;

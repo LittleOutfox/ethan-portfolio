@@ -2,7 +2,6 @@
   position: relative;
   min-height: 100svh;
   padding-top: var(--nav-h);
-  scroll-margin-top: 0;
 }
 
 .grid {

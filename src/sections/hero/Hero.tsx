@@ -1,5 +1,6 @@
 import { links, profile } from '../../content/profile'
 import { Icon } from '../../components/Icon'
+import { ExternalLink } from '../../components/ExternalLink'
 import styles from './Hero.module.css'
 
 export function Hero() {
@@ -35,17 +36,17 @@ export function Hero() {
             </div>
           </dl>
           <div className={styles.actions}>
-            <a className="button" href={links.resume.href} target="_blank" rel="noopener">
+            <ExternalLink className="button" href={links.resume.href}>
               View résumé
               <Icon name="external" />
-            </a>
+            </ExternalLink>
             <div className={styles.links}>
-              <a className="link" href={links.github.href} target="_blank" rel="noopener">
+              <ExternalLink className="link" href={links.github.href}>
                 GitHub
-              </a>
-              <a className="link" href={links.linkedin.href} target="_blank" rel="noopener">
+              </ExternalLink>
+              <ExternalLink className="link" href={links.linkedin.href}>
                 LinkedIn
-              </a>
+              </ExternalLink>
               <a className="link" href={links.email.href}>
                 {links.email.label}
               </a>

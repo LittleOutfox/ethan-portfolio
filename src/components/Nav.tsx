@@ -1,6 +1,7 @@
 import { useRef, useSyncExternalStore } from 'react'
 import { links, profile } from '../content/profile'
 import { PauseMotion } from './PauseMotion'
+import { ExternalLink } from './ExternalLink'
 import styles from './Nav.module.css'
 
 const SCROLLED_AT = 48
@@ -60,9 +61,7 @@ export function Nav() {
               </li>
             ))}
             <li>
-              <a href={links.resume.href} target="_blank" rel="noopener">
-                Résumé
-              </a>
+              <ExternalLink href={links.resume.href}>Résumé</ExternalLink>
             </li>
           </ul>
         </nav>
@@ -72,7 +71,7 @@ export function Nav() {
         </button>
       </div>
 
-      <dialog ref={dialogRef} className={styles.sheet} aria-label="Sections" onClick={(e) => e.target === e.currentTarget && closeMenu()}>
+      <dialog ref={dialogRef} className={styles.sheet} aria-label="Menu" onClick={(e) => e.target === e.currentTarget && closeMenu()}>
         <div className={styles.sheetInner}>
           <div className={styles.sheetTop}>
             <span className={styles.wordmark}>{profile.name}</span>
@@ -80,38 +79,40 @@ export function Nav() {
               Close
             </button>
           </div>
-          <ul className={styles.sheetList}>
-            {sections.map((s) => (
-              <li key={s.id}>
-                <a href={`#${s.id}`} onClick={closeMenu}>
-                  {s.label}
+          <nav aria-label="Menu">
+            <ul className={styles.sheetList}>
+              {sections.map((s) => (
+                <li key={s.id}>
+                  <a href={`#${s.id}`} onClick={closeMenu}>
+                    {s.label}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <ExternalLink href={links.resume.href} onClick={closeMenu}>
+                  Résumé
+                </ExternalLink>
+              </li>
+              <li>
+                <ExternalLink href={links.github.href} onClick={closeMenu}>
+                  GitHub
+                </ExternalLink>
+              </li>
+              <li>
+                <ExternalLink href={links.linkedin.href} onClick={closeMenu}>
+                  LinkedIn
+                </ExternalLink>
+              </li>
+              <li>
+                <a href={links.email.href} onClick={closeMenu}>
+                  {links.email.label}
                 </a>
               </li>
-            ))}
-            <li>
-              <a href={links.resume.href} target="_blank" rel="noopener" onClick={closeMenu}>
-                Résumé
-              </a>
-            </li>
-            <li>
-              <a href={links.github.href} target="_blank" rel="noopener" onClick={closeMenu}>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href={links.linkedin.href} target="_blank" rel="noopener" onClick={closeMenu}>
-                LinkedIn
-              </a>
-            </li>
-            <li>
-              <a href={links.email.href} onClick={closeMenu}>
-                {links.email.label}
-              </a>
-            </li>
-            <li>
-              <PauseMotion className={styles.sheetPause} />
-            </li>
-          </ul>
+              <li>
+                <PauseMotion className={styles.sheetPause} />
+              </li>
+            </ul>
+          </nav>
         </div>
       </dialog>
     </header>

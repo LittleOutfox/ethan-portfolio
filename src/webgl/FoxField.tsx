@@ -4,7 +4,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { FoxPoints, type FieldBuffers } from './FoxPoints'
 import { buildField, type ScatterLayout } from './buildField'
 import { samplePoses } from './sampleMain'
-import { applyGates, assert, control, flags, live, plates, pulse, target, traceRows } from './bus'
+import { applyGates, assert, control, flags, isStill, live, plates, pulse, target, traceRows } from './bus'
 import type { TierSpec } from './tiers'
 import { setupScroll } from './scroll'
 
@@ -159,7 +159,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
         return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
       })
     const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || !over(e)) return
+      if (isStill() || e.pointerType !== 'mouse' || !over(e)) return
       const now = performance.now() / 1000 - EPOCH
       if (now - lastPulse < 0.4) return
       lastPulse = now
@@ -169,7 +169,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       pulse.amp = 1
     }
     const onDown = (e: PointerEvent) => {
-      if (!over(e)) return
+      if (isStill() || !over(e)) return
       pulse.x = e.clientX
       pulse.y = e.clientY + window.scrollY
       pulse.t0 = performance.now() / 1000 - EPOCH
@@ -211,7 +211,9 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
   }, [buffers, spec])
 
   const onFirstFrame = () => {
-    document.querySelectorAll<HTMLElement>('[data-plate]').forEach((el) => el.setAttribute('data-live', ''))
+    // only the hero crossfades on the first frame; the Contact poster yields to the points
+    // when, and only when, the Gather actually runs (scroll.ts)
+    document.querySelector<HTMLElement>('[data-plate="a"]')?.setAttribute('data-live', '')
   }
 
   const colors = {

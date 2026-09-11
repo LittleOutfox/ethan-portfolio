@@ -57,14 +57,19 @@ export const control = {
 /** Page-space y of each authored trace row, so a hovered Experience row can light the nearest one. */
 export const traceRows: number[] = []
 
+/** A still field: the user's Pause or the OS preference. Nothing runs on a clock; scroll redraws. */
+export function isStill(): boolean {
+  return flags.paused || flags.reducedMotion
+}
+
 /**
- * Decide the loop mode from the flags and apply it. Idle is only a request: the render loop puts
- * itself to sleep once the field has actually faded out, so nothing freezes mid-lerp.
+ * Decide the loop mode from the flags and apply it. A still field renders one frame per
+ * invalidation (scroll, resize) so the page-anchored poses leave with their sections instead of
+ * freezing over the text below. Idle is only a request: the render loop puts itself to sleep once
+ * the field has actually faded out, so nothing freezes mid-lerp.
  */
 export function applyGates() {
-  if (flags.paused) {
-    control.setFrameloop('never')
-  } else if (flags.reducedMotion) {
+  if (isStill()) {
     control.setFrameloop('demand')
     control.invalidate()
   } else {

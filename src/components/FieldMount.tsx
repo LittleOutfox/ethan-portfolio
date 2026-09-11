@@ -1,10 +1,27 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Component, lazy, Suspense, useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { detectTier, type TierSpec } from '../webgl/tiers'
 import { applyGates, flags } from '../webgl/bus'
 import { isPaused } from '../motion/motionPrefs'
 
-// the lazy boundary sits above the Canvas: nothing eager imports three
-const FoxField = lazy(() => import('../webgl/FoxField'))
+// the lazy boundary sits above the Canvas: nothing eager imports three. A chunk that fails to
+// load (offline after first paint, a blocked CDN, a stale hash after a redeploy) renders nothing.
+type FieldComponent = ComponentType<{ spec: TierSpec }>
+const FoxField = lazy<FieldComponent>(() =>
+  import('../webgl/FoxField')
+    .then((m) => ({ default: m.default as FieldComponent }))
+    .catch(() => ({ default: (() => null) as FieldComponent })),
+)
+
+/** A Canvas that throws (no WebGL renderer, driver refusal) must not take the page down with it. */
+class FieldBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 /** Mounts the point field after first paint, only on devices that can afford it. */
 export function FieldMount() {
@@ -41,8 +58,10 @@ export function FieldMount() {
 
   if (!spec) return null
   return (
-    <Suspense fallback={null}>
-      <FoxField spec={spec} />
-    </Suspense>
+    <FieldBoundary>
+      <Suspense fallback={null}>
+        <FoxField spec={spec} />
+      </Suspense>
+    </FieldBoundary>
   )
 }
