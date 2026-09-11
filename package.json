@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "bake": "node scripts/bake-fox-masks.mjs"
+    "bake": "node scripts/bake-fox-masks.mjs",
+    "fonts": "python scripts/make-fonts.py",
+    "favicons": "node scripts/make-favicons.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.7.0",

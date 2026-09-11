@@ -17,6 +17,7 @@
 
 .email {
   display: inline-block;
+  min-height: var(--control-h);
   margin-top: var(--s-2);
   font-family: var(--font-display);
   font-size: clamp(1.5rem, 2.6vw, 2.25rem);

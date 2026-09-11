@@ -1,45 +1,41 @@
-# ORIGIN — 起源
+# etiong.com
 
-A nine-tailed fox scroll-story portfolio. One continuous journey through a moonlit ink forest — each chapter earned, like every tail.
+The portfolio of **Ethan Tiong**: Electrical Engineering at the University of Waterloo, RTL design for ASIC and FPGA. Live at [www.etiong.com](https://www.etiong.com/).
 
-**Ethan Tiong** · Electrical Engineering @ University of Waterloo · RTL for ASIC & FPGA
+## What is on the page
 
-## The story
-
-| Chapter | | |
-|---|---|---|
-| 00 | The Veil / Hero | ORIGIN — where the tales begin |
-| 01 | Awakening 觉醒 | the fox wakes, and remembers its name |
-| 02 | The Hunt | signals, traced through the dark — five disciplines |
-| 03 | The Leap | selected works, caught in motion — three spirit gates |
-| 04 | The Den 炉火 | not every night is a hunt |
-| 05 | Transformation 蜕变 | every tail is earned — five milestones, five tails |
-| 06 | The Snowfield 雪 | the snow waits. leave a trace |
-
-## Craft notes
-
-- **Hand-drawn ink foxes** — seven original SVG drawings, rendered as translucent moonlight spirits through a three-layer bloom (no raster AI art).
-- **One continuous journey** — a graded forest video scrubbed by total scroll progress, melted into the ink at every edge.
-- **Every tail is earned** — the sitting fox's five tails are baked into separate bitmaps at load (canvas alpha compositing over untouched artwork) and unfurl one per milestone.
-- **Proper Chinese** — every hanzi is Simplified Chinese, natively reviewed (起源 · 觉醒 · 炉火 · 蜕变 · 以狐为引); set in Noto Serif SC.
-- **Motion with intent** — GSAP ScrollTrigger + Lenis; pinned chapters, masked line reveals, a horizontal hunt, gates you pass through. Reduced-motion and no-JS fallbacks included.
+- A title block a recruiter can read in seconds: name, discipline, program, location, availability, résumé, GitHub, LinkedIn, email.
+- Experience as a chronological ledger, projects with measured parameters, a UART timing figure drawn from a unit-tested frame generator, skills, and contact.
+- One WebGL moment: the nine-tailed fox from my own line drawings, rebuilt as a field of points. It forms in the hero, releases into signal traces and snow as you scroll, and gathers again beside the contact block. Light travels along the drawn strokes; touching the fox sends a pulse through it.
 
 ## Stack
 
-Vanilla HTML / CSS / JavaScript. GSAP 3.12 (ScrollTrigger) and Lenis via CDN. No build step.
+Vite, React 19, TypeScript, Three.js with React Three Fiber, GSAP ScrollTrigger. CSS Modules over a small token layer. The page is prerendered to static HTML at build time, so every section is readable before JavaScript runs and with WebGL unavailable.
 
-## Run locally
+Self-hosted type: Newsreader (display), Schibsted Grotesk (text), Azeret Mono (measurements only).
 
+## Run
+
+```bash
+npm install
+npm run dev        # http://127.0.0.1:5173
+npm run build      # client build + SSR build + prerender into dist/
+npm run preview
+npm test           # sampler and UART generator tests
+npm run lint
+npm run bake       # rebake the fox masks from art/kitsune/*.svg
 ```
-python -m http.server 4173
-```
 
-Then open http://localhost:4173. A static server is required (the scroll-scrubbed video is fetched as a blob).
+## How the fox works
 
-## Repository notes
+`scripts/bake-fox-masks.mjs` rasterizes each drawing and bakes a small mask: a density-normalized ink weight (thin whiskers and heavy tail masses get proportionate points), a geodesic distance from the nose along the strokes, and raw ink. At runtime a worker draws stratified samples from the mask and Hilbert-sorts them so the two poses correspond point for point. One `THREE.Points` with a screen-space shader does the rest: per-point formation thresholds from the geodesic channel (tail tips release first, the nose last), an idle nose-to-tail luminance pulse, a pointer pulse, and a moon whose position is shared between the CSS wash and the shader.
 
-The earlier iteration of this portfolio is preserved on the [`previous-attempt`](../../tree/previous-attempt) branch.
+Devices are tiered once before the WebGL chunk is requested; phones and weak GPUs get fewer points and a hero-only field, and anything without WebGL2 keeps the posters. A persistent Pause motion control and the reduced-motion preference both stop the loop.
 
----
+## Accessibility
 
-Designed & built by hand. 以狐为引 — the fox leads the way.
+Semantic landmarks, one heading order, a skip link, visible two-tone focus, 44 px targets, a native dialog for the phone menu, prerendered content, and a pause control for the continuous field.
+
+## Provenance
+
+The seven fox drawings in `art/kitsune/` are original. Designed and built by hand.

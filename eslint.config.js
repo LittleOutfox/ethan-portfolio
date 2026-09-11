@@ -2,9 +2,11 @@ import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
 
+const nodeGlobals = { process: 'readonly', Buffer: 'readonly', console: 'readonly', URL: 'readonly' }
+
 const threeOnlyInWebgl = {
   files: ['src/**/*.{ts,tsx}'],
-  ignores: ['src/webgl/**'],
+  ignores: ['src/webgl/**', 'src/spike/**'],
   rules: {
     'no-restricted-imports': [
       'error',
@@ -24,7 +26,14 @@ export default tseslint.config(
   {
     files: ['**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
-    rules: { ...reactHooks.configs.recommended.rules },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs', 'vite.config.ts'],
+    languageOptions: { globals: nodeGlobals },
   },
   threeOnlyInWebgl,
 )

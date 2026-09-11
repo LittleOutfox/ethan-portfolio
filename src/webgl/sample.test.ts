@@ -95,7 +95,7 @@ describe('decimate', () => {
     expect(small.count).toBe(400)
     // first and last of the decimated set span the original ordering
     expect(small.xy[0]).toBe(full.xy[0])
-    let quadrants = new Set<string>()
+    const quadrants = new Set<string>()
     for (let i = 0; i < small.count; i++) quadrants.add(`${small.xy[i * 2] < 0.5}${small.xy[i * 2 + 1] < 0.5}`)
     expect(quadrants.size).toBe(4)
   })

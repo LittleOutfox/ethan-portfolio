@@ -1,32 +1,33 @@
-/* Self-hosted variable fonts, latin subsets, swap with metric-matched fallbacks so the swap
-   does not reflow. Only the display and body faces are preloaded (index.html). */
+/* Self-hosted fonts, instanced to the weights this page uses and subset to Latin-1 plus
+   punctuation (scripts/make-fonts.py). Swap with metric-matched
+   fallbacks; only the display and body faces are preloaded (index.html). */
 @font-face {
   font-family: 'Newsreader';
   font-style: normal;
-  font-weight: 200 800;
+  font-weight: 400 520;
   font-display: swap;
   src: url('/fonts/newsreader.woff2') format('woff2-variations');
 }
 @font-face {
   font-family: 'Newsreader';
   font-style: italic;
-  font-weight: 200 800;
+  font-weight: 400;
   font-display: swap;
-  src: url('/fonts/newsreader-italic.woff2') format('woff2-variations');
+  src: url('/fonts/newsreader-italic.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Schibsted Grotesk';
   font-style: normal;
-  font-weight: 400 900;
+  font-weight: 400 500;
   font-display: swap;
   src: url('/fonts/schibsted-grotesk-wght.woff2') format('woff2-variations');
 }
 @font-face {
   font-family: 'Azeret Mono';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 400;
   font-display: swap;
-  src: url('/fonts/azeret-mono-wght.woff2') format('woff2-variations');
+  src: url('/fonts/azeret-mono-wght.woff2') format('woff2');
 }
 /* subset to the glyphs this site uses (以狐为引) */
 @font-face {

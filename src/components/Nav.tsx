@@ -1,7 +1,35 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useSyncExternalStore } from 'react'
 import { links, profile } from '../content/profile'
 import { PauseMotion } from './PauseMotion'
 import styles from './Nav.module.css'
+
+const SCROLLED_AT = 48
+
+function subscribeScroll(onChange: () => void) {
+  let raf = 0
+  let last = window.scrollY > SCROLLED_AT
+  const onScroll = () => {
+    if (raf) return
+    raf = requestAnimationFrame(() => {
+      raf = 0
+      const next = window.scrollY > SCROLLED_AT
+      if (next !== last) {
+        last = next
+        onChange()
+      }
+    })
+  }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  return () => {
+    window.removeEventListener('scroll', onScroll)
+    if (raf) cancelAnimationFrame(raf)
+  }
+}
+
+/** true once the page has scrolled past the top; false on the server so markup matches */
+function useScrolled(): boolean {
+  return useSyncExternalStore(subscribeScroll, () => window.scrollY > SCROLLED_AT, () => false)
+}
 
 export const sections = [
   { id: 'about', label: 'About' },
@@ -12,30 +40,8 @@ export const sections = [
 ] as const
 
 export function Nav() {
-  const [scrolled, setScrolled] = useState(false)
+  const scrolled = useScrolled()
   const dialogRef = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    let raf = 0
-    let last = window.scrollY > 48
-    setScrolled(last)
-    const onScroll = () => {
-      if (raf) return
-      raf = requestAnimationFrame(() => {
-        raf = 0
-        const next = window.scrollY > 48
-        if (next !== last) {
-          last = next
-          setScrolled(next)
-        }
-      })
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [])
 
   const openMenu = () => dialogRef.current?.showModal()
   const closeMenu = () => dialogRef.current?.close()

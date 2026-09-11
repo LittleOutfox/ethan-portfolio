@@ -10,14 +10,8 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/three/') || id.includes('node_modules/@react-three/')) return 'three'
-          if (id.includes('node_modules/gsap/')) return 'gsap'
-        },
-      },
-    },
+    // no manual chunks: the lazy import of src/webgl/FoxField is the chunk boundary, so three,
+    // R3F and gsap land in that async chunk and nothing WebGL is preloaded at startup
   },
   worker: { format: 'es' },
 })
