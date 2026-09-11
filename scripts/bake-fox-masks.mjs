@@ -18,7 +18,7 @@ mkdirSync(DEBUG, { recursive: true })
 const POSES = {
   // minComponent: ink components smaller than this (px at render scale) are autotrace specks, not drawing;
   // the bowing pose is sketched in short dashes, so its threshold stays low
-  sitting: { noseHint: { x: 0.215, y: 0.13 }, minComponent: 160 },
+  sitting: { noseHint: { x: 0.215, y: 0.13 }, minComponent: 160, erase: [{ x0: 0.9, y0: 0.5, x1: 1.0, y1: 0.66 }] },
   howling: { noseHint: { x: 0.41, y: 0.02 }, minComponent: 80 },
   bowing: { noseHint: { x: 0.0, y: 0.86 }, minComponent: 24 },
 }
@@ -138,11 +138,17 @@ for (const name of names) {
 
   // ink coverage 0..1: black paths on transparent
   const ink = new Float32Array(W * H)
+  const erase = cfg.erase || []
   let minX = W, maxX = 0, minY = H, maxY = 0, count = 0
   for (let i = 0; i < W * H; i++) {
     const a = data[i * 4 + 3] / 255
     const lum = (data[i * 4] + data[i * 4 + 1] + data[i * 4 + 2]) / (3 * 255)
-    const v = a * (1 - lum)
+    let v = a * (1 - lum)
+    if (erase.length) {
+      const fx = (i % W) / W
+      const fy = ((i / W) | 0) / H
+      for (const r of erase) if (fx >= r.x0 && fx <= r.x1 && fy >= r.y0 && fy <= r.y1) v = 0
+    }
     ink[i] = v
     if (v > 0.15) {
       count++

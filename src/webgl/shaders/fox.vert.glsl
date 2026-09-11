@@ -85,7 +85,7 @@ void main() {
   float px = mod(uTime * (90.0 + 70.0 * tp) + tp * 5000.0, uViewport.x + 800.0) - 400.0;
   float packet = exp(-pow((pPage.x - px) / 110.0, 2.0)) * isTrace * wS;
   float assertLum = exp(-pow((pPage.y - uAssert.x) / 26.0, 2.0)) * uAssert.y * isTrace * wS;
-  float lum = (0.95 * depth + 0.5 * idle + 0.9 * ring + 0.7 * packet + 0.9 * assertLum) * lit;
+  float lum = (0.8 * depth + 0.5 * idle + 0.9 * ring + 0.7 * packet + 0.9 * assertLum) * lit;
 
   // colour: cold body, violet only at the tail tips, snow colour when released
   vec3 formedColor = mix(uColorBody, uColorTip, smoothstep(0.82, 1.0, geo));
@@ -95,9 +95,9 @@ void main() {
   // bloom seeds: a few larger, fainter points supply the low-frequency glow
   float big = step(0.90, aSeed.y);
   float sizeMul = mix(0.7 + 0.6 * (aSeed.y / 0.9), 3.0, big);
-  float alpha = mix(0.62, 0.16, big) * (0.7 + 0.3 * depth);
+  float alpha = mix(0.3, 0.08, big) * (0.7 + 0.3 * depth);
   // released points are quieter: dust faintest, snow soft, traces the brightest of the three
-  alpha *= mix(0.09 + 0.2 * isTrace + 0.07 * isSnow, 1.0, formed);
+  alpha *= mix(0.1 + 0.42 * isTrace + 0.16 * isSnow, 1.0, formed);
 
   vColorAlpha = vec4(color * lum, alpha * uFade);
   gl_PointSize = clamp(uPointSize * sizeMul * uDpr, 1.0, uMaxPointSize);
