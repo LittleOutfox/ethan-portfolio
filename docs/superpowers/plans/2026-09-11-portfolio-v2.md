@@ -41,19 +41,19 @@
 
 ## Phase 3 — WebGL
 
-- [ ] Task 3.1 `tiers.ts` (WebGL2 probe, coarse pointer, cores, memory, GPU blocklist) and the lazy `FoxField` chunk mounted after first paint.
-- [ ] Task 3.2 Worker sampling (`sample.worker.ts`) with module cache; main-thread fallback.
-- [ ] Task 3.3 Plate anchoring from the DOM cells via ResizeObserver (`plates.a/b`), poster crossfade (Resolve), idle pulse, moon wash + `lightX`.
-- [ ] Task 3.4 Scroll bus with ScrollTrigger: Release across the hero exit (formA 1.3 → −0.3), traces beside About/Experience, snow in quiet areas, active-trace pulse, frame-loop gates.
-- [ ] Task 3.5 Gather at Contact (formB), lit from the right.
-- [ ] Task 3.6 Pointer/touch pulse; Experience row hover → trace brighten.
+- [x] Task 3.1 `tiers.ts` (WebGL2 probe, coarse pointer, cores, memory, GPU blocklist) and the lazy `FoxField` chunk mounted after first paint.
+- [x] Task 3.2 Worker sampling (`sample.worker.ts`) with module cache; main-thread fallback.
+- [x] Task 3.3 Plate anchoring from the DOM cells via ResizeObserver (`plates.a/b`), poster crossfade (Resolve), idle pulse, moon wash + `lightX`.
+- [x] Task 3.4 Scroll bus with ScrollTrigger: Release across the hero exit (formA 1.3 → −0.3), traces beside About/Experience, snow in quiet areas, active-trace pulse, frame-loop gates.
+- [x] Task 3.5 Gather at Contact (formB), lit from the right.
+- [x] Task 3.6 Pointer/touch pulse; Experience row hover → trace brighten.
 - [ ] Task 3.7 Pause motion (aria-pressed, localStorage), reduced-motion static frame, context-loss recovery, perf assertions (r3f-perf dev), fragment budget.
 - [ ] Task 3.8 Screenshots + real-GPU check in Chrome; ★ review workflow (creative technologist + design lenses). Commit.
 
 ## Phase 4 — Projects figure and tables
 
 - [x] Task 4.1 `src/figures/uart.ts` frame generator + tests (idle high, start low, LSB first, stop high, 16 ticks/cell).
-- [ ] Task 4.2 `UartFigure.tsx` SVG with byte input and caption; hairline rows for Experience/Skills/Off the clock; Contact.
+- [x] Task 4.2 `UartFigure.tsx` SVG with byte input and caption; hairline rows for Experience/Skills/Off the clock; Contact.
 - [ ] Commit.
 
 ## Phase 5 — Mobile and intermediate widths

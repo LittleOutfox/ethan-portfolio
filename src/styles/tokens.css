@@ -70,7 +70,7 @@
   /* grid */
   --gutter: clamp(1.25rem, 5vw, 4.5rem);
   --col-gap: 1.5rem;
-  --content-max: 1440px;
+  --content-max: 1560px;
   --nav-h: 64px;
 
   /* motion: two curves, three durations */

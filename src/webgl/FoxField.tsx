@@ -62,7 +62,7 @@ function makeLayout(spec: TierSpec): ScatterLayout {
     quietX: wide ? [[0, W * 0.58]] : [[0, W]],
     traces,
     snowFraction: 0.2,
-    traceFraction: traces.length ? 0.09 : 0,
+    traceFraction: traces.length ? 0.3 : 0,
   }
 }
 

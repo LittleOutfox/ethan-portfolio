@@ -80,7 +80,7 @@
   margin-top: var(--s-5);
 }
 
-.actions .link {
+.actions :global(.link) {
   display: inline-flex;
   align-items: center;
   min-height: var(--control-h);
@@ -98,6 +98,7 @@
 
 .cell {
   position: relative;
+  overflow: hidden;
   width: 100%;
   aspect-ratio: 512 / 381;
 }
@@ -131,28 +132,50 @@
   }
 }
 
+/* phones and small tablets: a single column where the fox is a figure between the text and the
+   actions, so type never sits over points */
 @media (max-width: 959px) {
   .hero {
     min-height: auto;
   }
   .grid {
     min-height: auto;
-    row-gap: var(--s-7);
+    row-gap: 0;
+  }
+  .grid > *,
+  .block > * {
+    grid-column: 1 / -1;
   }
   .block {
-    grid-column: 1 / -1;
-    max-width: none;
-    padding-block: var(--s-8) 0;
+    display: contents;
   }
-  .block::before {
-    display: none;
+  .block > h1 {
+    order: 1;
+    margin-top: var(--s-7);
   }
-  .plate {
-    grid-column: 1 / -1;
-    margin-bottom: 0;
-    order: 3;
+  .role {
+    order: 2;
   }
   .standfirst {
+    order: 3;
     max-width: none;
+  }
+  .facts {
+    order: 4;
+  }
+  .plate {
+    order: 5;
+    margin-block: var(--s-7);
+    width: calc(100% + 2 * var(--gutter));
+    margin-inline: calc(-1 * var(--gutter));
+  }
+  .actions {
+    order: 6;
+    margin-top: 0;
+    padding-bottom: var(--s-6);
+  }
+  .actions :global(.button) {
+    width: 100%;
+    justify-content: center;
   }
 }

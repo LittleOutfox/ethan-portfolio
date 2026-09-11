@@ -62,6 +62,7 @@
 
 .cell {
   position: relative;
+  overflow: hidden;
   width: 100%;
   aspect-ratio: 512 / 456;
 }

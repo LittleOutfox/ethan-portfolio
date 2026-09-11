@@ -8,6 +8,7 @@ html {
 }
 
 body {
+  overflow-x: clip;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   letter-spacing: 0.005em;
@@ -59,6 +60,7 @@ body {
 }
 
 .t-body {
+  overflow-x: clip;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--text-2);

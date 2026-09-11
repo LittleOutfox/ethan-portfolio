@@ -38,9 +38,9 @@ export function Projects() {
                   ))}
                 </ul>
               ) : null}
-              <div className={styles.figure}>
-                <UartFigure id="uart" />
-              </div>
+            </div>
+            <div className={styles.figure}>
+              <UartFigure id="uart" />
             </div>
           </article>
 

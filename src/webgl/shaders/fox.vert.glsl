@@ -51,10 +51,11 @@ void main() {
   float isSnow = 1.0 - step(0.25, aSeed.w);
   float fall = mod(position.y + uTime * (14.0 + 26.0 * aSeed.y) + aSeed.x * 4000.0, uViewport.y + 40.0) - 20.0;
   vec2 scatter = mix(position.xy, vec2(position.x, fall), isSnow);
-  // slow drift, only while released
+  // slow drift, only while released; trace points hold their line (a signal stays on its net)
+  float isTrace = step(0.25, aSeed.w) * (1.0 - step(0.75, aSeed.w));
   float ph = aSeed.x * 6.2831853;
   vec2 drift = vec2(sin(uTime * 0.31 + ph) + 0.5 * sin(uTime * 0.83 + ph * 2.0),
-                    cos(uTime * 0.27 + ph * 1.3)) * (10.0 + 24.0 * aSeed.z) * uDrift;
+                    cos(uTime * 0.27 + ph * 1.3)) * (10.0 + 24.0 * aSeed.z) * uDrift * (1.0 - 0.92 * isTrace);
   scatter += drift * wS;
 
   // the path between formed and released is an arc, not a straight line: each point bows
@@ -80,7 +81,6 @@ void main() {
   float lit = 1.0 + 0.12 * (1.0 - abs(p.x / uViewport.x - uLightX) * 1.6);
   float depth = 0.65 + 0.35 * hash11(aSeed.x * 91.7);
   // released trace points carry slow luminance packets and answer to a hovered row
-  float isTrace = step(0.25, aSeed.w) * (1.0 - step(0.75, aSeed.w));
   float tp = hash11(floor((position.y + 2.5) / 5.0) * 0.37 + 1.0);
   float px = mod(uTime * (90.0 + 70.0 * tp) + tp * 5000.0, uViewport.x + 800.0) - 400.0;
   float packet = exp(-pow((pPage.x - px) / 110.0, 2.0)) * isTrace * wS;
@@ -89,14 +89,15 @@ void main() {
 
   // colour: cold body, violet only at the tail tips, snow colour when released
   vec3 formedColor = mix(uColorBody, uColorTip, smoothstep(0.82, 1.0, geo));
-  vec3 color = mix(uColorSnow, formedColor, formed);
+  vec3 color = mix(mix(uColorSnow, uColorBody, 0.75 * isTrace), formedColor, formed);
   color = mix(color, uColorCore, clamp(idle + ring, 0.0, 1.0) * 0.8);
 
   // bloom seeds: a few larger, fainter points supply the low-frequency glow
   float big = step(0.90, hash11(aSeed.x * 53.1 + 7.0));
   float sizeMul = mix(0.7 + 0.6 * aSeed.y, 3.0, big);
   float alpha = mix(1.0, 0.3, big) * (0.7 + 0.3 * depth);
-  alpha *= mix(0.45, 1.0, formed); // released points are quieter
+  // released points are quieter: dust faintest, snow soft, traces the brightest of the three
+  alpha *= mix(0.2 + 0.42 * isTrace + 0.14 * isSnow, 1.0, formed);
 
   vColorAlpha = vec4(color * lum, alpha * uFade);
   gl_PointSize = clamp(uPointSize * sizeMul * uDpr, 1.0, uMaxPointSize);

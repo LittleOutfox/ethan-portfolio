@@ -76,8 +76,10 @@
   color: var(--text-2);
 }
 
+/* the figure spans the whole plate beneath the text and the parameters */
 .figure {
-  min-height: 9rem;
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 /* the third project: one hairline row */

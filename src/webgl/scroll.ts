@@ -26,18 +26,55 @@ export function setupScroll(spec: TierSpec): () => void {
   }
 
   target.formA = 1.3
+  const narrow = window.innerWidth < 960
 
-  // Release: the fox lets go across the first 80% of a viewport of scroll, tail tips first
+  // Release: the fox lets go across the first 80% of a viewport of scroll, tail tips first.
+  // On a phone the fox is a figure below the title block, so the release follows the figure
+  // itself as it leaves the viewport rather than the hero's top edge.
   triggers.push(
-    ScrollTrigger.create({
-      trigger: '#top',
-      start: 'top top',
-      end: '+=80%',
-      onUpdate: (self) => {
-        target.formA = 1.3 - 1.6 * self.progress
-      },
-    }),
+    narrow
+      ? ScrollTrigger.create({
+          trigger: '[data-plate="a"]',
+          start: 'top 30%',
+          end: 'bottom 5%',
+          onUpdate: (self) => {
+            target.formA = 1.3 - 1.6 * self.progress
+          },
+        })
+      : ScrollTrigger.create({
+          trigger: '#top',
+          start: 'top top',
+          end: '+=80%',
+          onUpdate: (self) => {
+            target.formA = 1.3 - 1.6 * self.progress
+          },
+        }),
   )
+
+  if (!spec.gather) {
+    // low tier: the field exists for the hero only; it fades out past About and the loop stops
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: '#about',
+        start: 'top 90%',
+        end: 'top 40%',
+        onUpdate: (self) => {
+          target.fade = 1 - self.progress
+        },
+      }),
+    )
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: '#about',
+        start: 'top 40%',
+        end: 'bottom -100000%',
+        onToggle: (self) => {
+          flags.idle = self.isActive
+          applyGates()
+        },
+      }),
+    )
+  }
 
   // the moon crosses the sky over the whole page; the DOM wash and the shader share the value
   triggers.push(
@@ -54,7 +91,7 @@ export function setupScroll(spec: TierSpec): () => void {
   )
 
   // the quiet band: fade the field out through Skills and Off the clock, stop the loop, wake for Contact
-  triggers.push(
+  if (spec.gather) triggers.push(
     ScrollTrigger.create({
       trigger: '#skills',
       start: 'top 85%',
@@ -64,7 +101,7 @@ export function setupScroll(spec: TierSpec): () => void {
       },
     }),
   )
-  triggers.push(
+  if (spec.gather) triggers.push(
     ScrollTrigger.create({
       trigger: '#skills',
       start: 'top 30%',
