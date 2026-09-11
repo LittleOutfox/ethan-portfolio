@@ -3,7 +3,8 @@ import { samplePose, type MaskImage, type SampledPose } from './sample'
 async function loadMask(name: string): Promise<MaskImage> {
   const res = await fetch(`/fox/${name}.png`)
   if (!res.ok) throw new Error(`mask ${name}: ${res.status}`)
-  const bitmap = await createImageBitmap(await res.blob())
+  // data channels: no colour management, no premultiplication
+  const bitmap = await createImageBitmap(await res.blob(), { colorSpaceConversion: 'none', premultiplyAlpha: 'none' })
   const canvas = document.createElement('canvas')
   canvas.width = bitmap.width
   canvas.height = bitmap.height
@@ -36,6 +37,7 @@ export function samplePoses(poses: [string, string], count: number): Promise<{ a
     return { a: samplePose(ma, count, 1), b: samplePose(mb, count, 2) }
   })()
   cache.set(key, p)
+  p.catch(() => cache.delete(key)) // a failed fetch is retried by the next build, not cached
   return p
 }
 

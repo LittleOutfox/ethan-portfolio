@@ -245,9 +245,19 @@ for (const name of names) {
     rgb[i * 3 + 1] = Math.round(g * 255)
     rgb[i * 3 + 2] = Math.round(Math.min(1, ink[i]) * 255)
   }
-  await sharp(rgb, { raw: { width: W, height: H, channels: 3 } })
-    .resize(outW, outH, { kernel: 'lanczos3' })
-    .png({ compressionLevel: 9, palette: false })
+  // linear kernel: no ringing on data channels. The runtime reads R (weight) and G (geodesic)
+  // only, so B is zeroed and the low bits dropped: the PNG halves and nothing visible changes
+  const { data: small } = await sharp(rgb, { raw: { width: W, height: H, channels: 3 } })
+    .resize(outW, outH, { kernel: 'linear' })
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  for (let i = 0; i < outW * outH; i++) {
+    small[i * 3] &= 0xf8
+    small[i * 3 + 1] &= 0xfc
+    small[i * 3 + 2] = 0
+  }
+  await sharp(small, { raw: { width: outW, height: outH, channels: 3 } })
+    .png({ compressionLevel: 9, effort: 10, palette: false })
     .toFile(resolve(OUT, `${name}.png`))
 
   // debug: geodesic as a red-to-blue ramp over the ink, density as grey

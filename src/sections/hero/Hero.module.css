@@ -154,6 +154,11 @@
   .block {
     display: contents;
   }
+  /* the fox is a figure below the text here, so the scrim is not needed; as a grid item of a
+     contents box its negative inset would widen the page */
+  .block::before {
+    display: none;
+  }
   .block > h1 {
     order: 1;
     margin-top: var(--s-7);

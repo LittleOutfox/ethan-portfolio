@@ -46,6 +46,8 @@ export const flags = {
   idle: false,
   /** shader-clock time until which the formation lerps slowly (the arrival) */
   introUntil: 0,
+  /** true once buffers exist; before that no loop mode is worth running */
+  ready: false,
 }
 
 /** Hooks the Canvas registers so DOM-side code can stop and start the loop. */
@@ -69,7 +71,9 @@ export function isStill(): boolean {
  * the field has actually faded out, so nothing freezes mid-lerp.
  */
 export function applyGates() {
-  if (isStill()) {
+  if (!flags.ready) {
+    control.setFrameloop('never')
+  } else if (isStill()) {
     control.setFrameloop('demand')
     control.invalidate()
   } else {

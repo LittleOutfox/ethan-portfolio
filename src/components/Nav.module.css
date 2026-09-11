@@ -168,6 +168,7 @@
     gap: 0;
   }
   :global(html.no-js) .header {
+    position: static; /* in flow: a taller, wrapped bar must not cover the name */
     height: auto;
     min-height: var(--nav-h);
     background: var(--ground);

@@ -15,7 +15,8 @@ export interface SampleResponse {
 async function loadMask(name: string): Promise<MaskImage> {
   const res = await fetch(`/fox/${name}.png`)
   if (!res.ok) throw new Error(`mask ${name}: ${res.status}`)
-  const bitmap = await createImageBitmap(await res.blob())
+  // data channels: no colour management, no premultiplication
+  const bitmap = await createImageBitmap(await res.blob(), { colorSpaceConversion: 'none', premultiplyAlpha: 'none' })
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   if (!ctx) throw new Error('no 2d context in worker')

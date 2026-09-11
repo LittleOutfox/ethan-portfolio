@@ -28,8 +28,6 @@ export function FieldMount() {
   const [spec, setSpec] = useState<TierSpec | null>(null)
 
   useEffect(() => {
-    const s = detectTier()
-    if (!s) return
     const mq = matchMedia('(prefers-reduced-motion: reduce)')
     // ?motion=reduce forces the reduced-motion path for testing
     const forced = new URLSearchParams(location.search).get('motion') === 'reduce'
@@ -41,12 +39,15 @@ export function FieldMount() {
     }
     mq.addEventListener('change', onChange)
 
+    // the WebGL probe (a context creation) waits for idle too, so it never lands on hydration
     const hasIdle = typeof window.requestIdleCallback === 'function'
     let idle = 0
+    const decide = () => {
+      const s = detectTier()
+      if (s) setSpec(s)
+    }
     const raf = requestAnimationFrame(() => {
-      idle = hasIdle
-        ? window.requestIdleCallback(() => setSpec(s), { timeout: 1500 })
-        : window.setTimeout(() => setSpec(s), 300)
+      idle = hasIdle ? window.requestIdleCallback(decide, { timeout: 1500 }) : window.setTimeout(decide, 300)
     })
     return () => {
       cancelAnimationFrame(raf)

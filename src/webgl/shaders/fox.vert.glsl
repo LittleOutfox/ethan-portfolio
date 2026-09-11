@@ -12,7 +12,7 @@ uniform vec4 uPlateA;      // pose A rect in PAGE px: x, y, w, h
 uniform vec4 uPlateB;      // pose B rect in PAGE px
 uniform float uFormA;      // sweeps -0.3 .. 1.3: how much of pose A is formed (nose first)
 uniform float uFormB;      // same for pose B
-uniform float uTime;       // seconds, pre-wrapped
+uniform float uTime;       // seconds since the field's epoch, never wrapped
 uniform float uDpr;
 uniform float uPointSize;  // CSS px at sizeMul 1
 uniform float uMaxPointSize;

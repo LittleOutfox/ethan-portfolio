@@ -63,6 +63,19 @@ export function setupScroll(spec: TierSpec): () => void {
         }),
   )
 
+  // One owner for the field's opacity. The quiet band fades it out and the Contact approach fades
+  // it back in; both are progresses, so the curve is continuous at any viewport height (separate
+  // toggle ranges in viewport units invert on tall screens). The loop sleeps itself once the curve
+  // reaches zero (FoxPoints) and is woken here the moment it rises again.
+  const prog = { quiet: 0, contact: 0 }
+  const writeFade = () => {
+    const next = Math.max(1 - prog.quiet, Math.min(1, prog.contact * 3))
+    const wake = flags.idle && next > 0
+    target.fade = next
+    flags.idle = next === 0
+    if (wake) applyGates()
+  }
+
   if (!spec.gather) {
     // low tier: the field exists for the hero only; it fades out past About and the loop stops
     triggers.push(
@@ -71,18 +84,8 @@ export function setupScroll(spec: TierSpec): () => void {
         start: 'top 90%',
         end: 'top 40%',
         onUpdate: (self) => {
-          target.fade = 1 - self.progress
-        },
-      }),
-    )
-    triggers.push(
-      ScrollTrigger.create({
-        trigger: '#about',
-        start: 'top 40%',
-        end: 'bottom -100000%',
-        onToggle: (self) => {
-          flags.idle = self.isActive
-          applyGates()
+          prog.quiet = self.progress
+          writeFade()
         },
       }),
     )
@@ -102,31 +105,19 @@ export function setupScroll(spec: TierSpec): () => void {
     }),
   )
 
-  // the quiet band: fade the field out through Skills and Off the clock, stop the loop, wake for Contact
-  if (spec.gather) triggers.push(
-    ScrollTrigger.create({
-      trigger: '#skills',
-      start: 'top 85%',
-      end: 'top 30%',
-      onUpdate: (self) => {
-        target.fade = 1 - self.progress
-      },
-    }),
-  )
-  if (spec.gather) triggers.push(
-    ScrollTrigger.create({
-      trigger: '#skills',
-      start: 'top 30%',
-      endTrigger: '#contact',
-      end: 'top 140%',
-      onToggle: (self) => {
-        flags.idle = self.isActive
-        applyGates()
-      },
-    }),
-  )
-
   if (spec.gather) {
+    // the quiet band: fade the field out through Skills and Off the clock, then gather at Contact
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: '#skills',
+        start: 'top 85%',
+        end: 'top 30%',
+        onUpdate: (self) => {
+          prog.quiet = self.progress
+          writeFade()
+        },
+      }),
+    )
     const plateB = document.querySelector<HTMLElement>('[data-plate="b"]')
     triggers.push(
       ScrollTrigger.create({
@@ -134,10 +125,11 @@ export function setupScroll(spec: TierSpec): () => void {
         start: 'top 140%',
         end: 'top 20%',
         onUpdate: (self) => {
-          target.fade = Math.min(1, self.progress * 3)
+          prog.contact = self.progress
           target.formB = -0.3 + 1.6 * self.progress
           // the poster hands over once the pose is a third formed; scrolling back brings it back
           plateB?.toggleAttribute('data-live', self.progress > 0.35)
+          writeFade()
         },
       }),
     )

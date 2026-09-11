@@ -35,7 +35,6 @@ interface Props {
   onFirstFrame?: () => void
 }
 
-const TIME_WRAP = 600
 const liveAssert = { y: 0, amp: 0 }
 
 /** One THREE.Points, one geometry, one material, one draw call. */
@@ -43,6 +42,7 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
   const gl = useThree((s) => s.gl)
   const materialRef = useRef<ShaderMaterial>(null)
   const frames = useRef(0)
+  const slow = useRef(0)
 
   const geometry = useMemo(() => {
     const g = new BufferGeometry()
@@ -106,9 +106,11 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
       live.fade = target.fade
       live.drift = 0
     } else {
-      // the arrival: a slower settle while the fox first resolves
-      const k = now < flags.introUntil ? smooth(dt * 0.28) : smooth(dt)
-      live.formA += (target.formA - live.formA) * k
+      // the arrival: a slower settle while the fox first resolves; the first scroll gets the
+      // normal rate at once, so the release never lags the viewport
+      const k = smooth(dt)
+      const kA = now < flags.introUntil && target.formA === 1.3 ? smooth(dt * 0.28) : k
+      live.formA += (target.formA - live.formA) * kA
       live.formB += (target.formB - live.formB) * k
       live.lightX += (target.lightX - live.lightX) * k
       live.drift += (target.drift - live.drift) * k
@@ -135,8 +137,14 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
       u.uFade.value = 0
       control.setFrameloop('never')
     }
-    // a still field keeps its last clock so snow and trace packets do not re-place per scroll
-    if (!still) u.uTime.value = now % TIME_WRAP
+    // a still field keeps its last clock so snow and trace packets do not re-place per scroll;
+    // the clock is never wrapped (highp is exact to well past an hour), so pulses never expire
+    if (!still) {
+      u.uTime.value = now
+      // three long frames in a row: let R3F regress the pixel ratio until frames recover
+      slow.current = delta > 1 / 40 ? slow.current + 1 : 0
+      if (slow.current >= 3) state.performance.regress()
+    }
     u.uDpr.value = gl.getPixelRatio()
     ;(u.uPulse.value as Vector4).set(pulse.x, pulse.y, pulse.t0, still ? 0 : pulse.amp)
     ;(u.uAssert.value as Vector2).set(liveAssert.y, liveAssert.amp)

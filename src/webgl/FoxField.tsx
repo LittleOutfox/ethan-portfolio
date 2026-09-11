@@ -70,9 +70,11 @@ function makeLayout(spec: TierSpec): ScatterLayout {
   }
 }
 
-function FrameGate() {
+function FrameGate({ spec }: { spec: TierSpec }) {
   const setFrameloop = useThree((s) => s.setFrameloop)
   const invalidate = useThree((s) => s.invalidate)
+  const setDpr = useThree((s) => s.setDpr)
+  const perf = useThree((s) => s.performance.current)
   useEffect(() => {
     control.setFrameloop = setFrameloop
     control.invalidate = invalidate
@@ -82,6 +84,10 @@ function FrameGate() {
       control.invalidate = () => {}
     }
   }, [setFrameloop, invalidate])
+  // regressed performance (long frames, see FoxPoints) lowers the pixel ratio toward 1 and restores it
+  useEffect(() => {
+    setDpr(Math.max(1, spec.dprCap * perf))
+  }, [perf, spec.dprCap, setDpr])
   return null
 }
 
@@ -120,7 +126,9 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       built.current = true
       setBuffers(field)
     }
-    void build()
+    // a failed build (a mask 404 after a redeploy, offline, a decode error) leaves the poster and no loop
+    const run = () => build().catch(() => control.setFrameloop('never'))
+    void run()
     let t = 0
     let lastTop = pageTop('projects')
     const onResize = () => {
@@ -132,7 +140,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
         lastW = w
         lastTop = top
         clearTimeout(t)
-        t = window.setTimeout(() => void build(), 250)
+        t = window.setTimeout(run, 250)
       }
     }
     const ro = new ResizeObserver(() => measurePlates())
@@ -150,6 +158,8 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
   useEffect(() => {
     if (!buffers) return
     const teardownScroll = setupScroll(spec)
+    flags.ready = true
+    applyGates()
 
     let lastPulse = -1
     const cells = Array.from(document.querySelectorAll<HTMLElement>('[data-plate]'))
@@ -198,6 +208,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       row.addEventListener('focusout', leave)
     })
     return () => {
+      flags.ready = false
       teardownScroll()
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onDown)
@@ -228,7 +239,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       <Canvas
         flat
         dpr={[1, spec.dprCap]}
-        frameloop="always"
+        frameloop="never"
         performance={{ min: 0.35, max: 1, debounce: 180 }}
         gl={{ antialias: false, alpha: true, depth: false, stencil: false, powerPreference: 'high-performance' }}
         camera={{ fov: 35, near: 0.1, far: 12 }}
@@ -250,7 +261,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
           })
         }}
       >
-        <FrameGate />
+        <FrameGate spec={spec} />
         {buffers && !lost ? (
           <FoxPoints key={generation} buffers={buffers} colors={colors} pointSize={spec.pointSize} epoch={EPOCH} onFirstFrame={onFirstFrame} />
         ) : null}
