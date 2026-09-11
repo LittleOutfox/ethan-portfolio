@@ -24,7 +24,11 @@ npm run preview
 npm test           # sampler and UART generator tests
 npm run lint
 npm run bake       # rebake the fox masks from art/kitsune/*.svg
+npm run fonts      # re-instance and subset the fonts (needs pip install fonttools brotli)
+npm run favicons   # cut the favicons from the drawing
 ```
+
+While the dev server runs, `/spike.html?n=40000&a=sitting&b=bowing` renders the point field alone with sliders for the two poses, the moon, and reduced motion. Query parameters on the main page: `?tier=high|medium|low|none` forces a device tier and `?motion=reduce` forces the reduced-motion path.
 
 ## How the fox works
 

@@ -2,7 +2,7 @@
 // the quiet-band gate. ScrollTriggers write the plain `target` object; the render loop lerps.
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { applyGates, flags, target } from './bus'
+import { applyGates, control, flags, target } from './bus'
 import type { TierSpec } from './tiers'
 
 let registered = false
@@ -17,12 +17,15 @@ export function setupScroll(spec: TierSpec): () => void {
   const triggers: ScrollTrigger[] = []
 
   if (flags.reducedMotion) {
-    // one still frame of the formed fox; the moon rests
+    // one still frame of the formed fox; the moon rests; scrolling redraws so the page-anchored
+    // fox leaves with the hero instead of riding the viewport
     target.formA = 1.3
     target.formB = -0.3
     target.fade = 1
     applyGates()
-    return () => {}
+    const onScroll = () => control.invalidate()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }
 
   target.formA = 1.3

@@ -1,5 +1,5 @@
 import { useMemo, useState, type ChangeEvent, type FocusEvent } from 'react'
-import { byteFromChar, centreSampleXs, clockPolyline, formatByte, sampledBits, txPolyline, uartFrame } from './uart'
+import { byteFromChar, centreSampleXs, formatByte, sampledBits, txPolyline, uartFrame } from './uart'
 import styles from './UartFigure.module.css'
 
 /* viewBox geometry (user units). The plot is 12 cells of 72, so 16 ticks of 4.5 per cell. */
@@ -29,13 +29,12 @@ export function UartFigure({ id }: { id: string }) {
     return {
       frame,
       cells: sampledBits(frame),
-      clk: clockPolyline(frame, PLOT_W, CLK_HIGH, CLK_LOW),
       tx: txPolyline(frame, PLOT_W, TX_HIGH, TX_LOW),
       samples: centreSampleXs(frame, PLOT_W),
     }
   }, [ch])
 
-  const { frame, cells, clk, tx, samples } = view
+  const { frame, cells, tx, samples } = view
   const cellW = PLOT_W / frame.bits.length
   const inputId = `${id}-byte`
   const captionId = `${id}-cap`
@@ -88,7 +87,26 @@ export function UartFigure({ id }: { id: string }) {
             />
           </g>
 
-          {/* the two lanes */}
+          {/* the 16x clock as rising-edge ticks: the centre tick of every cell is the sample */}
+          <g transform={`translate(${PLOT_X} 0)`} fill="none" strokeWidth={1} shapeRendering="crispEdges" strokeLinecap="square">
+            {Array.from({ length: frame.totalTicks }, (_, t) => {
+              const x = (t * PLOT_W) / frame.totalTicks
+              const centre = t % frame.oversample === frame.oversample / 2
+              return (
+                <line
+                  key={t}
+                  x1={x}
+                  x2={x}
+                  y1={centre ? CLK_HIGH : CLK_LOW - 8}
+                  y2={CLK_LOW}
+                  stroke={centre ? 'var(--ice)' : 'var(--text-3)'}
+                  vectorEffect="non-scaling-stroke"
+                />
+              )
+            })}
+          </g>
+
+          {/* the tx lane */}
           <g
             transform={`translate(${PLOT_X} 0)`}
             fill="none"
@@ -98,7 +116,6 @@ export function UartFigure({ id }: { id: string }) {
             strokeLinecap="square"
             strokeLinejoin="miter"
           >
-            <polyline points={clk} vectorEffect="non-scaling-stroke" />
             <polyline points={tx} vectorEffect="non-scaling-stroke" />
           </g>
 

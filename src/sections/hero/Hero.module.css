@@ -72,12 +72,18 @@
   line-height: 1.55;
 }
 
+/* two deliberate rows: the one outlined control, then the three text links */
 .actions {
+  display: grid;
+  justify-items: start;
+  row-gap: var(--s-3);
+  margin-top: var(--s-5);
+}
+
+.links {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-4) var(--s-6);
-  margin-top: var(--s-5);
+  gap: 0 var(--s-6);
 }
 
 .actions :global(.link) {
@@ -163,16 +169,15 @@
   .facts {
     order: 4;
   }
-  .plate {
+  .actions {
     order: 5;
-    margin-block: var(--s-7);
+    margin-top: var(--s-5);
+  }
+  .plate {
+    order: 6;
+    margin-block: var(--s-7) var(--s-6);
     width: calc(100% + 2 * var(--gutter));
     margin-inline: calc(-1 * var(--gutter));
-  }
-  .actions {
-    order: 6;
-    margin-top: 0;
-    padding-bottom: var(--s-6);
   }
   .actions :global(.button) {
     width: 100%;

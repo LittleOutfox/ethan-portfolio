@@ -4,7 +4,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { FoxPoints, type FieldBuffers } from './FoxPoints'
 import { buildField, type ScatterLayout } from './buildField'
 import { samplePoses } from './sampleMain'
-import { applyGates, assert, control, flags, live, plates, pulse, target } from './bus'
+import { applyGates, assert, control, flags, live, plates, pulse, target, traceRows } from './bus'
 import type { TierSpec } from './tiers'
 import { setupScroll } from './scroll'
 
@@ -43,8 +43,10 @@ function makeLayout(spec: TierSpec): ScatterLayout {
   const aboutTop = pageTop('about')
   const projectsTop = pageTop('projects')
   const wide = W >= 960
-  const bandTop = aboutTop + H * 0.1
-  const bandBottom = projectsTop - H * 0.1
+  // released points settle as a loose haze around and just below the hero, never a viewport away
+  const bandTop = plates.a.y + plates.a.h * 0.35
+  const bandBottom = Math.min(projectsTop - H * 0.1, plates.a.y + plates.a.h + H * 0.9)
+  void aboutTop
   const traces: ScatterLayout['traces'] = []
   if (wide && spec.tier !== 'low') {
     const rows = [0.12, 0.31, 0.47, 0.68, 0.86]
@@ -58,8 +60,10 @@ function makeLayout(spec: TierSpec): ScatterLayout {
     width: W,
     height: H,
     fieldTop: bandTop,
-    fieldHeight: Math.max(H, bandBottom - bandTop),
+    fieldHeight: Math.max(H * 0.6, bandBottom - bandTop),
     quietX: wide ? [[0, W * 0.58]] : [[0, W]],
+    // when the whole width is text (phones), released points stay inside the hero figure's box
+    fallbackX: wide ? [W * 0.58, W] : [plates.a.x, plates.a.x + plates.a.w],
     traces,
     snowFraction: 0.2,
     traceFraction: traces.length ? 0.3 : 0,
@@ -86,6 +90,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
   const [generation, setGeneration] = useState(0)
   const [lost, setLost] = useState(false)
   const restores = useRef(0)
+  const built = useRef(false)
   const wrapRef = useRef<HTMLDivElement>(null)
 
   // sample once (cached), build the field from the page geometry, rebuild on real width changes
@@ -100,18 +105,32 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       const layout = makeLayout(spec)
       const field = buildField(a, b, layout)
       if (cancelled) return
+      traceRows.length = 0
+      for (const t of layout.traces) traceRows.push(t.y)
       if (import.meta.env.DEV) (window as unknown as { __field: unknown }).__field = { layout, field, bus: { target, live, flags, plates } }
-      live.formA = -0.3
-      flags.introUntil = performance.now() / 1000 - EPOCH + 1.8
+      if (flags.reducedMotion) {
+        // one still frame of the formed fox: nothing to settle
+        live.formA = target.formA = 1.3
+        live.fade = target.fade = 1
+      } else if (!built.current) {
+        // the arrival happens once per visit, not on every rebuild
+        live.formA = -0.3
+        flags.introUntil = performance.now() / 1000 - EPOCH + 1.8
+      }
+      built.current = true
       setBuffers(field)
     }
     void build()
     let t = 0
+    let lastTop = pageTop('projects')
     const onResize = () => {
       measurePlates()
       const w = window.innerWidth
-      if (Math.abs(w - lastW) / lastW > 0.12) {
+      const top = pageTop('projects')
+      // rebuild when the layout moved, not on every viewport tick (svh keeps phones stable)
+      if (Math.abs(w - lastW) / lastW > 0.12 || Math.abs(top - lastTop) > 24) {
         lastW = w
+        lastTop = top
         clearTimeout(t)
         t = window.setTimeout(() => void build(), 250)
       }
@@ -133,11 +152,14 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
     const teardownScroll = setupScroll(spec)
 
     let lastPulse = -1
-    const plateA = document.querySelector<HTMLElement>('[data-plate="a"]')
+    const cells = Array.from(document.querySelectorAll<HTMLElement>('[data-plate]'))
+    const over = (e: PointerEvent) =>
+      cells.some((c) => {
+        const r = c.getBoundingClientRect()
+        return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
+      })
     const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || !plateA) return
-      const r = plateA.getBoundingClientRect()
-      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return
+      if (e.pointerType !== 'mouse' || !over(e)) return
       const now = performance.now() / 1000 - EPOCH
       if (now - lastPulse < 0.4) return
       lastPulse = now
@@ -147,9 +169,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       pulse.amp = 1
     }
     const onDown = (e: PointerEvent) => {
-      if (!plateA) return
-      const r = plateA.getBoundingClientRect()
-      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return
+      if (!over(e)) return
       pulse.x = e.clientX
       pulse.y = e.clientY + window.scrollY
       pulse.t0 = performance.now() / 1000 - EPOCH
@@ -161,7 +181,11 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
     const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row]'))
     const enter = (e: Event) => {
       const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      assert.y = r.top + window.scrollY + r.height / 2
+      const y = r.top + window.scrollY + r.height / 2
+      // light the authored trace nearest the row
+      let best = traceRows.length ? traceRows[0] : y
+      for (const t of traceRows) if (Math.abs(t - y) < Math.abs(best - y)) best = t
+      assert.y = best
       assert.amp = 1
     }
     const leave = () => {
@@ -200,6 +224,7 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
   return (
     <div ref={wrapRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
       <Canvas
+        flat
         dpr={[1, spec.dprCap]}
         frameloop="always"
         performance={{ min: 0.35, max: 1, debounce: 180 }}
@@ -214,7 +239,10 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
           })
           el.addEventListener('webglcontextrestored', () => {
             restores.current += 1
-            if (restores.current > 2) return
+            if (restores.current > 2) {
+              control.setFrameloop('never') // the poster stays; no loop renders an empty scene
+              return
+            }
             setLost(false)
             setGeneration((g) => g + 1)
           })

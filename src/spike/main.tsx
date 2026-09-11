@@ -75,6 +75,7 @@ function App() {
         fieldTop: H * 0.9,
         fieldHeight: H * 1.2,
         quietX: [[0, W * 0.45]],
+        fallbackX: [W * 0.45, W],
         traces: [],
         snowFraction: 0.2,
         traceFraction: 0,

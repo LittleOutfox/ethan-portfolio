@@ -18,6 +18,14 @@ export function Hero() {
               <dd>{profile.school}</dd>
             </div>
             <div>
+              <dt>Experience</dt>
+              <dd>{profile.experienceLine}</dd>
+            </div>
+            <div>
+              <dt>Built</dt>
+              <dd>{profile.built}</dd>
+            </div>
+            <div>
               <dt>Based</dt>
               <dd>{profile.based}</dd>
             </div>
@@ -31,15 +39,17 @@ export function Hero() {
               View résumé
               <Icon name="external" />
             </a>
-            <a className="link" href={links.github.href} target="_blank" rel="noopener">
-              GitHub
-            </a>
-            <a className="link" href={links.linkedin.href} target="_blank" rel="noopener">
-              LinkedIn
-            </a>
-            <a className="link" href={links.email.href}>
-              {links.email.label}
-            </a>
+            <div className={styles.links}>
+              <a className="link" href={links.github.href} target="_blank" rel="noopener">
+                GitHub
+              </a>
+              <a className="link" href={links.linkedin.href} target="_blank" rel="noopener">
+                LinkedIn
+              </a>
+              <a className="link" href={links.email.href}>
+                {links.email.label}
+              </a>
+            </div>
           </div>
         </div>
 

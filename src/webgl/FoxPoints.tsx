@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, ShaderMaterial, Sphere, Vector2, Vector3, Vector4 } from 'three'
 import vert from './shaders/fox.vert.glsl?raw'
 import frag from './shaders/fox.frag.glsl?raw'
-import { assert, flags, live, plates, pulse, smooth, target } from './bus'
+import { assert, control, flags, live, plates, pulse, smooth, target } from './bus'
 
 export interface FieldBuffers {
   count: number
@@ -119,13 +119,19 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
     u.uDrift.value = flags.reducedMotion ? 0 : live.drift
     u.uIdlePulse.value = flags.reducedMotion ? 0 : 1
     u.uFade.value = live.fade
+    // the quiet band: sleep only once the field has actually faded out
+    if (flags.idle && !flags.reducedMotion && target.fade < 0.001 && live.fade < 0.004) {
+      live.fade = 0
+      u.uFade.value = 0
+      control.setFrameloop('never')
+    }
     u.uTime.value = now % TIME_WRAP
     u.uDpr.value = gl.getPixelRatio()
     ;(u.uPulse.value as Vector4).set(pulse.x, pulse.y, pulse.t0, pulse.amp)
     ;(u.uAssert.value as Vector2).set(liveAssert.y, liveAssert.amp)
 
     frames.current += 1
-    if (frames.current === 2 && onFirstFrame) onFirstFrame()
+    if (frames.current === (flags.reducedMotion ? 1 : 2) && onFirstFrame) onFirstFrame()
   })
 
   return (
@@ -136,6 +142,7 @@ export function FoxPoints({ buffers, colors, pointSize, epoch, onFirstFrame }: P
         fragmentShader={frag}
         uniforms={uniforms}
         transparent
+        premultipliedAlpha
         depthTest={false}
         depthWrite={false}
         blending={AdditiveBlending}

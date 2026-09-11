@@ -54,9 +54,15 @@ export const control = {
   invalidate: () => {},
 }
 
-/** Decide the loop mode from the flags and apply it. */
+/** Page-space y of each authored trace row, so a hovered Experience row can light the nearest one. */
+export const traceRows: number[] = []
+
+/**
+ * Decide the loop mode from the flags and apply it. Idle is only a request: the render loop puts
+ * itself to sleep once the field has actually faded out, so nothing freezes mid-lerp.
+ */
 export function applyGates() {
-  if (flags.paused || flags.idle) {
+  if (flags.paused) {
     control.setFrameloop('never')
   } else if (flags.reducedMotion) {
     control.setFrameloop('demand')

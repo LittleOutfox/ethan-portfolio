@@ -36,8 +36,8 @@
 - [x] Task 2.4 Hero section: title block (h1, role line, standfirst, run-in dl, actions) + fox plate cell with poster `<img>` and ground rule.
 - [x] Task 2.5 About, Experience, Projects (plate + rows, figure placeholder), Skills, Off the clock, Contact sections with real copy.
 - [x] Task 2.6 Prerender pipeline (`vite build` → `--ssr` → `scripts/prerender.mjs`), verify dist/index.html contains full content; `npm run build` clean.
-- [ ] Task 2.7 Screenshots at 1440/1280/1024/768/390, JS-off render, keyboard walk; critique and fix. ★ review workflow.
-- [ ] Commit.
+- [x] Task 2.7 Screenshots at 1440/1280/1024/768/390, JS-off render, keyboard walk; critique and fix. ★ review workflow (wf_dd042799-8b2).
+- [x] Commit.
 
 ## Phase 3 — WebGL
 
@@ -47,14 +47,14 @@
 - [x] Task 3.4 Scroll bus with ScrollTrigger: Release across the hero exit (formA 1.3 → −0.3), traces beside About/Experience, snow in quiet areas, active-trace pulse, frame-loop gates.
 - [x] Task 3.5 Gather at Contact (formB), lit from the right.
 - [x] Task 3.6 Pointer/touch pulse; Experience row hover → trace brighten.
-- [ ] Task 3.7 Pause motion (aria-pressed, localStorage), reduced-motion static frame, context-loss recovery, perf assertions (r3f-perf dev), fragment budget.
-- [ ] Task 3.8 Screenshots + real-GPU check in Chrome; ★ review workflow (creative technologist + design lenses). Commit.
+- [x] Task 3.7 Pause motion (aria-pressed, localStorage), reduced-motion static frame, context-loss recovery, perf assertions (r3f-perf dev), fragment budget.
+- [~] Task 3.8 Screenshots done; real-GPU check blocked (Chrome tab hidden); ★ review workflow running. Commit done.
 
 ## Phase 4 — Projects figure and tables
 
 - [x] Task 4.1 `src/figures/uart.ts` frame generator + tests (idle high, start low, LSB first, stop high, 16 ticks/cell).
 - [x] Task 4.2 `UartFigure.tsx` SVG with byte input and caption; hairline rows for Experience/Skills/Off the clock; Contact.
-- [ ] Commit.
+- [x] Commit.
 
 ## Phase 5 — Mobile and intermediate widths
 

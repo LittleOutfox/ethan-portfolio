@@ -16,9 +16,11 @@ mkdirSync(DEBUG, { recursive: true })
 
 // noseHint: where the nose sits, as a fraction of the ink bounding box (x from left, y from top).
 const POSES = {
-  sitting: { noseHint: { x: 0.215, y: 0.13 } },
-  howling: { noseHint: { x: 0.41, y: 0.02 } },
-  bowing: { noseHint: { x: 0.0, y: 0.86 } },
+  // minComponent: ink components smaller than this (px at render scale) are autotrace specks, not drawing;
+  // the bowing pose is sketched in short dashes, so its threshold stays low
+  sitting: { noseHint: { x: 0.215, y: 0.13 }, minComponent: 160 },
+  howling: { noseHint: { x: 0.41, y: 0.02 }, minComponent: 80 },
+  bowing: { noseHint: { x: 0.0, y: 0.86 }, minComponent: 24 },
 }
 const LONG_EDGE = 512
 const RENDER_SCALE = 2 // rasterize at 2x the viewBox; the autotrace has no detail beyond that
@@ -154,7 +156,7 @@ for (const name of names) {
   }
 
   // drop tiny connected components: autotrace specks are not drawing
-  const MIN_COMPONENT = 24 // px at render scale: specks, not the short dashes of a sketched stroke
+  const MIN_COMPONENT = cfg.minComponent
   {
     const label = new Int32Array(W * H)
     const stack = new Int32Array(W * H)

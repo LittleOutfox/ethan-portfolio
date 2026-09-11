@@ -16,7 +16,7 @@ export const projects: Project[] = [
       'STM32F401RE host firmware',
       'Xilinx Vivado',
     ],
-    stack: 'Verilog · SystemVerilog · FSMs · FIFO · Embedded C++',
+    stack: 'Verilog · SystemVerilog · FSMs · FIFO · C (STM32 HAL)',
     link: { label: 'focus-or-fry on GitHub', href: 'https://github.com/LittleOutfox/focus-or-fry/', external: true },
   },
   {

@@ -61,7 +61,8 @@
   --s-8: 4rem;
   --s-9: 6rem;
   --s-10: 8rem;
-  --space-section: clamp(6rem, 12vw, 10rem);
+  --space-section: clamp(5rem, 9vw, 7.5rem);
+  --space-section-large: clamp(8rem, 16vw, 14rem);
   --space-section-tight: clamp(3.5rem, 6vw, 5rem);
   --space-block: var(--s-7);
   --space-group: var(--s-5);

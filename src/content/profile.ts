@@ -6,12 +6,14 @@ export const profile: Profile = {
   standfirst:
     'I am most drawn to RTL design: latency, throughput, interfaces, timing, and the logic that decides how a system moves.',
   school: 'Electrical Engineering @ University of Waterloo',
-  status: 'Open · Winter 2027 co-op',
+  status: 'Seeking a Winter 2027 co-op',
+  experienceLine: 'General Dynamics · ArchES Computing',
+  built: 'Focus or Fry, an FPGA telemetry system',
   based: 'Greater Toronto · open to relocate',
   focus: 'RTL · ASIC & FPGA',
   email: 'ethan.tiong@uwaterloo.ca',
   bio: [
-    'I study Electrical Engineering at the University of Waterloo. I am most drawn to RTL design: latency, throughput, interfaces, timing, and the logic that decides how a system moves. I like the space between hardware and software too, bridging the gap between processing systems and programmable logic. Every tail points deeper, closer to silicon.',
+    'I study Electrical Engineering at the University of Waterloo. I like the space between hardware and software, bridging the gap between processing systems and programmable logic. Every tail points deeper, closer to silicon.',
     'Hi! My name is Ethan Tiong. I was born in Canada on a snowy winter afternoon, and if it was not already obvious, my favourite animal is the fox. I’ve always held an affinity towards the charm, intelligence, and playfulness they are known for. Quiet when they need to be, quick when it matters, and just a little mysterious.',
   ],
 }

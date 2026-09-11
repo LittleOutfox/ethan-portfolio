@@ -1,6 +1,6 @@
 .contact {
   position: relative;
-  padding-top: var(--space-section);
+  padding-top: var(--space-section-large);
 }
 
 .grid {

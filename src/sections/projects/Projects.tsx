@@ -18,7 +18,7 @@ export function Projects() {
               <h3 id={`p-${lead.id}`} className="t-title">
                 {lead.title}
               </h3>
-              <p className={`data ${styles.meta}`}>{lead.meta}</p>
+              <p className={`t-meta ${styles.meta}`}>{lead.meta}</p>
               <p className={`t-body ${styles.desc}`}>{lead.description}</p>
               <p className={`data ${styles.stack}`}>{lead.stack}</p>
               {lead.link ? (
@@ -48,7 +48,7 @@ export function Projects() {
             <h3 id={`p-${second.id}`} className="t-title">
               {second.title}
             </h3>
-            <p className={`data ${styles.meta}`}>{second.meta}</p>
+            <p className={`t-meta ${styles.meta}`}>{second.meta}</p>
             <p className={`t-body ${styles.desc}`}>{second.description}</p>
             <p className={`data ${styles.stack}`}>{second.stack}</p>
             {second.note ? <p className={`t-meta ${styles.note}`}>{second.note}</p> : null}
@@ -64,7 +64,7 @@ export function Projects() {
             <p className={`data ${styles.stack}`}>{third.stack}</p>
           </div>
           <div className={styles.rowMeta}>
-            <p className="data">{third.meta}</p>
+            <p className="t-meta">{third.meta}</p>
             {third.link ? (
               <a className={`link ${styles.projectLink}`} href={third.link.href} target="_blank" rel="noopener">
                 {third.link.label}

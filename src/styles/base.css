@@ -170,8 +170,7 @@ body {
   scroll-margin-top: calc(var(--nav-h) + 1rem);
 }
 
-.section > .t-heading,
-.section > .t-heading-quiet {
+.container > .t-heading {
   margin-bottom: var(--space-block);
 }
 

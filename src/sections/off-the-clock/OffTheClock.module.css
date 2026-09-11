@@ -17,7 +17,7 @@
 
 .list {
   grid-column: 5 / span 7;
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid var(--hairline-strong);
 }
 
 .item {

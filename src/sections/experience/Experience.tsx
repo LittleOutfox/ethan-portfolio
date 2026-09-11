@@ -15,7 +15,7 @@ export function Experience() {
               <span className={styles.org}>{e.organization}</span>
               <span className={styles.role}>
                 {e.role}
-                {e.projected ? <span className="visually-hidden"> (projected)</span> : null}
+                {e.projected ? <span className="t-meta"> (expected)</span> : null}
               </span>
             </li>
           ))}

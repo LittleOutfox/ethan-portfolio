@@ -14,10 +14,12 @@ export function FieldMount() {
     const s = detectTier()
     if (!s) return
     const mq = matchMedia('(prefers-reduced-motion: reduce)')
-    flags.reducedMotion = mq.matches
+    // ?motion=reduce forces the reduced-motion path for testing
+    const forced = new URLSearchParams(location.search).get('motion') === 'reduce'
+    flags.reducedMotion = mq.matches || forced
     flags.paused = isPaused()
     const onChange = () => {
-      flags.reducedMotion = mq.matches
+      flags.reducedMotion = mq.matches || forced
       applyGates()
     }
     mq.addEventListener('change', onChange)

@@ -12,6 +12,10 @@ export interface Profile {
   standfirst: string
   school: string
   status: string
+  /** employers, as named in the experience ledger */
+  experienceLine: string
+  /** the lead project, as named in the projects section */
+  built: string
   based: string
   focus: string
   email: string
