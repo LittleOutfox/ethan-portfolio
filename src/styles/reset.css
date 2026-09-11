@@ -1,0 +1,101 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--ice-rgb) / 0.22) var(--ground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  min-height: 100svh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+p,
+h1,
+h2,
+h3,
+dt,
+dd,
+li {
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: inherit;
+  font-size: inherit;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px var(--ground);
+  border-radius: var(--radius);
+}
+
+::selection {
+  background: rgb(185 167 240 / 0.35);
+  color: var(--moon);
+}
