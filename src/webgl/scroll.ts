@@ -38,8 +38,8 @@ export function setupScroll(spec: TierSpec): () => void {
     narrow
       ? ScrollTrigger.create({
           trigger: '[data-plate="a"]',
-          start: 'top 30%',
-          end: 'bottom 5%',
+          start: 'top 12%',
+          end: 'bottom 0%',
           onUpdate: (self) => {
             target.formA = 1.3 - 1.6 * self.progress
           },

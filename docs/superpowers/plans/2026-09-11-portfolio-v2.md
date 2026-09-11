@@ -62,7 +62,10 @@
 
 ## Phase 6 — Polish
 
-- [ ] Typography, spacing rhythm (computed values), alignment, states, browser surfaces, motion timing, lighting, contrast on rendered pixels, Lenis decision, favicon, OG image, meta, `impeccable detect --json`. Commit.
+- [x] Review round one applied (recruiter, design jury, creative technologist lenses): hero facts, heading margins, rhythm tokens, mono creep, release band, clock ticks, blending, loop gates, reduced motion, pruning.
+- [x] Favicons from the drawing, fonts instanced and subset, lazy Three chunk, robots/sitemap/llms.txt, README, `impeccable detect --json` clean, Lighthouse mobile 92 / desktop 100.
+- [ ] Lenis decision: native scroll kept (the lerp smooths the field; keyboard and anchors stay native).
+- [ ] OG image from the finished hero; a11y lens + synthesis results; contrast on rendered pixels.
 
 ## Phase 7 — Final audit
 

@@ -99,6 +99,8 @@ void main() {
   // released points are quieter: dust faintest, snow soft, traces the brightest of the three
   alpha *= mix(0.1 + 0.42 * isTrace + 0.16 * isSnow, 1.0, formed);
 
+  // the bowing drawing has fewer strokes for the same points, so its pose sits a little lighter
+  alpha *= 1.0 - 0.4 * wB;
   vColorAlpha = vec4(color * lum, alpha * uFade);
   gl_PointSize = clamp(uPointSize * sizeMul * uDpr, 1.0, uMaxPointSize);
 }
