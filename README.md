@@ -32,7 +32,7 @@ While the dev server runs, `/spike.html?n=40000&a=sitting&b=bowing` renders the 
 
 ## How the fox works
 
-`scripts/bake-fox-masks.mjs` rasterizes each drawing and bakes a small mask: a density-normalized ink weight (thin whiskers and heavy tail masses get proportionate points), a geodesic distance from the nose along the strokes, and raw ink. At runtime a worker draws stratified samples from the mask and Hilbert-sorts them so the two poses correspond point for point. One `THREE.Points` with a screen-space shader does the rest: per-point formation thresholds from the geodesic channel (tail tips release first, the nose last), an idle nose-to-tail luminance pulse, a pointer pulse, and a moon whose position is shared between the CSS wash and the shader.
+`scripts/bake-fox-masks.mjs` rasterizes each drawing and bakes a small mask: a density-normalized ink weight (thin whiskers and heavy tail masses get proportionate points) and a geodesic distance from the nose along the strokes, two channels of a small PNG the runtime decodes as data. At runtime a worker draws stratified samples from the mask and Hilbert-sorts them so the two poses correspond point for point. One `THREE.Points` with a screen-space shader does the rest: per-point formation thresholds from the geodesic channel (tail tips release first, the nose last), an idle nose-to-tail luminance pulse, a pointer pulse, and a moon whose position is shared between the CSS wash and the shader.
 
 Devices are tiered once before the WebGL chunk is requested; phones and weak GPUs get fewer points and a hero-only field, and anything without WebGL2 keeps the posters. A persistent Pause motion control and the reduced-motion preference both stop the loop.
 

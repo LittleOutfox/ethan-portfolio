@@ -27,7 +27,8 @@ const RENDER_SCALE = 2 // rasterize at 2x the viewBox; the autotrace has no deta
 const GAP_COST = 6 // walking through empty space costs this much more than walking along a stroke
 
 const only = process.argv.slice(2)
-const names = only.length ? only : Object.keys(POSES)
+// the two shipped poses by default; `node scripts/bake-fox-masks.mjs howling` bakes the comparison pose
+const names = only.length ? only : ['sitting', 'bowing']
 
 function gaussianKernel(sigma) {
   const r = Math.ceil(sigma * 3)

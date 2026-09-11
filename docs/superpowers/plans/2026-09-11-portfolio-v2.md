@@ -58,7 +58,7 @@
 
 ## Phase 5 — Mobile and intermediate widths
 
-- [ ] Own compositions at 390/768/1024; hero fox box; menu sheet; tables; figure scroll container; LOW tier; safe areas; tap targets. Screenshots. Commit.
+- [x] Own compositions at 390/768/1024; hero fox box; menu sheet; tables; figure scroll container; LOW tier; safe areas; tap targets. Screenshots. Commit.
 
 ## Phase 6 — Polish
 
@@ -66,7 +66,7 @@
 - [x] Favicons from the drawing, fonts instanced and subset, lazy Three chunk, robots/sitemap/llms.txt, README, `impeccable detect --json` clean, Lighthouse mobile 92 / desktop 100.
 - [x] Lenis decision: native scroll kept (the lerp smooths the field; keyboard and anchors stay native).
 - [x] OG image from the finished hero (1200×630, 166 KB).
-- [ ] a11y lens + synthesis results; contrast on rendered pixels; reduced-motion check.
+- [x] a11y lens + synthesis results; contrast on rendered pixels; reduced-motion check.
 
 ## Phase 7 — Final audit
 
