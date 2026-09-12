@@ -19,7 +19,6 @@
 
   --hairline: rgb(var(--ice-rgb) / 0.14);
   --hairline-strong: rgb(var(--ice-rgb) / 0.28);
-  --mist: rgb(var(--ice-rgb) / 0.06);
   --scrim: rgb(var(--ground-rgb) / 0.72);
   --focus: var(--ice);
 

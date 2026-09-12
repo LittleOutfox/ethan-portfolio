@@ -15,7 +15,6 @@ colors:
   snow: "#c9d8ea"
   hairline: "rgb(159 216 255 / 0.14)"
   hairline-strong: "rgb(159 216 255 / 0.28)"
-  mist: "rgb(159 216 255 / 0.06)"
   scrim: "rgb(7 11 20 / 0.72)"
 typography:
   display:
@@ -216,7 +215,6 @@ Midnight navy and blue-black grounds (never grey), soft white text, one ice illu
 - **Ground Raised** (`ground-raised`): the outlined button's hover fill; at 55% it is the base of the mist band gradient.
 - **Text** (`text`), **Text Secondary** (`text-secondary`), **Text Tertiary** (`text-tertiary`): the three text tones. Headings, titles, labels and `dd` values are Text; body copy, roles and stack lines are Secondary; meta, data, years, `dt` terms, notes and the signature are Tertiary. Body contrast on the rendered navy stays at or above 4.5:1; the hero block carries a feathered navy scrim (`scrim`) so field points never pass beneath type.
 - **Hairline** / **Hairline Strong** (`hairline`, `hairline-strong`): ice at 14% for row dividers, 28% for the rule that opens a ledger, the button border, the fox's ground rule, and the scrolled nav's bottom edge (drawn as a `0 1px 0` box-shadow, the only box-shadow in the system).
-- **Mist** (`mist`): a defined token at ice 6%; the shipped mist band uses `rgb(17 26 46 / 0.55)` to transparent instead (see Elevation & Depth).
 
 ### Named Rules
 **The One Ice Line Rule.** Ice is set as text exactly once on the page: the hero role line. Every other appearance of Ice is illumination (points, hairlines, underlines, focus), never copy.

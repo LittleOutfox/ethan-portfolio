@@ -157,15 +157,6 @@ body {
   background: var(--ground-3);
 }
 
-/* hairline rows share one grammar across tables, lists and definition lists */
-.hairline {
-  border-top: 1px solid var(--hairline);
-}
-
-.hairline-strong {
-  border-top: 1px solid var(--hairline-strong);
-}
-
 /* sections and headings: more space above a heading than below it */
 .section {
   padding-block: var(--space-section) 0;
@@ -179,12 +170,6 @@ body {
 .container {
   width: min(100% - 2 * var(--gutter), var(--content-max));
   margin-inline: auto;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--col-gap);
 }
 
 /* content stacks above the fixed atmosphere and the field */

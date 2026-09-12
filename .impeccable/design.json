@@ -4,68 +4,374 @@
   "title": "Design System: Ethan Tiong — portfolio",
   "extensions": {
     "colorMeta": {
-      "ground": { "role": "neutral", "displayName": "Midnight Ground", "canonical": "#070b14", "tonalRamp": ["#070b14", "#0b1220", "#111a2e", "#1a2742", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc"] },
-      "ground-plate": { "role": "neutral", "displayName": "Navy Plate", "canonical": "#0b1220", "tonalRamp": ["#070b14", "#0b1220", "#111a2e", "#1a2742", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc"] },
-      "ground-raised": { "role": "neutral", "displayName": "Raised Navy", "canonical": "#111a2e", "tonalRamp": ["#070b14", "#0b1220", "#111a2e", "#1a2742", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc"] },
-      "text": { "role": "neutral", "displayName": "Soft White", "canonical": "#e8eef7", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
-      "text-secondary": { "role": "neutral", "displayName": "Blue Grey", "canonical": "#a9b6cc", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
-      "text-tertiary": { "role": "neutral", "displayName": "Slate Blue", "canonical": "#7c8aa5", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
-      "moon": { "role": "tertiary", "displayName": "Moon White", "canonical": "#f4f7fb", "tonalRamp": ["#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb", "#ffffff"] },
-      "ice": { "role": "primary", "displayName": "Ice", "canonical": "#9fd8ff", "tonalRamp": ["#0a2236", "#123a5c", "#1f5a8a", "#3384bd", "#4fa8e8", "#78c2f5", "#9fd8ff", "#d6eefc"] },
-      "ice-deep": { "role": "primary", "displayName": "Deep Ice", "canonical": "#4fa8e8", "tonalRamp": ["#0a2236", "#123a5c", "#1f5a8a", "#3384bd", "#4fa8e8", "#78c2f5", "#9fd8ff", "#d6eefc"] },
-      "violet": { "role": "secondary", "displayName": "Tail-Tip Violet", "canonical": "#b9a7f0", "tonalRamp": ["#1c1633", "#2f2656", "#4a3d85", "#6f5fb3", "#9484d4", "#b9a7f0", "#d3c8f6", "#ebe5fb"] },
-      "snow": { "role": "tertiary", "displayName": "Released Snow", "canonical": "#c9d8ea", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
-      "hairline": { "role": "neutral", "displayName": "Hairline 14%", "canonical": "rgb(159 216 255 / 0.14)" },
-      "hairline-strong": { "role": "neutral", "displayName": "Hairline 28%", "canonical": "rgb(159 216 255 / 0.28)" },
-      "mist": { "role": "neutral", "displayName": "Mist 6%", "canonical": "rgb(159 216 255 / 0.06)" },
-      "scrim": { "role": "neutral", "displayName": "Hero Scrim", "canonical": "rgb(7 11 20 / 0.72)" }
+      "ground": {
+        "role": "neutral",
+        "displayName": "Midnight Ground",
+        "canonical": "#070b14",
+        "tonalRamp": [
+          "#070b14",
+          "#0b1220",
+          "#111a2e",
+          "#1a2742",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc"
+        ]
+      },
+      "ground-plate": {
+        "role": "neutral",
+        "displayName": "Navy Plate",
+        "canonical": "#0b1220",
+        "tonalRamp": [
+          "#070b14",
+          "#0b1220",
+          "#111a2e",
+          "#1a2742",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc"
+        ]
+      },
+      "ground-raised": {
+        "role": "neutral",
+        "displayName": "Raised Navy",
+        "canonical": "#111a2e",
+        "tonalRamp": [
+          "#070b14",
+          "#0b1220",
+          "#111a2e",
+          "#1a2742",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Soft White",
+        "canonical": "#e8eef7",
+        "tonalRamp": [
+          "#111a2e",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc",
+          "#c9d8ea",
+          "#e8eef7",
+          "#f4f7fb"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Blue Grey",
+        "canonical": "#a9b6cc",
+        "tonalRamp": [
+          "#111a2e",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc",
+          "#c9d8ea",
+          "#e8eef7",
+          "#f4f7fb"
+        ]
+      },
+      "text-tertiary": {
+        "role": "neutral",
+        "displayName": "Slate Blue",
+        "canonical": "#7c8aa5",
+        "tonalRamp": [
+          "#111a2e",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc",
+          "#c9d8ea",
+          "#e8eef7",
+          "#f4f7fb"
+        ]
+      },
+      "moon": {
+        "role": "tertiary",
+        "displayName": "Moon White",
+        "canonical": "#f4f7fb",
+        "tonalRamp": [
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc",
+          "#c9d8ea",
+          "#e8eef7",
+          "#f4f7fb",
+          "#ffffff"
+        ]
+      },
+      "ice": {
+        "role": "primary",
+        "displayName": "Ice",
+        "canonical": "#9fd8ff",
+        "tonalRamp": [
+          "#0a2236",
+          "#123a5c",
+          "#1f5a8a",
+          "#3384bd",
+          "#4fa8e8",
+          "#78c2f5",
+          "#9fd8ff",
+          "#d6eefc"
+        ]
+      },
+      "ice-deep": {
+        "role": "primary",
+        "displayName": "Deep Ice",
+        "canonical": "#4fa8e8",
+        "tonalRamp": [
+          "#0a2236",
+          "#123a5c",
+          "#1f5a8a",
+          "#3384bd",
+          "#4fa8e8",
+          "#78c2f5",
+          "#9fd8ff",
+          "#d6eefc"
+        ]
+      },
+      "violet": {
+        "role": "secondary",
+        "displayName": "Tail-Tip Violet",
+        "canonical": "#b9a7f0",
+        "tonalRamp": [
+          "#1c1633",
+          "#2f2656",
+          "#4a3d85",
+          "#6f5fb3",
+          "#9484d4",
+          "#b9a7f0",
+          "#d3c8f6",
+          "#ebe5fb"
+        ]
+      },
+      "snow": {
+        "role": "tertiary",
+        "displayName": "Released Snow",
+        "canonical": "#c9d8ea",
+        "tonalRamp": [
+          "#111a2e",
+          "#2a3a5a",
+          "#4a5d80",
+          "#7c8aa5",
+          "#a9b6cc",
+          "#c9d8ea",
+          "#e8eef7",
+          "#f4f7fb"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline 14%",
+        "canonical": "rgb(159 216 255 / 0.14)"
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Hairline 28%",
+        "canonical": "rgb(159 216 255 / 0.28)"
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Hero Scrim",
+        "canonical": "rgb(7 11 20 / 0.72)"
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "The name, once. Newsreader with optical sizing, ~80px at 1440." },
-      "heading": { "displayName": "Heading", "purpose": "Section h2s; 3rem below before content." },
-      "heading-quiet": { "displayName": "Heading Quiet", "purpose": "The Off the clock h2 set beside its list; also menu-sheet link size." },
-      "title": { "displayName": "Title", "purpose": "Project titles and skill names." },
-      "lede": { "displayName": "Lede", "purpose": "The first About paragraph." },
-      "role": { "displayName": "Role line", "purpose": "The hero role line; the only place Ice is text." },
-      "body": { "displayName": "Body", "purpose": "Standfirst, bio, descriptions, skill lines; 44ch / 62ch / 60ch measures." },
-      "meta": { "displayName": "Meta", "purpose": "Project meta and stack lines, status, colophon, dt terms." },
-      "label": { "displayName": "Label", "purpose": "Form labels, hobby names, nav links, button and action text. Never uppercase." },
-      "note": { "displayName": "Note", "purpose": "Italic serif aside under a skill." },
-      "data": { "displayName": "Data", "purpose": "Years, measured parameters, byte input and readout. Never headings or prose." },
-      "signature": { "displayName": "Signature", "purpose": "The footer mark 以狐为引, aria-hidden, Noto Serif SC subset." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "The name, once. Newsreader with optical sizing, ~80px at 1440."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Section h2s; 3rem below before content."
+      },
+      "heading-quiet": {
+        "displayName": "Heading Quiet",
+        "purpose": "The Off the clock h2 set beside its list; also menu-sheet link size."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Project titles and skill names."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "The first About paragraph."
+      },
+      "role": {
+        "displayName": "Role line",
+        "purpose": "The hero role line; the only place Ice is text."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Standfirst, bio, descriptions, skill lines; 44ch / 62ch / 60ch measures."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Project meta and stack lines, status, colophon, dt terms."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels, hobby names, nav links, button and action text. Never uppercase."
+      },
+      "note": {
+        "displayName": "Note",
+        "purpose": "Italic serif aside under a skill."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Years, measured parameters, byte input and readout. Never headings or prose."
+      },
+      "signature": {
+        "displayName": "Signature",
+        "purpose": "The footer mark 以狐为引, aria-hidden, Noto Serif SC subset."
+      }
     },
     "shadows": [
-      { "name": "nav-edge", "value": "0 1px 0 rgb(159 216 255 / 0.14)", "purpose": "The scrolled nav's bottom hairline. The system has no drop shadows." },
-      { "name": "focus-halo", "value": "0 0 0 5px #070b14", "purpose": "Ground-coloured halo under the 2px ice focus outline so the ring separates from whatever is beneath." }
+      {
+        "name": "nav-edge",
+        "value": "0 1px 0 rgb(159 216 255 / 0.14)",
+        "purpose": "The scrolled nav's bottom hairline. The system has no drop shadows."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 5px #070b14",
+        "purpose": "Ground-coloured halo under the 2px ice focus outline so the ring separates from whatever is beneath."
+      }
     ],
     "motion": [
-      { "name": "ease-move", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Movement: the skip link's slide." },
-      { "name": "ease-fade", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Fades: colour, border, background, poster opacity." },
-      { "name": "t-1", "value": "140ms", "purpose": "Hover and active feedback on links, buttons, nav items, inputs, ledger rows." },
-      { "name": "t-2", "value": "280ms", "purpose": "Nav fill on scroll; skip link reveal." },
-      { "name": "t-3", "value": "720ms", "purpose": "Poster-to-live crossfade." },
-      { "name": "reduced-motion", "value": "t-1, t-2, t-3 = 0ms; scroll-behavior auto", "purpose": "prefers-reduced-motion collapses every duration; the field renders one still, page-anchored frame." },
-      { "name": "field-smoothing", "value": "k = 1 - 0.001^dt (~100ms time constant)", "purpose": "Every scrubbed field value is integrated toward its target, never snapped." },
-      { "name": "field-resolve", "value": "~1.8s arrival, once per visit", "purpose": "The fox forms nose-first on first load." },
-      { "name": "field-release", "value": "formA 1.3 → -0.3 over first 80% viewport of scroll (desktop) or as the hero figure leaves (phones)", "purpose": "Tail tips let go first along an arc." },
-      { "name": "field-gather", "value": "formB -0.3 → 1.3 as #contact moves from 140% to 20% of the viewport; poster handover at 0.35", "purpose": "The bowing fox gathers beside Contact." },
-      { "name": "field-quiet", "value": "fade 1 → 0 from #skills top 85% to 30%; loop sleeps at 0", "purpose": "The field is absent through Skills and Off the clock." },
-      { "name": "moon-wash", "value": "--light-x 0.12 → 0.85 over the whole page, transform only", "purpose": "One moon crosses the sky by the bottom; shader uLightX shares the value." },
-      { "name": "idle-pulse", "value": "every 6s nose-to-tail", "purpose": "A luminance packet runs along the strokes." },
-      { "name": "pointer-pulse", "value": "ring at 900px/s, 60px width, exp(-1.4t) decay, ≤1 per 400ms", "purpose": "Pointer over a plate injects a pulse; off under Pause or reduced motion." },
-      { "name": "dom-static", "value": "none", "purpose": "The DOM never animates in: no entrance, stagger or scroll reveal." }
+      {
+        "name": "ease-move",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Movement: the skip link's slide."
+      },
+      {
+        "name": "ease-fade",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Fades: colour, border, background, poster opacity."
+      },
+      {
+        "name": "t-1",
+        "value": "140ms",
+        "purpose": "Hover and active feedback on links, buttons, nav items, inputs, ledger rows."
+      },
+      {
+        "name": "t-2",
+        "value": "280ms",
+        "purpose": "Nav fill on scroll; skip link reveal."
+      },
+      {
+        "name": "t-3",
+        "value": "720ms",
+        "purpose": "Poster-to-live crossfade."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "t-1, t-2, t-3 = 0ms; scroll-behavior auto",
+        "purpose": "prefers-reduced-motion collapses every duration; the field renders one still, page-anchored frame."
+      },
+      {
+        "name": "field-smoothing",
+        "value": "k = 1 - 0.001^dt (~100ms time constant)",
+        "purpose": "Every scrubbed field value is integrated toward its target, never snapped."
+      },
+      {
+        "name": "field-resolve",
+        "value": "~1.8s arrival, once per visit",
+        "purpose": "The fox forms nose-first on first load."
+      },
+      {
+        "name": "field-release",
+        "value": "formA 1.3 → -0.3 over first 80% viewport of scroll (desktop) or as the hero figure leaves (phones)",
+        "purpose": "Tail tips let go first along an arc."
+      },
+      {
+        "name": "field-gather",
+        "value": "formB -0.3 → 1.3 as #contact moves from 140% to 20% of the viewport; poster handover at 0.35",
+        "purpose": "The bowing fox gathers beside Contact."
+      },
+      {
+        "name": "field-quiet",
+        "value": "fade 1 → 0 from #skills top 85% to 30%; loop sleeps at 0",
+        "purpose": "The field is absent through Skills and Off the clock."
+      },
+      {
+        "name": "moon-wash",
+        "value": "--light-x 0.12 → 0.85 over the whole page, transform only",
+        "purpose": "One moon crosses the sky by the bottom; shader uLightX shares the value."
+      },
+      {
+        "name": "idle-pulse",
+        "value": "every 6s nose-to-tail",
+        "purpose": "A luminance packet runs along the strokes."
+      },
+      {
+        "name": "pointer-pulse",
+        "value": "ring at 900px/s, 60px width, exp(-1.4t) decay, ≤1 per 400ms",
+        "purpose": "Pointer over a plate injects a pulse; off under Pause or reduced motion."
+      },
+      {
+        "name": "dom-static",
+        "value": "none",
+        "purpose": "The DOM never animates in: no entrance, stagger or scroll reveal."
+      }
     ],
     "breakpoints": [
-      { "name": "hero-columns", "value": "1280px", "purpose": "Below: title block spans 6 columns, plate 7–12; project plate goes full width." },
-      { "name": "single-column", "value": "960px", "purpose": "Below: one column, menu sheet replaces inline nav, fox is a full-bleed figure below the actions, release follows the figure." },
-      { "name": "nav-scrolled", "value": "48px scroll", "purpose": "Header fills to ground 92% with a hairline edge." }
+      {
+        "name": "hero-columns",
+        "value": "1280px",
+        "purpose": "Below: title block spans 6 columns, plate 7–12; project plate goes full width."
+      },
+      {
+        "name": "single-column",
+        "value": "960px",
+        "purpose": "Below: one column, menu sheet replaces inline nav, fox is a full-bleed figure below the actions, release follows the figure."
+      },
+      {
+        "name": "nav-scrolled",
+        "value": "48px scroll",
+        "purpose": "Header fills to ground 92% with a hairline edge."
+      }
     ],
     "tiers": [
-      { "name": "high", "points": 60000, "dprCap": 1.75, "pointSize": 4.2, "gather": true },
-      { "name": "medium", "points": 34000, "dprCap": 1.5, "pointSize": 4.2, "gather": true },
-      { "name": "low", "points": 16000, "dprCap": 1.25, "pointSize": 3.8, "gather": false, "note": "hero only; field fades out past About; Contact stays a poster" },
-      { "name": "none", "note": "no WebGL2, software rasteriser, Save-Data, or ?tier=none; posters only" },
-      { "name": "query-params", "note": "?tier=high|medium|low|none forces a tier; ?motion=reduce forces the reduced-motion path" }
+      {
+        "name": "high",
+        "points": 60000,
+        "dprCap": 1.75,
+        "pointSize": 4.2,
+        "gather": true
+      },
+      {
+        "name": "medium",
+        "points": 34000,
+        "dprCap": 1.5,
+        "pointSize": 4.2,
+        "gather": true
+      },
+      {
+        "name": "low",
+        "points": 16000,
+        "dprCap": 1.25,
+        "pointSize": 3.8,
+        "gather": false,
+        "note": "hero only; field fades out past About; Contact stays a poster"
+      },
+      {
+        "name": "none",
+        "note": "no WebGL2, software rasteriser, Save-Data, or ?tier=none; posters only"
+      },
+      {
+        "name": "query-params",
+        "note": "?tier=high|medium|low|none forces a tier; ?motion=reduce forces the reduced-motion path"
+      }
     ],
     "accessibility": [
       "Skip link to #main, fixed top-left, revealed on focus-visible",
@@ -81,12 +387,46 @@
       "Byte input at 1rem so iOS does not zoom on focus"
     ],
     "rasterProvenance": [
-      { "file": "public/fox/sitting.png", "from": "art/kitsune/sitting.svg", "by": "scripts/bake-fox-masks.mjs", "at": "2026-09-12", "sidecar": "public/fox/sitting.json" },
-      { "file": "public/fox/bowing.png", "from": "art/kitsune/bowing.svg", "by": "scripts/bake-fox-masks.mjs", "at": "2026-09-12", "sidecar": "public/fox/bowing.json" },
-      { "file": "public/fox/sitting-poster.webp", "from": "public/fox/sitting.png", "by": "scripts/make-posters.mjs", "at": "2026-09-12", "params": "60000 points, 8.4px at 2x, 1296×964" },
-      { "file": "public/fox/bowing-poster.webp", "from": "public/fox/bowing.png", "by": "scripts/make-posters.mjs", "at": "2026-09-12", "params": "60000 points, 8.4px at 2x, 1296×1154" },
-      { "file": "public/favicon.svg, favicon-32.png, favicon-64.png, apple-touch-icon.png", "from": "art/kitsune/sitting.svg (head crop)", "by": "scripts/make-favicons.mjs", "params": "ink #e8eef7 on #070b14" },
-      { "file": "public/og.png", "from": "capture of the finished hero", "by": "none (commit bafc2f3)", "params": "1200×630" }
+      {
+        "file": "public/fox/sitting.png",
+        "from": "art/kitsune/sitting.svg",
+        "by": "scripts/bake-fox-masks.mjs",
+        "at": "2026-09-12",
+        "sidecar": "public/fox/sitting.json"
+      },
+      {
+        "file": "public/fox/bowing.png",
+        "from": "art/kitsune/bowing.svg",
+        "by": "scripts/bake-fox-masks.mjs",
+        "at": "2026-09-12",
+        "sidecar": "public/fox/bowing.json"
+      },
+      {
+        "file": "public/fox/sitting-poster.webp",
+        "from": "public/fox/sitting.png",
+        "by": "scripts/make-posters.mjs",
+        "at": "2026-09-12",
+        "params": "60000 points, 8.4px at 2x, 1296×964"
+      },
+      {
+        "file": "public/fox/bowing-poster.webp",
+        "from": "public/fox/bowing.png",
+        "by": "scripts/make-posters.mjs",
+        "at": "2026-09-12",
+        "params": "60000 points, 8.4px at 2x, 1296×1154"
+      },
+      {
+        "file": "public/favicon.svg, favicon-32.png, favicon-64.png, apple-touch-icon.png",
+        "from": "art/kitsune/sitting.svg (head crop)",
+        "by": "scripts/make-favicons.mjs",
+        "params": "ink #e8eef7 on #070b14"
+      },
+      {
+        "file": "public/og.png",
+        "from": "capture of the finished hero",
+        "by": "none (commit bafc2f3)",
+        "params": "1200×630"
+      }
     ]
   },
   "components": [
@@ -175,14 +515,46 @@
       "Every shipped raster is derived from the author's drawings by a checked-in script and carries its provenance."
     ],
     "rules": [
-      { "name": "The One Ice Line Rule", "body": "Ice is set as text exactly once on the page: the hero role line. Every other appearance of Ice is illumination (points, hairlines, underlines, focus), never copy.", "section": "colors" },
-      { "name": "The Tail-Tip Rule", "body": "Violet is never a UI colour. It exists in the tail tips of the fox and in ::selection, and nothing else may borrow it.", "section": "colors" },
-      { "name": "The Navy, Never Grey Rule", "body": "Every ground is a blue-black (#070b14, #0b1220, #111a2e). No neutral grey surface, no pure black, no white surface.", "section": "colors" },
-      { "name": "The Data-Only Mono Rule", "body": "Azeret Mono is reserved for measurements, years and identifiers. It never sets a heading, a label or a sentence.", "section": "typography" },
-      { "name": "The Measure-Per-Course Rule", "body": "Each course of text has a fixed measure matched to its role: 44ch for the hero standfirst, 62ch for the bio, 60ch for a project description.", "section": "typography" },
-      { "name": "The No-Eyebrow Rule", "body": "Headings stand alone. No kicker, eyebrow, section number or uppercase tracking above them; hierarchy is carried by size, face and space.", "section": "typography" },
-      { "name": "The No Glow Pass Rule", "body": "Tone is point density. The field's brightness comes from overlapping two-lobe sprites (tight core, 12% halo) drawn additively; there is no bloom, no CSS filter, no backdrop-filter, no text-shadow.", "section": "elevation" },
-      { "name": "The Grain Only in the Mist Rule", "body": "The 1.5% noise lives on the mist band's pseudo-element and nowhere else. The ground, plate and sheet are clean.", "section": "elevation" }
+      {
+        "name": "The One Ice Line Rule",
+        "body": "Ice is set as text exactly once on the page: the hero role line. Every other appearance of Ice is illumination (points, hairlines, underlines, focus), never copy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tail-Tip Rule",
+        "body": "Violet is never a UI colour. It exists in the tail tips of the fox and in ::selection, and nothing else may borrow it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Navy, Never Grey Rule",
+        "body": "Every ground is a blue-black (#070b14, #0b1220, #111a2e). No neutral grey surface, no pure black, no white surface.",
+        "section": "colors"
+      },
+      {
+        "name": "The Data-Only Mono Rule",
+        "body": "Azeret Mono is reserved for measurements, years and identifiers. It never sets a heading, a label or a sentence.",
+        "section": "typography"
+      },
+      {
+        "name": "The Measure-Per-Course Rule",
+        "body": "Each course of text has a fixed measure matched to its role: 44ch for the hero standfirst, 62ch for the bio, 60ch for a project description.",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Eyebrow Rule",
+        "body": "Headings stand alone. No kicker, eyebrow, section number or uppercase tracking above them; hierarchy is carried by size, face and space.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Glow Pass Rule",
+        "body": "Tone is point density. The field's brightness comes from overlapping two-lobe sprites (tight core, 12% halo) drawn additively; there is no bloom, no CSS filter, no backdrop-filter, no text-shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Grain Only in the Mist Rule",
+        "body": "The 1.5% noise lives on the mist band's pseudo-element and nowhere else. The ground, plate and sheet are clean.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do set every rule as 1px solid ice at 14% (dividers) or 28% (openers, borders, the ground rule); open a list with the strong rule and close each row with the light one.",
