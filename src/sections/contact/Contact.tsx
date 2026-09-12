@@ -37,7 +37,7 @@ export function Contact() {
 
         <div className={styles.plate} aria-hidden="true">
           <div className={styles.cell} data-plate="b">
-            <img className={styles.poster} src="/fox/bowing-bloom.webp" width={648} height={576} alt="" loading="lazy" decoding="async" />
+            <img className={styles.poster} src="/fox/bowing-poster.webp" width={648} height={577} alt="" loading="lazy" decoding="async" />
           </div>
           <div className={styles.rule} />
         </div>

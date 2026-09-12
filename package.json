@@ -12,7 +12,8 @@
     "test": "vitest run",
     "bake": "node scripts/bake-fox-masks.mjs",
     "fonts": "python scripts/make-fonts.py",
-    "favicons": "node scripts/make-favicons.mjs"
+    "favicons": "node scripts/make-favicons.mjs",
+    "posters": "node scripts/make-posters.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^9.7.0",

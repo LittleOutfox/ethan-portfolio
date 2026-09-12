@@ -55,7 +55,7 @@
   height: auto;
 }
 
-/* user units of the 960-wide viewBox: 18 here renders as 12px at the 640px minimum */
+/* user units of the 976-wide viewBox: 18 here renders as 12px at the 640px minimum */
 .svgText {
   font-size: 18px;
 }

@@ -3,11 +3,11 @@ import { byteFromChar, centreSampleXs, formatByte, sampledBits, txPolyline, uart
 import styles from './UartFigure.module.css'
 
 /* viewBox geometry (user units). The plot is 12 cells of 72, so 16 ticks of 4.5 per cell. */
-const VB_W = 960
+const VB_W = 976
 const VB_H = 150
-const PLOT_X = 88
+const PLOT_X = 104
 const PLOT_W = 864
-const LANE_LABEL_X = 76
+const LANE_LABEL_X = 92
 const CLK_HIGH = 20
 const CLK_LOW = 44
 const TX_HIGH = 72

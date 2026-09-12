@@ -16,11 +16,6 @@
   border-bottom: 1px solid var(--hairline);
 }
 
-.entry:last-child dt,
-.entry:last-child dd p {
-  color: var(--text-3);
-}
-
 .note {
   margin-top: var(--s-2);
   font-size: var(--fs-meta);

@@ -21,7 +21,7 @@ export function Projects() {
               </h3>
               <p className={`t-meta ${styles.meta}`}>{lead.meta}</p>
               <p className={`t-body ${styles.desc}`}>{lead.description}</p>
-              <p className={`data ${styles.stack}`}>{lead.stack}</p>
+              <p className={`t-meta ${styles.stack}`}>{lead.stack}</p>
               {lead.link ? (
                 <ExternalLink className={`link ${styles.projectLink}`} href={lead.link.href}>
                   {lead.link.label}
@@ -51,7 +51,7 @@ export function Projects() {
             </h3>
             <p className={`t-meta ${styles.meta}`}>{second.meta}</p>
             <p className={`t-body ${styles.desc}`}>{second.description}</p>
-            <p className={`data ${styles.stack}`}>{second.stack}</p>
+            <p className={`t-meta ${styles.stack}`}>{second.stack}</p>
             {second.note ? <p className={`t-meta ${styles.note}`}>{second.note}</p> : null}
           </article>
         </div>
@@ -62,7 +62,7 @@ export function Projects() {
           </h3>
           <div>
             <p className="t-body">{third.description}</p>
-            <p className={`data ${styles.stack}`}>{third.stack}</p>
+            <p className={`t-meta ${styles.stack}`}>{third.stack}</p>
           </div>
           <div className={styles.rowMeta}>
             <p className="t-meta">{third.meta}</p>

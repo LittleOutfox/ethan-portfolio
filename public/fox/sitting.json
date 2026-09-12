@@ -1,5 +1,8 @@
 {
   "pose": "sitting",
+  "source": "art/kitsune/sitting.svg",
+  "bakedWith": "scripts/bake-fox-masks.mjs",
+  "bakedAt": "2026-09-12",
   "viewBox": {
     "width": 674,
     "height": 502
@@ -19,5 +22,14 @@
     "y": 0.199203187250996
   },
   "inkPixels": 54196,
-  "maxGeodesic": 1892
+  "maxGeodesic": 1892,
+  "poster": {
+    "file": "sitting-poster.webp",
+    "width": 1296,
+    "height": 964,
+    "points": 60000,
+    "pointSize": 8.4,
+    "renderedWith": "scripts/make-posters.mjs",
+    "renderedAt": "2026-09-12"
+  }
 }

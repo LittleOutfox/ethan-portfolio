@@ -239,7 +239,9 @@ export default function FoxField({ spec }: { spec: TierSpec }) {
       <Canvas
         flat
         dpr={[1, spec.dprCap]}
-        frameloop="never"
+        // off until there are buffers; afterwards the gates own the mode. The prop must go away then,
+        // because R3F re-applies a given prop on every re-render (a context loss triggers one)
+        frameloop={buffers ? undefined : 'never'}
         performance={{ min: 0.35, max: 1, debounce: 180 }}
         gl={{ antialias: false, alpha: true, depth: false, stencil: false, powerPreference: 'high-performance' }}
         camera={{ fov: 35, near: 0.1, far: 12 }}

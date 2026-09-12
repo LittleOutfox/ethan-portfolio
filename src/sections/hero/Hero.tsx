@@ -58,9 +58,9 @@ export function Hero() {
           <div className={styles.cell} data-plate="a">
             <img
               className={styles.poster}
-              src="/fox/sitting-bloom.webp"
+              src="/fox/sitting-poster.webp"
               width={648}
-              height={483}
+              height={482}
               alt=""
               fetchPriority="high"
               decoding="async"

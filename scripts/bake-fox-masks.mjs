@@ -283,6 +283,9 @@ for (const name of names) {
 
   const side = {
     pose: name,
+    source: `art/kitsune/${name}.svg`,
+    bakedWith: 'scripts/bake-fox-masks.mjs',
+    bakedAt: new Date().toISOString().slice(0, 10),
     viewBox: { width: meta.width, height: meta.height },
     mask: { width: outW, height: outH },
     bbox: { x: minX / W, y: minY / H, w: (maxX - minX) / W, h: (maxY - minY) / H },
