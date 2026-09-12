@@ -70,4 +70,4 @@
 
 ## Phase 7 — Final audit
 
-- [ ] ★ Adversarial workflow (AI-look, recruiter, a11y, perf, robustness); fixes; second round; impeccable finish reviewer; documenter (DESIGN.md + sidecar); README; PR v2 → main.
+- [x] ★ Adversarial workflow (AI-look, recruiter, a11y, perf, robustness); fixes; second round; impeccable finish reviewer; documenter (DESIGN.md + sidecar); README; PR v2 → main.

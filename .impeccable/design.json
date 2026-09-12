@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T00:00:00Z",
+  "title": "Design System: Ethan Tiong — portfolio",
+  "extensions": {
+    "colorMeta": {
+      "ground": { "role": "neutral", "displayName": "Midnight Ground", "canonical": "#070b14", "tonalRamp": ["#070b14", "#0b1220", "#111a2e", "#1a2742", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc"] },
+      "ground-plate": { "role": "neutral", "displayName": "Navy Plate", "canonical": "#0b1220", "tonalRamp": ["#070b14", "#0b1220", "#111a2e", "#1a2742", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc"] },
+      "ground-raised": { "role": "neutral", "displayName": "Raised Navy", "canonical": "#111a2e", "tonalRamp": ["#070b14", "#0b1220", "#111a2e", "#1a2742", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc"] },
+      "text": { "role": "neutral", "displayName": "Soft White", "canonical": "#e8eef7", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
+      "text-secondary": { "role": "neutral", "displayName": "Blue Grey", "canonical": "#a9b6cc", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
+      "text-tertiary": { "role": "neutral", "displayName": "Slate Blue", "canonical": "#7c8aa5", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
+      "moon": { "role": "tertiary", "displayName": "Moon White", "canonical": "#f4f7fb", "tonalRamp": ["#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb", "#ffffff"] },
+      "ice": { "role": "primary", "displayName": "Ice", "canonical": "#9fd8ff", "tonalRamp": ["#0a2236", "#123a5c", "#1f5a8a", "#3384bd", "#4fa8e8", "#78c2f5", "#9fd8ff", "#d6eefc"] },
+      "ice-deep": { "role": "primary", "displayName": "Deep Ice", "canonical": "#4fa8e8", "tonalRamp": ["#0a2236", "#123a5c", "#1f5a8a", "#3384bd", "#4fa8e8", "#78c2f5", "#9fd8ff", "#d6eefc"] },
+      "violet": { "role": "secondary", "displayName": "Tail-Tip Violet", "canonical": "#b9a7f0", "tonalRamp": ["#1c1633", "#2f2656", "#4a3d85", "#6f5fb3", "#9484d4", "#b9a7f0", "#d3c8f6", "#ebe5fb"] },
+      "snow": { "role": "tertiary", "displayName": "Released Snow", "canonical": "#c9d8ea", "tonalRamp": ["#111a2e", "#2a3a5a", "#4a5d80", "#7c8aa5", "#a9b6cc", "#c9d8ea", "#e8eef7", "#f4f7fb"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline 14%", "canonical": "rgb(159 216 255 / 0.14)" },
+      "hairline-strong": { "role": "neutral", "displayName": "Hairline 28%", "canonical": "rgb(159 216 255 / 0.28)" },
+      "mist": { "role": "neutral", "displayName": "Mist 6%", "canonical": "rgb(159 216 255 / 0.06)" },
+      "scrim": { "role": "neutral", "displayName": "Hero Scrim", "canonical": "rgb(7 11 20 / 0.72)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The name, once. Newsreader with optical sizing, ~80px at 1440." },
+      "heading": { "displayName": "Heading", "purpose": "Section h2s; 3rem below before content." },
+      "heading-quiet": { "displayName": "Heading Quiet", "purpose": "The Off the clock h2 set beside its list; also menu-sheet link size." },
+      "title": { "displayName": "Title", "purpose": "Project titles and skill names." },
+      "lede": { "displayName": "Lede", "purpose": "The first About paragraph." },
+      "role": { "displayName": "Role line", "purpose": "The hero role line; the only place Ice is text." },
+      "body": { "displayName": "Body", "purpose": "Standfirst, bio, descriptions, skill lines; 44ch / 62ch / 60ch measures." },
+      "meta": { "displayName": "Meta", "purpose": "Project meta and stack lines, status, colophon, dt terms." },
+      "label": { "displayName": "Label", "purpose": "Form labels, hobby names, nav links, button and action text. Never uppercase." },
+      "note": { "displayName": "Note", "purpose": "Italic serif aside under a skill." },
+      "data": { "displayName": "Data", "purpose": "Years, measured parameters, byte input and readout. Never headings or prose." },
+      "signature": { "displayName": "Signature", "purpose": "The footer mark 以狐为引, aria-hidden, Noto Serif SC subset." }
+    },
+    "shadows": [
+      { "name": "nav-edge", "value": "0 1px 0 rgb(159 216 255 / 0.14)", "purpose": "The scrolled nav's bottom hairline. The system has no drop shadows." },
+      { "name": "focus-halo", "value": "0 0 0 5px #070b14", "purpose": "Ground-coloured halo under the 2px ice focus outline so the ring separates from whatever is beneath." }
+    ],
+    "motion": [
+      { "name": "ease-move", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Movement: the skip link's slide." },
+      { "name": "ease-fade", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Fades: colour, border, background, poster opacity." },
+      { "name": "t-1", "value": "140ms", "purpose": "Hover and active feedback on links, buttons, nav items, inputs, ledger rows." },
+      { "name": "t-2", "value": "280ms", "purpose": "Nav fill on scroll; skip link reveal." },
+      { "name": "t-3", "value": "720ms", "purpose": "Poster-to-live crossfade." },
+      { "name": "reduced-motion", "value": "t-1, t-2, t-3 = 0ms; scroll-behavior auto", "purpose": "prefers-reduced-motion collapses every duration; the field renders one still, page-anchored frame." },
+      { "name": "field-smoothing", "value": "k = 1 - 0.001^dt (~100ms time constant)", "purpose": "Every scrubbed field value is integrated toward its target, never snapped." },
+      { "name": "field-resolve", "value": "~1.8s arrival, once per visit", "purpose": "The fox forms nose-first on first load." },
+      { "name": "field-release", "value": "formA 1.3 → -0.3 over first 80% viewport of scroll (desktop) or as the hero figure leaves (phones)", "purpose": "Tail tips let go first along an arc." },
+      { "name": "field-gather", "value": "formB -0.3 → 1.3 as #contact moves from 140% to 20% of the viewport; poster handover at 0.35", "purpose": "The bowing fox gathers beside Contact." },
+      { "name": "field-quiet", "value": "fade 1 → 0 from #skills top 85% to 30%; loop sleeps at 0", "purpose": "The field is absent through Skills and Off the clock." },
+      { "name": "moon-wash", "value": "--light-x 0.12 → 0.85 over the whole page, transform only", "purpose": "One moon crosses the sky by the bottom; shader uLightX shares the value." },
+      { "name": "idle-pulse", "value": "every 6s nose-to-tail", "purpose": "A luminance packet runs along the strokes." },
+      { "name": "pointer-pulse", "value": "ring at 900px/s, 60px width, exp(-1.4t) decay, ≤1 per 400ms", "purpose": "Pointer over a plate injects a pulse; off under Pause or reduced motion." },
+      { "name": "dom-static", "value": "none", "purpose": "The DOM never animates in: no entrance, stagger or scroll reveal." }
+    ],
+    "breakpoints": [
+      { "name": "hero-columns", "value": "1280px", "purpose": "Below: title block spans 6 columns, plate 7–12; project plate goes full width." },
+      { "name": "single-column", "value": "960px", "purpose": "Below: one column, menu sheet replaces inline nav, fox is a full-bleed figure below the actions, release follows the figure." },
+      { "name": "nav-scrolled", "value": "48px scroll", "purpose": "Header fills to ground 92% with a hairline edge." }
+    ],
+    "tiers": [
+      { "name": "high", "points": 60000, "dprCap": 1.75, "pointSize": 4.2, "gather": true },
+      { "name": "medium", "points": 34000, "dprCap": 1.5, "pointSize": 4.2, "gather": true },
+      { "name": "low", "points": 16000, "dprCap": 1.25, "pointSize": 3.8, "gather": false, "note": "hero only; field fades out past About; Contact stays a poster" },
+      { "name": "none", "note": "no WebGL2, software rasteriser, Save-Data, or ?tier=none; posters only" },
+      { "name": "query-params", "note": "?tier=high|medium|low|none forces a tier; ?motion=reduce forces the reduced-motion path" }
+    ],
+    "accessibility": [
+      "Skip link to #main, fixed top-left, revealed on focus-visible",
+      "Landmarks: header, nav (Sections / Menu), main#main tabindex=-1, footer contentinfo; every section aria-labelledby its h2",
+      "44px minimum hit height on every control (--control-h); 56px rows in the menu sheet",
+      "Focus ring: 2px ice outline, 3px offset, 5px ground halo, 2px radius",
+      "scroll-padding-top: 64px + 1rem on html (WCAG 2.4.11)",
+      "Pause motion control (WCAG 2.2.2), persisted in localStorage key 'motion'; label carries state",
+      "prefers-reduced-motion: durations 0ms, scroll-behavior auto, field drift 0, one still frame redrawn on scroll/resize",
+      "Fox plates aria-hidden; posters alt=''; external links append '(opens in a new tab)'",
+      "Body text ≥ 4.5:1 on rendered navy; hero scrim keeps points from passing under type",
+      "Readable with JavaScript off (html.no-js: static header, inline links) and WebGL off (posters)",
+      "Byte input at 1rem so iOS does not zoom on focus"
+    ],
+    "rasterProvenance": [
+      { "file": "public/fox/sitting.png", "from": "art/kitsune/sitting.svg", "by": "scripts/bake-fox-masks.mjs", "at": "2026-09-12", "sidecar": "public/fox/sitting.json" },
+      { "file": "public/fox/bowing.png", "from": "art/kitsune/bowing.svg", "by": "scripts/bake-fox-masks.mjs", "at": "2026-09-12", "sidecar": "public/fox/bowing.json" },
+      { "file": "public/fox/sitting-poster.webp", "from": "public/fox/sitting.png", "by": "scripts/make-posters.mjs", "at": "2026-09-12", "params": "60000 points, 8.4px at 2x, 1296×964" },
+      { "file": "public/fox/bowing-poster.webp", "from": "public/fox/bowing.png", "by": "scripts/make-posters.mjs", "at": "2026-09-12", "params": "60000 points, 8.4px at 2x, 1296×1154" },
+      { "file": "public/favicon.svg, favicon-32.png, favicon-64.png, apple-touch-icon.png", "from": "art/kitsune/sitting.svg (head crop)", "by": "scripts/make-favicons.mjs", "params": "ink #e8eef7 on #070b14" },
+      { "file": "public/og.png", "from": "capture of the finished hero", "by": "none (commit bafc2f3)", "params": "1200×630" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Outlined Button",
+      "kind": "button",
+      "refersTo": "button-outlined",
+      "description": "The one outlined control on the page (View résumé), with the drawn external-link icon.",
+      "html": "<a class=\"ds-button\" href=\"#\">View résumé<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6.5 3.5H3.5v9h9V9.5\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linecap=\"square\"/><path d=\"M9 3.5h3.5V7M12.5 3.5 7.5 8.5\" stroke=\"currentColor\" stroke-width=\"1.25\" stroke-linecap=\"square\"/></svg></a>",
+      "css": ".ds-button { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0 1.5rem; border: 1px solid rgb(159 216 255 / 0.28); border-radius: 2px; background: transparent; color: #e8eef7; font-family: 'Schibsted Grotesk', Arial, sans-serif; font-weight: 500; font-size: 0.9375rem; letter-spacing: 0.01em; text-decoration: none; transition: background-color 140ms cubic-bezier(0.25,1,0.5,1), border-color 140ms cubic-bezier(0.25,1,0.5,1), color 140ms cubic-bezier(0.25,1,0.5,1); } .ds-button:hover { background: #111a2e; border-color: rgb(159 216 255 / 0.45); color: #f4f7fb; } .ds-button:active { background: #111a2e; } .ds-button:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; box-shadow: 0 0 0 5px #070b14; }"
+    },
+    {
+      "name": "Text Link",
+      "kind": "custom",
+      "refersTo": "link-text",
+      "description": "Underlined in deep ice; text and underline brighten to ice on hover.",
+      "html": "<a class=\"ds-link\" href=\"#\">GitHub<span class=\"ds-vh\"> (opens in a new tab)</span></a>",
+      "css": ".ds-link { color: #e8eef7; font-family: 'Schibsted Grotesk', Arial, sans-serif; font-size: 0.9375rem; font-weight: 500; text-decoration: underline; text-decoration-color: #4fa8e8; text-decoration-thickness: 1px; text-underline-offset: 0.18em; transition: color 140ms cubic-bezier(0.25,1,0.5,1), text-decoration-color 140ms cubic-bezier(0.25,1,0.5,1); } .ds-link:hover, .ds-link:active { color: #9fd8ff; text-decoration-color: #9fd8ff; } .ds-link:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; box-shadow: 0 0 0 5px #070b14; border-radius: 2px; } .ds-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }"
+    },
+    {
+      "name": "Navigation Bar",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Fixed 64px bar: serif wordmark left, label-weight section links and the Pause control right; fills to ground 92% once scrolled.",
+      "html": "<header class=\"ds-nav ds-nav--scrolled\"><a class=\"ds-nav-wordmark\" href=\"#\">Ethan Tiong</a><nav><a class=\"ds-nav-link\" href=\"#\">About</a><a class=\"ds-nav-link\" href=\"#\">Experience</a><a class=\"ds-nav-link\" href=\"#\">Projects</a><a class=\"ds-nav-link\" href=\"#\">Skills</a><a class=\"ds-nav-link\" href=\"#\">Contact</a><a class=\"ds-nav-link\" href=\"#\">Résumé</a></nav><button class=\"ds-nav-pause\" type=\"button\">Pause motion</button></header>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 2rem; height: 64px; padding: 0 1.5rem; background: transparent; font-family: 'Schibsted Grotesk', Arial, sans-serif; transition: background-color 280ms cubic-bezier(0.25,1,0.5,1); } .ds-nav--scrolled { background: rgb(7 11 20 / 0.92); box-shadow: 0 1px 0 rgb(159 216 255 / 0.14); } .ds-nav-wordmark { margin-right: auto; display: inline-flex; align-items: center; min-height: 44px; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.0625rem; letter-spacing: 0.005em; color: #f4f7fb; text-decoration: none; } .ds-nav nav { display: flex; gap: 0.5rem; } .ds-nav-link, .ds-nav-pause { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.75rem; font: inherit; font-weight: 500; font-size: 0.9375rem; letter-spacing: 0.01em; color: #a9b6cc; text-decoration: none; background: none; border: 0; border-radius: 2px; cursor: pointer; transition: color 140ms cubic-bezier(0.25,1,0.5,1); } .ds-nav-pause { color: #7c8aa5; margin-left: 1rem; } .ds-nav-link:hover, .ds-nav-pause:hover { color: #f4f7fb; } .ds-nav-link:active, .ds-nav-pause:active, .ds-nav-pause[data-paused] { color: #9fd8ff; } .ds-nav-link:focus-visible, .ds-nav-pause:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; box-shadow: 0 0 0 5px #070b14; }"
+    },
+    {
+      "name": "Hairline Ledger Row",
+      "kind": "card",
+      "refersTo": "hairline-row",
+      "description": "The Experience ledger: a 28% rule opens the list, each row closes with a 14% rule; year in Data, organisation in Text, role in Text Secondary.",
+      "html": "<ol class=\"ds-ledger\"><li class=\"ds-row\"><span class=\"ds-data\">2025</span><span class=\"ds-org\">Organisation</span><span class=\"ds-role\">Role title</span></li><li class=\"ds-row\" data-projected><span class=\"ds-data\">2027</span><span class=\"ds-org\">Organisation</span><span class=\"ds-role\">Role title <span class=\"ds-meta\">(expected)</span></span></li></ol>",
+      "css": ".ds-ledger { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgb(159 216 255 / 0.28); font-family: 'Schibsted Grotesk', Arial, sans-serif; } .ds-row { display: grid; grid-template-columns: 7rem minmax(0, 14rem) minmax(0, 1fr); column-gap: 1.5rem; align-items: baseline; min-height: 4.5rem; padding: 1.5rem 0; border-bottom: 1px solid rgb(159 216 255 / 0.14); } .ds-row[data-projected] { border-top: 1px dashed rgb(159 216 255 / 0.28); margin-top: -1px; } .ds-row[data-projected] .ds-org, .ds-row[data-projected] .ds-role { color: #7c8aa5; } .ds-data { font-family: 'Azeret Mono', Consolas, monospace; font-size: 0.8125rem; line-height: 1.5; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; color: #7c8aa5; } .ds-org { font-weight: 500; font-size: 1.0625rem; color: #e8eef7; } .ds-role { font-size: 1.0625rem; color: #a9b6cc; } .ds-meta { font-size: 0.9375rem; color: #7c8aa5; }"
+    },
+    {
+      "name": "Project Plate",
+      "kind": "card",
+      "refersTo": "project-plate",
+      "description": "The one raised surface: navy at 60% with top and bottom strong hairlines, no side borders, no radius; title, meta, body, stack line as meta, and a Data spec list.",
+      "html": "<article class=\"ds-plate\"><div><h3 class=\"ds-title\">focus-or-fry</h3><p class=\"ds-meta\">FPGA telemetry processing · Artix-7</p><p class=\"ds-body\">An end-to-end FPGA telemetry-processing system with a UART core and self-checking testbenches.</p><p class=\"ds-meta\">SystemVerilog · Vivado · Basys 3</p></div><ul class=\"ds-specs\"><li>100 MHz system clock</li><li>115200 baud, 8N1</li><li>16× oversampling</li><li>64-entry TX / RX FIFOs</li></ul></article>",
+      "css": ".ds-plate { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 3rem; padding: 3rem 2rem; background: rgb(11 18 32 / 0.6); border-top: 1px solid rgb(159 216 255 / 0.28); border-bottom: 1px solid rgb(159 216 255 / 0.28); font-family: 'Schibsted Grotesk', Arial, sans-serif; color: #e8eef7; } .ds-title { margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 430; font-size: clamp(1.375rem, 1.8vw, 1.75rem); line-height: 1.2; color: #e8eef7; } .ds-meta { margin: 0.25rem 0 0; font-size: 0.9375rem; line-height: 1.5; color: #7c8aa5; } .ds-body { margin: 1rem 0 0; max-width: 60ch; font-size: 1.0625rem; line-height: 1.65; color: #a9b6cc; } .ds-body + .ds-meta { margin-top: 1rem; color: #a9b6cc; } .ds-specs { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgb(159 216 255 / 0.14); } .ds-specs li { padding: 0.5rem 0; border-bottom: 1px solid rgb(159 216 255 / 0.14); font-family: 'Azeret Mono', Consolas, monospace; font-size: 0.8125rem; line-height: 1.5; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; color: #a9b6cc; }"
+    },
+    {
+      "name": "Byte Input",
+      "kind": "input",
+      "refersTo": "input-byte",
+      "description": "The UART figure's single-character input with its label and Data readout; 1rem so iOS does not zoom.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-byte\">Byte to send</label><input class=\"ds-input\" id=\"ds-byte\" type=\"text\" maxlength=\"1\" value=\"E\"><span class=\"ds-readout\">0x45 · 0b01000101</span></div>",
+      "css": ".ds-field { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; font-family: 'Schibsted Grotesk', Arial, sans-serif; } .ds-label { font-weight: 500; font-size: 0.9375rem; line-height: 1.4; letter-spacing: 0.01em; color: #e8eef7; } .ds-input { width: 3.5rem; height: 44px; padding: 0; text-align: center; font-family: 'Azeret Mono', Consolas, monospace; font-size: 1rem; line-height: 1; color: #e8eef7; background: #0b1220; border: 1px solid rgb(159 216 255 / 0.28); border-radius: 2px; appearance: none; transition: border-color 140ms cubic-bezier(0.25,1,0.5,1); } .ds-input:hover { border-color: rgb(159 216 255 / 0.45); } .ds-input:focus { outline: none; } .ds-input:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; box-shadow: 0 0 0 5px #070b14; } .ds-readout { font-family: 'Azeret Mono', Consolas, monospace; font-size: 0.8125rem; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; color: #a9b6cc; white-space: nowrap; }"
+    },
+    {
+      "name": "Menu Sheet",
+      "kind": "nav",
+      "refersTo": "menu-sheet",
+      "description": "The phone navigation: a native dialog filling the viewport in plate navy, with a hairline list of 56px serif rows.",
+      "html": "<div class=\"ds-sheet\"><div class=\"ds-sheet-top\"><span class=\"ds-sheet-wordmark\">Ethan Tiong</span><button class=\"ds-sheet-close\" type=\"button\">Close</button></div><ul class=\"ds-sheet-list\"><li><a href=\"#\">About</a></li><li><a href=\"#\">Experience</a></li><li><a href=\"#\">Projects</a></li><li><a href=\"#\">Skills</a></li><li><a href=\"#\">Contact</a></li><li><button class=\"ds-sheet-pause\" type=\"button\">Pause motion</button></li></ul></div>",
+      "css": ".ds-sheet { background: #0b1220; color: #e8eef7; padding: 0 1.25rem 1rem; font-family: 'Schibsted Grotesk', Arial, sans-serif; } .ds-sheet-top { display: flex; align-items: center; justify-content: space-between; height: 64px; } .ds-sheet-wordmark { font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 1.0625rem; color: #f4f7fb; } .ds-sheet-close { min-height: 44px; padding: 0 0.75rem; font: inherit; font-weight: 500; font-size: 0.9375rem; color: #e8eef7; background: none; border: 0; cursor: pointer; } .ds-sheet-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgb(159 216 255 / 0.14); } .ds-sheet-list li { border-bottom: 1px solid rgb(159 216 255 / 0.14); } .ds-sheet-list a { display: flex; align-items: center; min-height: 56px; font-family: Newsreader, Georgia, serif; font-size: 1.5rem; color: #e8eef7; text-decoration: none; } .ds-sheet-pause { display: flex; align-items: center; min-height: 56px; width: 100%; padding: 0; font: inherit; font-size: 1.0625rem; color: #a9b6cc; background: none; border: 0; text-align: left; cursor: pointer; } .ds-sheet-pause[data-paused] { color: #9fd8ff; } .ds-sheet a:focus-visible, .ds-sheet button:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 3px; box-shadow: 0 0 0 5px #070b14; border-radius: 2px; }"
+    },
+    {
+      "name": "Hero Facts",
+      "kind": "custom",
+      "refersTo": "hairline-row",
+      "description": "The run-in definition list under the standfirst: meta-weight terms, text-weight values, one hairline under the whole group.",
+      "html": "<dl class=\"ds-facts\"><div><dt>Program</dt><dd>Electrical Engineering, University of Waterloo</dd></div><div><dt>Based</dt><dd>Greater Toronto, open to relocate</dd></div><div><dt>Status</dt><dd>Open, Winter 2027 co-op</dd></div></dl>",
+      "css": ".ds-facts { display: grid; grid-template-columns: max-content 1fr; column-gap: 1.5rem; row-gap: 0.5rem; margin: 0; padding-bottom: 1.5rem; border-bottom: 1px solid rgb(159 216 255 / 0.14); font-family: 'Schibsted Grotesk', Arial, sans-serif; } .ds-facts > div { display: contents; } .ds-facts dt { font-size: 0.9375rem; line-height: 1.55; color: #7c8aa5; } .ds-facts dd { margin: 0; font-size: 1.0625rem; line-height: 1.55; color: #e8eef7; }"
+    },
+    {
+      "name": "Fox Plate",
+      "kind": "custom",
+      "refersTo": "project-plate",
+      "description": "The cell the point field anchors to: a 512:381 box with the poster beneath and a 1px strong hairline ground rule. The live points fade the poster out over 720ms.",
+      "html": "<div class=\"ds-fox\" aria-hidden=\"true\"><div class=\"ds-fox-cell\"><img class=\"ds-fox-poster\" src=\"/fox/sitting-poster.webp\" alt=\"\" width=\"648\" height=\"482\"></div><div class=\"ds-fox-rule\"></div></div>",
+      "css": ".ds-fox { position: relative; max-width: 648px; } .ds-fox-cell { position: relative; overflow: hidden; width: 100%; aspect-ratio: 512 / 381; background: #070b14; } .ds-fox-poster { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: fill; opacity: 1; transition: opacity 720ms cubic-bezier(0.25,1,0.5,1); } .ds-fox-cell[data-live] .ds-fox-poster { opacity: 0; } .ds-fox-rule { height: 1px; background: rgb(159 216 255 / 0.28); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A datasheet in moonlight",
+    "overview": "The page is a calmly set document in the grammar a hardware hiring manager reads daily (a title block, hairline ledgers, one raised plate, a timing figure) laid on a midnight-navy sheet. The only light on the page is a field of cold points that forms the author's own sitting fox in the first viewport, releases into traces and snow as the reader scrolls, and gathers again as the bowing fox beside Contact. One moon wash crosses the sky over the length of the page; a mist band rests in the lower viewport. Everything else is ink on paper: text, 1 px ice-tinted rules, and a single outlined control.\n\nDensity is editorial rather than dashboard: wide gutters, a 12-column grid, fixed measures per role (44ch hero standfirst, 62ch bio, 60ch project description), and more space above a heading than below it. The DOM never animates in. Nothing fades up, slides, or staggers; the only things that move are the point field (scrubbed to scroll, never timed), the moon wash (scroll-driven transform), and feedback transitions on hover and focus. Under Pause or reduced motion the field renders one still, page-anchored frame.\n\nRecorded as the world's refusals, each confirmed by the shipped build: no cards, no radius above 2 px, no gradient text, no blur, no glass, no drop shadows, no eyebrow labels, no section numbers or chapter names, no glyph icons, no purple glow.",
+    "keyCharacteristics": [
+      "Ice #9fd8ff is illumination. It is text exactly once (the hero role line) and otherwise lives in the point field, the hairlines (at 14% and 28%), focus rings and link underlines.",
+      "Violet #b9a7f0 appears only at the fox's tail-tip points and in ::selection.",
+      "One luminance ramp: tone is point density; the densest overlap is the highlight; there is no separate glow pass and no CSS glow.",
+      "Hairline rows (1px solid at 14%, a 28% rule to open a list) are the one structural grammar shared by ledgers, spec lists, the facts dl, the footer and the fox's ground rule.",
+      "Two curves, three durations: cubic-bezier(0.16, 1, 0.3, 1) for movement, cubic-bezier(0.25, 1, 0.5, 1) for fades; 140 / 280 / 720 ms; all three collapse to 0 ms under prefers-reduced-motion.",
+      "Every shipped raster is derived from the author's drawings by a checked-in script and carries its provenance."
+    ],
+    "rules": [
+      { "name": "The One Ice Line Rule", "body": "Ice is set as text exactly once on the page: the hero role line. Every other appearance of Ice is illumination (points, hairlines, underlines, focus), never copy.", "section": "colors" },
+      { "name": "The Tail-Tip Rule", "body": "Violet is never a UI colour. It exists in the tail tips of the fox and in ::selection, and nothing else may borrow it.", "section": "colors" },
+      { "name": "The Navy, Never Grey Rule", "body": "Every ground is a blue-black (#070b14, #0b1220, #111a2e). No neutral grey surface, no pure black, no white surface.", "section": "colors" },
+      { "name": "The Data-Only Mono Rule", "body": "Azeret Mono is reserved for measurements, years and identifiers. It never sets a heading, a label or a sentence.", "section": "typography" },
+      { "name": "The Measure-Per-Course Rule", "body": "Each course of text has a fixed measure matched to its role: 44ch for the hero standfirst, 62ch for the bio, 60ch for a project description.", "section": "typography" },
+      { "name": "The No-Eyebrow Rule", "body": "Headings stand alone. No kicker, eyebrow, section number or uppercase tracking above them; hierarchy is carried by size, face and space.", "section": "typography" },
+      { "name": "The No Glow Pass Rule", "body": "Tone is point density. The field's brightness comes from overlapping two-lobe sprites (tight core, 12% halo) drawn additively; there is no bloom, no CSS filter, no backdrop-filter, no text-shadow.", "section": "elevation" },
+      { "name": "The Grain Only in the Mist Rule", "body": "The 1.5% noise lives on the mist band's pseudo-element and nowhere else. The ground, plate and sheet are clean.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do set every rule as 1px solid ice at 14% (dividers) or 28% (openers, borders, the ground rule); open a list with the strong rule and close each row with the light one.",
+      "Do keep the DOM static: no entrance animation, no stagger, no scroll-triggered reveal. Motion belongs to the point field, the moon wash's transform, and 140 ms hover/focus fades.",
+      "Do use exactly two curves and three durations: cubic-bezier(0.16, 1, 0.3, 1) for movement, cubic-bezier(0.25, 1, 0.5, 1) for fades; 140 / 280 / 720 ms; all zero under reduced motion.",
+      "Do give every interactive element a 44 px minimum hit height and the global focus ring (2 px ice, 3 px offset, 5 px ground halo).",
+      "Do label state in words (\"Pause motion\" / \"Resume motion\", \"(expected)\", \"(opens in a new tab)\"), never by colour alone.",
+      "Do set measurements, years and identifiers in Data (Azeret Mono, tabular) and everything read in Schibsted Grotesk.",
+      "Do keep the fox anchored to a DOM plate with a hairline ground rule and a poster beneath; a new pose needs a mask, a sidecar and a poster from the same scripts.",
+      "Do keep scroll-padding-top at nav height + 1rem and the skip link, main, and footer landmarks intact."
+    ],
+    "donts": [
+      "Don't set Ice as text anywhere but the hero role line, and don't use Violet outside tail tips and ::selection.",
+      "Don't add cards, glass, blur, backdrop-filter, drop shadows, gradient text, or any radius above 2 px.",
+      "Don't add eyebrows, kickers, section numbers, chapter names or uppercase tracked labels above headings.",
+      "Don't use glyph or icon-font icons; draw them at 1.25 stroke with square caps in currentColor.",
+      "Don't add a glow pass, bloom, text-shadow or CSS glow; the field's tone is density alone.",
+      "Don't let grain appear outside the mist band, or raise it above 1.5%.",
+      "Don't animate the field on a clock when Pause or reduced motion is active; render one still frame per scroll or resize.",
+      "Don't use a grey, black or white surface; every ground is one of the three navies.",
+      "Don't ship a raster without a generating script and recorded provenance."
+    ]
+  }
+}
