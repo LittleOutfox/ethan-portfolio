@@ -1,0 +1,55 @@
+/* Self-hosted fonts, instanced to the weights this page uses and subset to Latin-1 plus
+   punctuation (scripts/make-fonts.py). Swap with metric-matched
+   fallbacks; only the display and body faces are preloaded (index.html). */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400 520;
+  font-display: swap;
+  src: url('/fonts/newsreader.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/newsreader-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('/fonts/schibsted-grotesk-wght.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Azeret Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/azeret-mono-wght.woff2') format('woff2');
+}
+/* subset to the glyphs this site uses (以狐为引) */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 200 400;
+  font-display: swap;
+  src: url('/fonts/noto-sc.woff2') format('woff2');
+}
+
+/* metric fallbacks: keep the swap from shifting layout */
+@font-face {
+  font-family: 'Newsreader Fallback';
+  src: local('Times New Roman'), local('Georgia');
+  size-adjust: 104%;
+  ascent-override: 92%;
+  descent-override: 24%;
+}
+@font-face {
+  font-family: 'Schibsted Fallback';
+  src: local('Arial'), local('Helvetica');
+  size-adjust: 98%;
+  ascent-override: 96%;
+  descent-override: 24%;
+}

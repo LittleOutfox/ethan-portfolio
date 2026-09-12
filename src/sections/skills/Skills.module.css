@@ -1,0 +1,32 @@
+.skills {
+  position: relative;
+}
+
+.list {
+  border-top: 1px solid var(--hairline-strong);
+  max-width: calc(9 / 12 * 100%);
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+  column-gap: var(--col-gap);
+  align-items: baseline;
+  padding: var(--s-5) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.note {
+  margin-top: var(--s-2);
+  font-size: var(--fs-meta);
+}
+
+@media (max-width: 959px) {
+  .list {
+    max-width: none;
+  }
+  .entry {
+    grid-template-columns: 1fr;
+    row-gap: var(--s-2);
+  }
+}

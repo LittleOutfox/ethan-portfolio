@@ -1,0 +1,128 @@
+/* a larger interval before the work: the page changes tempo here */
+.projects {
+  position: relative;
+  padding-top: var(--space-section-large);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  align-items: start;
+}
+
+/* the one raised plate on the page: top and bottom hairlines, no side borders, no radius */
+.plate {
+  grid-column: 1 / span 8;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--s-7) var(--s-7);
+  padding: var(--s-7) var(--s-6);
+  margin-left: calc(-1 * var(--s-6));
+  background: rgb(11 18 32 / 0.6);
+  border-top: 1px solid var(--hairline-strong);
+  border-bottom: 1px solid var(--hairline-strong);
+}
+
+.plateText {
+  min-width: 0;
+}
+
+.plateSide {
+  min-width: 0;
+  display: grid;
+  gap: var(--s-6);
+  align-content: start;
+}
+
+.aside {
+  grid-column: 10 / -1;
+  padding-top: var(--s-7);
+}
+
+.meta {
+  margin-top: var(--s-1);
+}
+
+.desc {
+  margin-top: var(--s-4);
+  max-width: var(--measure-project);
+}
+
+.stack {
+  margin-top: var(--s-4);
+  color: var(--text-2);
+}
+
+.note {
+  margin-top: var(--s-3);
+}
+
+.projectLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+  min-height: var(--control-h);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+}
+
+.specs {
+  border-top: 1px solid var(--hairline);
+}
+
+.specs li {
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-2);
+}
+
+/* the figure spans the whole plate beneath the text and the parameters */
+.figure {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+/* the third project: one hairline row */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr) minmax(0, 2fr);
+  column-gap: var(--col-gap);
+  align-items: start;
+  padding: var(--s-7) 0;
+  margin-top: var(--s-7);
+  border-top: 1px solid var(--hairline-strong);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.rowMeta {
+  display: grid;
+  justify-items: start;
+}
+
+@media (max-width: 1279px) {
+  .plate {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+  .aside {
+    grid-column: 1 / span 8;
+  }
+}
+
+@media (max-width: 959px) {
+  .plate {
+    grid-template-columns: 1fr;
+    padding: var(--s-6) var(--s-4);
+    margin-inline: calc(-1 * var(--s-4));
+  }
+  .aside {
+    grid-column: 1 / -1;
+    padding-top: var(--s-6);
+  }
+  .row {
+    grid-template-columns: 1fr;
+    row-gap: var(--s-4);
+  }
+}

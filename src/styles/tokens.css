@@ -1,0 +1,94 @@
+:root {
+  color-scheme: dark;
+
+  /* ground and text: midnight navy, blue-black, never grey */
+  --ground: #070b14;
+  --ground-2: #0b1220;
+  --ground-3: #111a2e;
+  --text: #e8eef7;
+  --text-2: #a9b6cc;
+  --text-3: #7c8aa5;
+  --moon: #f4f7fb;
+
+  /* light: ice is the illumination colour; it appears as text exactly once (the hero role line) */
+  --ice: #9fd8ff;
+  --ice-deep: #4fa8e8;
+  --violet: #b9a7f0;
+  --ice-rgb: 159 216 255;
+  --ground-rgb: 7 11 20;
+
+  --hairline: rgb(var(--ice-rgb) / 0.14);
+  --hairline-strong: rgb(var(--ice-rgb) / 0.28);
+  --scrim: rgb(var(--ground-rgb) / 0.72);
+  --focus: var(--ice);
+
+  /* type families */
+  --font-display: 'Newsreader', 'Times New Roman', Georgia, serif;
+  --font-body: 'Schibsted Grotesk', Arial, Helvetica, sans-serif;
+  --font-data: 'Azeret Mono', Consolas, 'Courier New', monospace;
+  --font-cjk: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+
+  /* type roles: one token each, identical in every section */
+  --fs-display: clamp(2.75rem, 5.6vw, 5.5rem);
+  --fs-heading: clamp(2rem, 3.4vw, 3rem);
+  --fs-heading-quiet: clamp(1.5rem, 2.4vw, 1.75rem);
+  --fs-title: clamp(1.375rem, 1.8vw, 1.75rem);
+  --fs-lede: 1.375rem;
+  --fs-role: 1.375rem;
+  --fs-body: 1.0625rem;
+  --fs-meta: 0.9375rem;
+  --fs-data: 0.8125rem;
+
+  --lh-display: 0.98;
+  --lh-heading: 1.06;
+  --lh-title: 1.2;
+  --lh-body: 1.65;
+  --lh-tight: 1.35;
+
+  --measure-hero: 44ch;
+  --measure-bio: 62ch;
+  --measure-project: 60ch;
+
+  /* spacing: 4px base, semantic steps */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+  --s-10: 8rem;
+  --space-section: clamp(5rem, 9vw, 7.5rem);
+  --space-section-large: clamp(8rem, 16vw, 14rem);
+  --space-section-tight: clamp(3.5rem, 6vw, 5rem);
+  --space-block: var(--s-7);
+  --space-group: var(--s-5);
+  --space-inline: var(--s-3);
+
+  /* grid */
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  --col-gap: 1.5rem;
+  --content-max: 1560px;
+  --nav-h: 64px;
+
+  /* motion: two curves, three durations */
+  --ease-move: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-fade: cubic-bezier(0.25, 1, 0.5, 1);
+  --t-1: 140ms;
+  --t-2: 280ms;
+  --t-3: 720ms;
+
+  /* form */
+  --radius: 2px;
+  --control-h: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-1: 0ms;
+    --t-2: 0ms;
+    --t-3: 0ms;
+  }
+}

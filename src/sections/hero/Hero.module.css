@@ -1,0 +1,192 @@
+.hero {
+  position: relative;
+  min-height: 100svh;
+  padding-top: var(--nav-h);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  min-height: calc(100svh - var(--nav-h));
+  align-items: end;
+}
+
+/* title block: columns 1–5, vertically centred with a quiet lower-left beneath the actions */
+.block {
+  position: relative;
+  grid-column: 1 / span 5;
+  align-self: center;
+  padding-block: var(--s-8) 14svh;
+  max-width: 34rem;
+}
+
+/* a feathered navy scrim under the type block so field points never pass under text below 4.5:1 */
+.block::before {
+  content: '';
+  position: absolute;
+  inset: -4rem -8rem -4rem calc(-1 * var(--gutter) - 2rem);
+  background: radial-gradient(ellipse 70% 60% at 35% 50%, var(--scrim), transparent 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.role {
+  margin-top: var(--s-4);
+  font-weight: 500;
+  font-size: var(--fs-role);
+  line-height: var(--lh-tight);
+  color: var(--ice);
+}
+
+.standfirst {
+  margin-top: var(--s-5);
+  max-width: var(--measure-hero);
+}
+
+/* run-in facts: one hairline under the whole group */
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: var(--s-5);
+  row-gap: var(--s-2);
+  margin-top: var(--s-6);
+  padding-bottom: var(--s-5);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.facts > div {
+  display: contents;
+}
+
+.facts dt {
+  font-size: var(--fs-meta);
+  color: var(--text-3);
+  line-height: 1.55;
+}
+
+.facts dd {
+  font-size: var(--fs-body);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+/* two deliberate rows: the one outlined control, then the three text links */
+.actions {
+  display: grid;
+  justify-items: start;
+  row-gap: var(--s-3);
+  margin-top: var(--s-5);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-6);
+}
+
+.actions :global(.link) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+}
+
+/* the plate: columns 6–12, standing on a hairline ground rule */
+.plate {
+  grid-column: 6 / -1;
+  align-self: end;
+  margin-bottom: 15svh;
+  position: relative;
+}
+
+.cell {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 512 / 381;
+}
+
+/* the same stipple the shader draws, rendered offline from the same mask (scripts/make-posters.mjs);
+   it fills the cell exactly as the live points do, so the crossfade is invisible */
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  opacity: 1;
+  transition: opacity var(--t-3) var(--ease-fade);
+}
+
+.cell[data-live] .poster {
+  opacity: 0;
+}
+
+.rule {
+  height: 1px;
+  background: var(--hairline-strong);
+}
+
+@media (max-width: 1279px) {
+  .block {
+    grid-column: 1 / span 6;
+  }
+  .plate {
+    grid-column: 7 / -1;
+  }
+}
+
+/* phones and small tablets: a single column where the fox is a figure between the text and the
+   actions, so type never sits over points */
+@media (max-width: 959px) {
+  .hero {
+    min-height: auto;
+  }
+  .grid {
+    min-height: auto;
+    row-gap: 0;
+  }
+  .grid > *,
+  .block > * {
+    grid-column: 1 / -1;
+  }
+  .block {
+    display: contents;
+  }
+  /* the fox is a figure below the text here, so the scrim is not needed; as a grid item of a
+     contents box its negative inset would widen the page */
+  .block::before {
+    display: none;
+  }
+  .block > h1 {
+    order: 1;
+    margin-top: var(--s-7);
+  }
+  .role {
+    order: 2;
+  }
+  .standfirst {
+    order: 3;
+    max-width: none;
+  }
+  .facts {
+    order: 4;
+  }
+  .actions {
+    order: 5;
+    margin-top: var(--s-5);
+  }
+  .plate {
+    order: 6;
+    margin-block: var(--s-7) var(--s-6);
+    width: calc(100% + 2 * var(--gutter));
+    margin-inline: calc(-1 * var(--gutter));
+  }
+  .actions :global(.button) {
+    width: 100%;
+    justify-content: center;
+  }
+}

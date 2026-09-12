@@ -1,0 +1,180 @@
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20;
+  height: var(--nav-h);
+  background: transparent;
+  transition: background-color var(--t-2) var(--ease-fade);
+}
+
+.header[data-scrolled] {
+  background: rgb(var(--ground-rgb) / 0.92);
+  box-shadow: 0 1px 0 var(--hairline);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: var(--s-6);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  letter-spacing: 0.005em;
+  color: var(--moon);
+  text-decoration: none;
+  margin-right: auto;
+  min-height: var(--control-h);
+  display: inline-flex;
+  align-items: center;
+}
+
+.links ul {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.links a,
+.pause {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  padding: 0 var(--s-3);
+  font-weight: 500;
+  font-size: var(--fs-meta);
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: var(--radius);
+  touch-action: manipulation;
+  transition: color var(--t-1) var(--ease-fade);
+}
+
+@media (hover: hover) {
+  .links a:hover,
+  .pause:hover {
+    color: var(--moon);
+  }
+}
+
+.links a:active,
+.pause:active {
+  color: var(--ice);
+}
+
+.pause {
+  color: var(--text-3);
+  margin-left: var(--s-4);
+}
+
+.pause[data-paused] {
+  color: var(--ice);
+}
+
+.menuButton {
+  display: none;
+  min-height: var(--control-h);
+  padding: 0 var(--s-3);
+  font-weight: 500;
+  font-size: var(--fs-meta);
+  color: var(--text);
+  touch-action: manipulation;
+}
+
+/* the sheet */
+.sheet {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--ground-2);
+  color: var(--text);
+  overscroll-behavior: contain;
+}
+
+.sheet::backdrop {
+  background: rgb(var(--ground-rgb) / 0.6);
+}
+
+.sheetInner {
+  padding: 0 var(--gutter) env(safe-area-inset-bottom);
+}
+
+.sheetTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-h);
+}
+
+.sheetList {
+  border-top: 1px solid var(--hairline);
+}
+
+.sheetList li {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.sheetList a,
+.sheetPause {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text);
+  text-decoration: none;
+  text-align: left;
+}
+
+.sheetPause {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--text-2);
+}
+
+.sheetPause[data-paused] {
+  color: var(--ice);
+}
+
+@media (max-width: 959px) {
+  .links,
+  .desktopOnly {
+    display: none;
+  }
+  .menuButton {
+    display: inline-flex;
+    align-items: center;
+  }
+  /* no JavaScript: the Menu button needs showModal(), so the section links stay in the bar and wrap */
+  :global(html.no-js) .menuButton {
+    display: none;
+  }
+  :global(html.no-js) .links {
+    display: block;
+  }
+  :global(html.no-js) .links ul {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0;
+  }
+  :global(html.no-js) .header {
+    position: static; /* in flow: a taller, wrapped bar must not cover the name */
+    height: auto;
+    min-height: var(--nav-h);
+    background: var(--ground);
+  }
+  :global(html.no-js) .bar {
+    flex-wrap: wrap;
+    padding-bottom: var(--s-2);
+  }
+}

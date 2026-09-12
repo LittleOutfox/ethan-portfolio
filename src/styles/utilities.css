@@ -1,0 +1,33 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: var(--s-3);
+  left: var(--s-3);
+  z-index: 100;
+  padding: var(--s-2) var(--s-4);
+  background: var(--ground-2);
+  color: var(--moon);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  transform: translateY(-200%);
+  transition: transform var(--t-2) var(--ease-move);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.nowrap {
+  white-space: nowrap;
+}

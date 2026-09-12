@@ -1,0 +1,21 @@
+{
+  "buildPath": "code",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "newsreader fallback",
+        "createdAt": "2026-09-12T03:14:05.771Z",
+        "reason": "metric-matched local fallback face (size-adjust over Times New Roman) for the documented Newsreader display font; not a brand font"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "schibsted fallback",
+        "createdAt": "2026-09-12T03:14:05.830Z",
+        "reason": "metric-matched local fallback face (size-adjust over Arial) for the documented Schibsted Grotesk body font; not a brand font"
+      }
+    ]
+  }
+}

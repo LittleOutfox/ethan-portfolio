@@ -1,0 +1,24 @@
+.about {
+  position: relative;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+}
+
+.prose {
+  grid-column: 1 / span 7;
+  max-width: var(--measure-bio);
+}
+
+.prose p + p {
+  margin-top: var(--space-group);
+}
+
+@media (max-width: 959px) {
+  .prose {
+    grid-column: 1 / -1;
+  }
+}

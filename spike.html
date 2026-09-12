@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fox field spike</title>
+    <style>
+      html { background: #070b14; color: #e8eef7; font: 14px system-ui, sans-serif; }
+      body { margin: 0; min-height: 300vh; }
+      #ui { position: fixed; left: 16px; bottom: 16px; z-index: 10; display: grid; gap: 8px; background: rgba(7,11,20,.8); padding: 12px; }
+      #ui label { display: flex; gap: 8px; align-items: center; }
+      .cellA, .cellB { position: absolute; outline: 1px dashed rgba(159,216,255,.3); }
+      .rule { position: absolute; height: 1px; background: rgba(159,216,255,.28); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="ui"></div>
+    <script type="module" src="/src/spike/main.tsx"></script>
+  </body>
+</html>

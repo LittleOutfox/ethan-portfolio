@@ -1,0 +1,36 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* one moon, off-axis; translated by transform only (--light-x is 0..1 across the viewport) */
+.wash {
+  --light-x: 0.12;
+  position: absolute;
+  top: -40vh;
+  left: 0;
+  width: 120vw;
+  height: 120vh;
+  transform: translate3d(calc(var(--light-x) * 100vw - 60vw), 0, 0);
+  background: radial-gradient(closest-side, rgb(var(--ice-rgb) / 0.075), rgb(var(--ice-rgb) / 0.03) 45%, transparent 72%);
+  will-change: transform;
+}
+
+.mist {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 32vh;
+  background: linear-gradient(to top, rgb(17 26 46 / 0.55), transparent);
+}
+
+.mist::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}

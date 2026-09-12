@@ -1,10 +1,22 @@
-__pycache__/
-*.zip
+# dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+*.local
 
-# local tooling — not needed to run the site
+# local tooling
 .claude/
+.playwright-cli/
+.playwright-mcp/
+.impeccable/review/
+.impeccable/build/
+.impeccable/config.local.json
+.agents/
+skills-lock.json
 
 # OS / editor cruft
 .DS_Store
 Thumbs.db
 *.log
+__pycache__/
+*.zip

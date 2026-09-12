@@ -1,0 +1,35 @@
+{
+  "pose": "bowing",
+  "source": "art/kitsune/bowing.svg",
+  "bakedWith": "scripts/bake-fox-masks.mjs",
+  "bakedAt": "2026-09-12",
+  "viewBox": {
+    "width": 665,
+    "height": 592
+  },
+  "mask": {
+    "width": 512,
+    "height": 456
+  },
+  "bbox": {
+    "x": 0.031578947368421054,
+    "y": 0.20439189189189189,
+    "w": 0.9060150375939849,
+    "h": 0.6765202702702703
+  },
+  "nose": {
+    "x": 0.04586466165413534,
+    "y": 0.856418918918919
+  },
+  "inkPixels": 21004,
+  "maxGeodesic": 3400,
+  "poster": {
+    "file": "bowing-poster.webp",
+    "width": 1296,
+    "height": 1154,
+    "points": 60000,
+    "pointSize": 8.4,
+    "renderedWith": "scripts/make-posters.mjs",
+    "renderedAt": "2026-09-12"
+  }
+}
