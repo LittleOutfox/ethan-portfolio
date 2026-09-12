@@ -126,7 +126,7 @@ async function render(name) {
   }
   const file = `${name}-poster.webp`
   await sharp(out, { raw: { width: W, height: H, channels: 4 } })
-    .webp({ quality: 80, alphaQuality: 90, effort: 6 })
+    .webp({ quality: 75, alphaQuality: 60, effort: 6 }) // the alpha channel carries the stipple; 60 keeps it crisp at under half the bytes
     .toFile(resolve(FOX, file))
   side.poster = {
     file,

@@ -24,6 +24,7 @@ npm run preview
 npm test           # sampler and UART generator tests
 npm run lint
 npm run bake       # rebake the fox masks from art/kitsune/*.svg
+npm run posters    # render the fallback posters from the masks with the field's material
 npm run fonts      # re-instance and subset the fonts (needs pip install fonttools brotli)
 npm run favicons   # cut the favicons from the drawing
 ```
