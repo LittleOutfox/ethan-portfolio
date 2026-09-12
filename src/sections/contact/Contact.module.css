@@ -126,6 +126,10 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  /* the 24rem flex basis is a width on desktop; in a column it would become height */
+  .footer p:nth-child(2) {
+    flex: 0 0 auto;
+  }
   .signature {
     margin-left: 0;
   }
