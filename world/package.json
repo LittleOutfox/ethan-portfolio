@@ -1,0 +1,26 @@
+{
+  "name": "origin-world",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The 3D world behind ORIGIN. Builds the one vendored file js/world/scene.js.",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.7.0",
+    "react": "19.2.8",
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/three": "0.185.4",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.0",
+    "vitest": "4.1.11"
+  }
+}

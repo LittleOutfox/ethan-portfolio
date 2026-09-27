@@ -1,0 +1,3 @@
+# the 3D world bundle is built from world/ (npm run build) — keep its
+# minified diff out of reviews
+js/world/scene.js -diff linguist-generated=true

@@ -9,6 +9,11 @@ package-lock.json
 tools/bake-debug/
 dist/
 
+# the 3D world is its own small package (world/) that builds the one
+# vendored file js/world/scene.js — its manifests are tracked
+!world/package.json
+!world/package-lock.json
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

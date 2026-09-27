@@ -144,32 +144,25 @@ a { color: inherit; text-decoration: none; }
    ------------------------------------------------------------ */
 
 /* ART DIRECTION LAW — the world is ink.
-   The video is a whisper beneath it: graded dark at the file level,
-   held at ≤0.5 opacity, and melted into #08070d at every edge.
-   Content always sits on near-black. Never let the footage read
-   as a bright backdrop poster. */
-.journey {
-  position: fixed; inset: 0; z-index: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
+   The 3D forest (js/world, built from world/) is a whisper beneath
+   it: graded dark in its own shaders and melted into #08070d at every
+   edge by a vignette drawn in the same pass. Only the moon and the
+   foxfire glow. Content always sits on near-black. Never let the world
+   read as a bright backdrop poster. */
+.world {
+  position: fixed; top: 0; left: 0; z-index: 0;
+  /* vw × lvh, not inset:0 — neither the scrollbar gutter that appears
+     at Enter nor a phone's collapsing URL bar may resize (and so
+     reallocate) the canvas mid-story */
+  width: 100vw; height: 100vh; height: 100lvh;
+  pointer-events: none;
   opacity: 0;
-  /* the grade (brightness 0.9, contrast 1.03) is baked into the encode
-     itself — no per-frame CSS filter pass (PSNR-verified identical).
-     2.4s is deliberately off the --dur scale: a cinematic backdrop
+  /* 2.4s is deliberately off the --dur scale: a cinematic backdrop
      fade, like the hunt fox's sine idle, sits outside the voice. */
   transition: opacity 2.4s var(--out-soft);
-  pointer-events: none;
-  transform: translateZ(0); /* own compositor layer: scrub repaints stay off the page */
 }
-.journey.ready { opacity: 0.55; }
-
-.journey-veil {
-  position: fixed; inset: 0; z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(115% 95% at 50% 42%, transparent 24%, rgba(8, 7, 13, 0.92) 100%),
-    linear-gradient(to bottom, rgba(8, 7, 13, 0.65), transparent 26%, transparent 68%, rgba(8, 7, 13, 0.82));
-}
+.world canvas { display: block; width: 100%; height: 100%; }
+html.world-on .world { opacity: 1; }
 
 #foxfire {
   position: fixed; inset: 0; z-index: 2;
@@ -1053,7 +1046,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   max-width: 500px;
   padding: clamp(26px, 3vw, 40px);
   /* frost baked into the fill — a live backdrop-filter here re-blurred
-     the video + snow canvas behind the card on every animated frame */
+     the world + snow behind the card on every animated frame */
   background: linear-gradient(160deg, rgba(30, 27, 44, 0.72), rgba(13, 11, 22, 0.58));
   border: 1px solid var(--hairline);
 }
@@ -1260,8 +1253,7 @@ html.no-js .tails-list li, html.reduced .tails-list li { opacity: 1; }
 html.no-js .tails-count, html.reduced .tails-count { display: none; }
 
 html.reduced .rail { display: none; }
-html.reduced .journey, html.no-js .journey,
-html.reduced .journey-veil, html.no-js .journey-veil { display: none; }
+html.reduced .world, html.no-js .world { display: none; }
 html.reduced .tails-spirit, html.no-js .tails-spirit {
   -webkit-mask-image: none; mask-image: none;
 }
@@ -1278,4 +1270,10 @@ html.reduced .cursor-halo { display: none; }
   .veil-spirit { animation: none; }
   .hero-cue-line::after { animation: none; }
   .cursor-halo { display: none; }
+  .world { display: none; }
+}
+
+/* forced colours (high-contrast modes): the page, not the scenery */
+@media (forced-colors: active) {
+  .world { display: none; }
 }
