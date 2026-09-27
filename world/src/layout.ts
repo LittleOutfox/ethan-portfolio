@@ -70,22 +70,29 @@ export function heightAt(x: number, z: number): number {
     if (d < dmin) dmin = d
   }
   const roll = 0.7 * Math.sin(x * 0.11 + 1.3) * Math.sin(z * 0.09 - 0.7) + 0.35 * Math.sin(x * 0.23 + z * 0.17)
-  return esum / wsum + roll * smoothstep(4, 22, dmin)
+  // the shrine's hill, west of the summit, where the far torii climb
+  const hill = 9 * Math.exp(-((x - 38) ** 2 + (z + 136) ** 2) / (2 * 16 * 16))
+  return esum / wsum + (roll + hill) * smoothstep(4, 22, dmin)
 }
 
 export interface Tree {
   x: number
   y: number
   z: number
-  /** trunk radius at the base (m) */
+  /** how far the flared base spreads (m) — what must stay clear of the camera */
   radius: number
-  height: number
-  /** rotation about y and a small lean, radians */
+  scale: number
+  /** rotation about y (turns the tree's long branches toward the path) and a small lean, radians */
   rot: number
   lean: number
-  /** which archetype to draw */
+  /** which archetype to draw (trees.ts) */
   kind: number
 }
+
+/** trunk radius of each archetype in trees.ts (kept here so layout stays three-free to test) */
+const TRUNK = [0.72, 0.55, 0.85, 0.5, 0.66]
+/** the wide, gnarled archetypes frame the path; the tall narrow ones fill the depths */
+const FRAMERS = [0, 2, 4]
 
 const ROUTE_XZ: [number, number][] = ROUTE.map(([x, , z]) => [x, z])
 
@@ -100,36 +107,67 @@ function forestDensity(x: number, z: number): number {
   return d
 }
 
-const CANDIDATES = 2600
+/** Camera positions along the whole journey, every `step` of world time. */
+export function cameraSamples(step: number): [number, number, number][] {
+  const sample = makeCameraPath(KEYS)
+  const pose: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
+  const out: [number, number, number][] = []
+  for (let t = 0; t <= KEYS.length - 1 + 1e-9; t += step) {
+    sample(t, pose)
+    out.push([pose.pos[0], pose.pos[1], pose.pos[2]])
+  }
+  return out
+}
+
+const CANDIDATES = 1500
+
+/** the route point nearest (x, z) */
+function nearestOnRoute(x: number, z: number): [number, number] {
+  let best: [number, number] = [x, z]
+  let bd = Infinity
+  for (let i = 0; i < ROUTE_XZ.length - 1; i++) {
+    const [ax, az] = ROUTE_XZ[i]
+    const [bx, bz] = ROUTE_XZ[i + 1]
+    const dx = bx - ax, dz = bz - az
+    const u = Math.min(1, Math.max(0, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)))
+    const px = ax + u * dx, pz = az + u * dz
+    const d = Math.hypot(x - px, z - pz)
+    if (d < bd) { bd = d; best = [px, pz] }
+  }
+  return best
+}
 
 /**
  * The seeded forest. Candidates are drawn in random order and filtered, so the
  * first N trees are an even sample of the whole forest — lower tiers take a prefix.
+ * Trees near the path are the big gnarled framers, turned so their long
+ * branches reach out over it.
  */
 export function placeTrees(density: number): Tree[] {
   const rng = mulberry32(7)
-  const sample = makeCameraPath(KEYS)
-  const pose: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
-  const cam: [number, number][] = []
-  for (let t = 0; t <= KEYS.length - 1; t += 0.02) {
-    sample(t, pose)
-    cam.push([pose.pos[0], pose.pos[2]])
-  }
+  const cam: [number, number][] = cameraSamples(0.02).map(([x, , z]) => [x, z])
   const all: Tree[] = []
   for (let i = 0; i < CANDIDATES; i++) {
     const x = -70 + rng() * 200
     const z = 40 - rng() * 280
     const keep = rng()
-    const radius = 0.3 + rng() * rng() * 0.8
-    const height = 12 + rng() * 14
-    const rot = rng() * Math.PI * 2
-    const lean = (rng() - 0.5) * 0.12
-    const kind = Math.floor(rng() * 5)
+    const r1 = rng(), r2 = rng(), r3 = rng(), r4 = rng()
     if (keep > forestDensity(x, z)) continue
-    const clear = radius + 2.4
-    if (distanceToCurve(x, z, cam) < clear) continue
-    if (distanceToCurve(x, z, ROUTE_XZ) < clear) continue
-    all.push({ x, y: heightAt(x, z), z, radius, height, rot, lean, kind })
+    // only where the camera can ever see: past ~65 m the fog has it anyway
+    const dCam = distanceToCurve(x, z, cam)
+    if (dCam > 65) continue
+    const dPath = distanceToCurve(x, z, ROUTE_XZ)
+    const framer = dPath < 14
+    const kind = framer ? FRAMERS[Math.floor(r1 * FRAMERS.length)] : Math.floor(r1 * TRUNK.length)
+    const scale = framer ? 1.0 + r2 * 0.4 : 0.75 + r2 * 0.4
+    const radius = TRUNK[kind] * scale * 1.8
+    const clear = radius + 3
+    if (dCam < clear || dPath < clear) continue
+    const [px, pz] = nearestOnRoute(x, z)
+    const toward = Math.atan2(-(pz - z), px - x)
+    const rot = framer ? toward + (r3 - 0.5) * 1.2 : r3 * Math.PI * 2
+    const lean = (r4 - 0.5) * 0.1
+    all.push({ x, y: heightAt(x, z), z, radius, scale, rot, lean, kind })
   }
   return all.slice(0, Math.round(all.length * Math.min(1, Math.max(0, density))))
 }

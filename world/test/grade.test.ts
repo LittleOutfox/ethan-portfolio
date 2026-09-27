@@ -12,6 +12,7 @@ describe('gradeAt', () => {
       expect(g.moon).toBeCloseTo(key.moon, 6)
       expect(g.canopy).toBeCloseTo(key.canopy, 6)
       expect(g.snow).toBeCloseTo(key.snow, 6)
+      expect(g.haze).toBeCloseTo(key.haze, 6)
       const c = new Color(key.fog)
       expect(g.fog.r).toBeCloseTo(c.r, 6)
       expect(g.fog.b).toBeCloseTo(c.b, 6)

@@ -22,6 +22,15 @@ export const KEYS: Key[] = [
   { pos: [60, 11.4, -150], look: [60, 10.6, -220], fov: 45 },
 ]
 
+/** The den's hearth, off the path to the right of the stair top. */
+export const HEARTH: Vec3 = [74, 9.8, -104]
+
+/** Where the camera stands when all five tails are earned (key t8) — the tail bands rise in front of it. */
+export const SUMMIT: Vec3 = [60, 13.4, -116]
+
+/** Works progress of each DOM gate's pass-through, if the page hasn't published its own. */
+export const GATE_PASS_DEFAULT = [0.4, 0.64, 0.88]
+
 /** The moon hangs low over the story's far end, straight down −z. */
 export const MOON_DIR: Vec3 = (() => {
   const e = (7.6 * Math.PI) / 180
@@ -36,6 +45,8 @@ export const MOON_DIR: Vec3 = (() => {
  *   moon     moon disc + halo strength (the canopy hides it inside the forest)
  *   canopy   how much of the upper sky the forest roof darkens
  *   snow     falling snow amount
+ *   haze     moonlight scattered in the fog toward the moon — the glow at
+ *            the end of the path that the film had
  */
 export interface Grade {
   fog: string
@@ -43,17 +54,18 @@ export interface Grade {
   moon: number
   canopy: number
   snow: number
+  haze: number
 }
 
 export const GRADES: Grade[] = [
-  { fog: '#15142a', density: 0.018, moon: 1.0, canopy: 0.0, snow: 0.0 },
-  { fog: '#131226', density: 0.022, moon: 0.8, canopy: 0.3, snow: 0.0 },
-  { fog: '#111024', density: 0.03, moon: 0.35, canopy: 0.8, snow: 0.0 },
-  { fog: '#111024', density: 0.03, moon: 0.25, canopy: 0.85, snow: 0.0 },
-  { fog: '#121126', density: 0.028, moon: 0.4, canopy: 0.7, snow: 0.0 },
-  { fog: '#131227', density: 0.026, moon: 0.4, canopy: 0.6, snow: 0.0 },
-  { fog: '#171219', density: 0.03, moon: 0.2, canopy: 0.8, snow: 0.0 },
-  { fog: '#15142a', density: 0.02, moon: 0.9, canopy: 0.2, snow: 0.05 },
-  { fog: '#17162d', density: 0.018, moon: 1.25, canopy: 0.0, snow: 0.25 },
-  { fog: '#1a1a30', density: 0.016, moon: 1.0, canopy: 0.0, snow: 1.0 },
+  { fog: '#100f22', density: 0.02, moon: 0.0, canopy: 0.2, snow: 0.0, haze: 0.03 },
+  { fog: '#0f0e20', density: 0.024, moon: 0.0, canopy: 0.5, snow: 0.0, haze: 0.032 },
+  { fog: '#0e0d1d', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.0, haze: 0.034 },
+  { fog: '#0e0d1d', density: 0.03, moon: 0.0, canopy: 0.9, snow: 0.0, haze: 0.03 },
+  { fog: '#0f0e20', density: 0.028, moon: 0.0, canopy: 0.8, snow: 0.0, haze: 0.032 },
+  { fog: '#100f22', density: 0.026, moon: 0.1, canopy: 0.7, snow: 0.0, haze: 0.03 },
+  { fog: '#130e17', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.0, haze: 0.012 },
+  { fog: '#100f22', density: 0.022, moon: 0.7, canopy: 0.3, snow: 0.05, haze: 0.028 },
+  { fog: '#121126', density: 0.02, moon: 1.0, canopy: 0.0, snow: 0.25, haze: 0.028 },
+  { fog: '#13122a', density: 0.018, moon: 0.85, canopy: 0.0, snow: 1.0, haze: 0.026 },
 ]

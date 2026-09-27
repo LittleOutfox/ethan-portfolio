@@ -46,6 +46,22 @@ describe('makeCameraPath', () => {
     expect(d).toBeLessThan(0.01)
   })
 
+  it('never overshoots between two keys (each axis stays within its keys)', () => {
+    // a sideways run into a key that then heads straight on: the camera must
+    // not swing past the second key while leaving it
+    const ks: Key[] = [
+      { pos: [40, 2, -20], look: [40, 2, -60], fov: 45 },
+      { pos: [60, 2, -34], look: [60, 7, -90], fov: 45 },
+      { pos: [60, 10, -84], look: [62, 11, -130], fov: 45 },
+      { pos: [64, 11, -96], look: [74, 10, -104], fov: 45 },
+    ]
+    const s = makeCameraPath(ks)
+    for (let t = 1; t <= 2; t += 0.01) {
+      const p = s(t, pose())
+      expect(Math.abs(p.pos[0] - 60)).toBeLessThan(0.05)
+    }
+  })
+
   it('holds the end keys outside the authored range', () => {
     const before = sample(-3, pose())
     const after = sample(99, pose())

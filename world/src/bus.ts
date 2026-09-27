@@ -21,6 +21,8 @@ export interface Bus {
   fail(why?: unknown): void
   frame: ((time: number) => void) | null
   onEnter: (() => void) | null
+  /** set by the world at boot: the tier it chose (for checks and debugging) */
+  tier?: string
 }
 
 export function getBus(): Bus | undefined {

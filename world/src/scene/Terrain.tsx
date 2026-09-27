@@ -14,9 +14,9 @@ const smooth = (a: number, b: number, x: number) => {
 
 /** The ground: one displaced grid, with the path and the snowfield baked per vertex. */
 function buildTerrain(): PlaneGeometry {
-  const g = new PlaneGeometry(340, 340, 170, 170)
+  const g = new PlaneGeometry(420, 700, 150, 230)
   g.rotateX(-Math.PI / 2)
-  g.translate(30, 0, -90)
+  g.translate(30, 0, -170)
   const pos = g.attributes.position as BufferAttribute
   const path = new Float32Array(pos.count)
   const snow = new Float32Array(pos.count)

@@ -56,6 +56,7 @@ async function boot(bus: Bus) {
   const tier = detectTier()
   const host = document.getElementById('world')
   if (!tier || !host) return bus.fail(tier ? 'no #world host' : undefined)
+  bus.tier = tier.tier
 
   const canvas = document.createElement('canvas')
   host.appendChild(canvas)

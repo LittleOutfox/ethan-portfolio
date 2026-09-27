@@ -1,7 +1,7 @@
 // One uniforms object shared by every material: the Director writes it once
 // per frame and every surface reads the same light.
 import { Color, Vector2, Vector3 } from 'three'
-import { MOON_DIR } from './keys'
+import { HEARTH, MOON_DIR } from './keys'
 
 export function makeUniforms() {
   return {
@@ -19,6 +19,16 @@ export function makeUniforms() {
     uCanopy: { value: 0 },
     uSnow: { value: 0 },
     uWarm: { value: 0 },
+    uHaze: { value: 0.04 },
+    uHearth: { value: new Vector3(...HEARTH) },
+    /** tails earned, eased (0..5) */
+    uTails: { value: 0 },
+    /** how awake the foxfire is: dormant at the forest edge, lit from the path on */
+    uWake: { value: 0 },
+    /** pointer in NDC (xy) and how hard it is stirring (z) */
+    uPointer: { value: new Vector3(0, 0, 0) },
+    /** px per metre at unit distance: drawing-buffer height / (2·tan(fov/2)) */
+    uScale: { value: 800 },
   }
 }
 

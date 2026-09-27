@@ -9,12 +9,13 @@ export interface GradeState {
   moon: number
   canopy: number
   snow: number
+  haze: number
 }
 
 const FOGS = GRADES.map((g) => new Color(g.fog))
 
 export function makeGrade(): GradeState {
-  return { fog: new Color(), density: 0, moon: 0, canopy: 0, snow: 0 }
+  return { fog: new Color(), density: 0, moon: 0, canopy: 0, snow: 0, haze: 0 }
 }
 
 export function gradeAt(t: number, out: GradeState): GradeState {
@@ -30,5 +31,6 @@ export function gradeAt(t: number, out: GradeState): GradeState {
   out.moon = a.moon + (b.moon - a.moon) * s
   out.canopy = a.canopy + (b.canopy - a.canopy) * s
   out.snow = a.snow + (b.snow - a.snow) * s
+  out.haze = a.haze + (b.haze - a.haze) * s
   return out
 }

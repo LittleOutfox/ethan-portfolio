@@ -13,6 +13,8 @@ uniform float uMoon;
 uniform float uCanopy;
 uniform float uSnow;
 uniform float uWarm;
+uniform float uHaze;
+uniform vec3 uHearth;
 
 float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -20,12 +22,37 @@ float hash12(vec2 p) {
   return fract((p3.x + p3.y) * p3.z);
 }
 
+// smooth value noise, for patches that shouldn't look like tiles
+float noise2(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x),
+             mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// The fog's own colour: brighter toward the moon, where moonlight scatters
+// in the mist — the glow at the end of the path.
+vec3 fogTint(vec3 dir) {
+  float s = max(dot(dir, uMoonDir), 0.0);
+  vec3 lit = mix(uSpirit, uMoonColor, 0.35);
+  return uFogColor + lit * uHaze * (0.35 * pow(s, 6.0) + 0.65 * pow(s, 48.0));
+}
+
 // distance fog that lies thicker near the ground
 vec3 fog(vec3 col, vec3 wpos) {
-  float d = distance(wpos, cameraPosition);
+  vec3 ray = wpos - cameraPosition;
+  float d = length(ray);
   float low = exp(-max(wpos.y - (cameraPosition.y - 1.5), 0.0) * 0.14);
   float f = 1.0 - exp(-d * uFogDensity * (0.6 + 0.6 * low));
-  return mix(col, uFogColor, clamp(f, 0.0, 1.0));
+  return mix(col, fogTint(ray / d), clamp(f, 0.0, 1.0));
+}
+
+// the den's hearth: warm light on whatever stands near it, strongest on the side that faces it
+vec3 hearth(vec3 col, vec3 wpos, vec3 n) {
+  vec3 L = uHearth - wpos;
+  float d = length(L);
+  float k = exp(-d * 0.16) * uWarm;
+  return col + uEmber * k * 0.07 * (0.25 + 0.75 * max(dot(n, L / d), 0.0));
 }
 
 // The page's old CSS veil, now drawn in the same pass: an ellipse centred

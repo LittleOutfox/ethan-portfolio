@@ -1,8 +1,6 @@
 // Scroll → world time → camera. Pure math, no DOM: the bus hands us one
 // progress per story segment; their sum is the world clock (0..9), and the
-// camera glides along Catmull-Rom curves through one authored key per
-// segment boundary.
-import { CatmullRomCurve3, Vector3 } from 'three'
+// camera glides through one authored key per segment boundary.
 
 export const SEGMENTS = ['hero', 'origin', 'hunt', 'trail', 'works', 'den', 'climb', 'tails', 'snow'] as const
 export type Segment = (typeof SEGMENTS)[number]
@@ -27,24 +25,50 @@ export function worldTime(p: Progress): number {
 }
 
 /**
- * A sampler for the camera at world time t (key i sits at t = i). Positions and
- * look targets ride centripetal Catmull-Rom curves, so the camera passes through
- * every key without a corner; fov eases between neighbouring keys.
+ * Slopes for a monotone cubic through evenly spaced values (Fritsch–Carlson):
+ * wherever the keys stop rising or falling the curve flattens instead of
+ * overshooting — a camera that runs sideways into a key never swings past it.
+ */
+function monotoneSlopes(y: number[]): number[] {
+  const n = y.length
+  const m = new Array<number>(n).fill(0)
+  for (let k = 1; k < n - 1; k++) {
+    const d0 = y[k] - y[k - 1]
+    const d1 = y[k + 1] - y[k]
+    m[k] = d0 * d1 > 0 ? 2 / (1 / d0 + 1 / d1) : 0
+  }
+  m[0] = y[1] - y[0]
+  m[n - 1] = y[n - 1] - y[n - 2]
+  return m
+}
+
+function hermite(y: number[], m: number[], k: number, s: number): number {
+  const s2 = s * s
+  const s3 = s2 * s
+  return (2 * s3 - 3 * s2 + 1) * y[k] + (s3 - 2 * s2 + s) * m[k] + (-2 * s3 + 3 * s2) * y[k + 1] + (s3 - s2) * m[k + 1]
+}
+
+/**
+ * A sampler for the camera at world time t (key i sits at t = i). Position and
+ * look target each ride a monotone cubic per axis — through every key, smooth
+ * across it, never overshooting between two — and fov eases key to key.
  */
 export function makeCameraPath(keys: Key[]) {
   const n = keys.length
-  const pos = new CatmullRomCurve3(keys.map((k) => new Vector3(...k.pos)), false, 'centripetal')
-  const look = new CatmullRomCurve3(keys.map((k) => new Vector3(...k.look)), false, 'centripetal')
-  const v = new Vector3()
+  const axis = (f: (k: Key) => number) => {
+    const y = keys.map(f)
+    return { y, m: monotoneSlopes(y) }
+  }
+  const P = [axis((k) => k.pos[0]), axis((k) => k.pos[1]), axis((k) => k.pos[2])]
+  const L = [axis((k) => k.look[0]), axis((k) => k.look[1]), axis((k) => k.look[2])]
   return (t: number, out: Pose): Pose => {
     const tc = t < 0 ? 0 : t > n - 1 ? n - 1 : t
-    const u = tc / (n - 1)
-    pos.getPoint(u, v)
-    out.pos[0] = v.x; out.pos[1] = v.y; out.pos[2] = v.z
-    look.getPoint(u, v)
-    out.look[0] = v.x; out.look[1] = v.y; out.look[2] = v.z
     const i = Math.min(n - 2, Math.floor(tc))
     const f = tc - i
+    for (let a = 0; a < 3; a++) {
+      out.pos[a] = hermite(P[a].y, P[a].m, i, f)
+      out.look[a] = hermite(L[a].y, L[a].m, i, f)
+    }
     const s = f * f * (3 - 2 * f)
     out.fov = keys[i].fov + (keys[i + 1].fov - keys[i].fov) * s
     return out
