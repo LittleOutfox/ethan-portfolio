@@ -49,7 +49,7 @@ export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
       const th = rng() * 6.283
       add(hx + Math.cos(th) * r, hy - 0.6, hz + Math.sin(th) * r, 0.06 + rng() * 0.1, 0.7 + rng() * 0.5, 1)
     }
-    add(hx, hy - 0.2, hz, 5, 0.5, 2)
+    add(hx, hy - 0.2, hz, 4, 0.3, 2)
 
     // five tail bands fanning up from a point beneath the moon, ahead of the summit
     const md = new Vector3(MOON_DIR[0], 0, MOON_DIR[2]).normalize()

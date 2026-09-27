@@ -354,6 +354,7 @@
     window.__foxfireStart = function () {
       if (started) return;
       started = true;
+      canvas.dataset.running = '1';
       lastY = window.scrollY;
       resize();
       if (!listening) { listening = true; window.addEventListener('resize', resize); }
@@ -362,6 +363,7 @@
     window.__foxfireStop = function () {
       if (!started) return;
       started = false;
+      canvas.dataset.running = '0';
       cancelAnimationFrame(raf);
       ctx.clearRect(0, 0, W, H);
     };

@@ -52,7 +52,7 @@ vec3 hearth(vec3 col, vec3 wpos, vec3 n) {
   vec3 L = uHearth - wpos;
   float d = length(L);
   float k = exp(-d * 0.16) * uWarm;
-  return col + uEmber * k * 0.07 * (0.25 + 0.75 * max(dot(n, L / d), 0.0));
+  return col + uEmber * k * 0.05 * (0.25 + 0.75 * max(dot(n, L / d), 0.0));
 }
 
 // The page's old CSS veil, now drawn in the same pass: an ellipse centred

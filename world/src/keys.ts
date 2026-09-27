@@ -19,7 +19,7 @@ export const KEYS: Key[] = [
   { pos: [64, 10.8, -96], look: [74, 10.2, -104], fov: 46 },
   { pos: [60, 12.2, -112], look: [70, 17, -160], fov: 44 },
   { pos: [60, 13.4, -116], look: [70, 22, -160], fov: 42 },
-  { pos: [60, 11.4, -150], look: [60, 10.6, -220], fov: 45 },
+  { pos: [60, 11.4, -150], look: [42, 10.6, -220], fov: 45 },
 ]
 
 /**
@@ -75,10 +75,10 @@ export const GRADES: Grade[] = [
   { fog: '#0f0e20', density: 0.024, moon: 0.0, canopy: 0.5, snow: 0.0, haze: 0.032 },
   { fog: '#0e0d1d', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.0, haze: 0.034 },
   { fog: '#0e0d1d', density: 0.03, moon: 0.0, canopy: 0.9, snow: 0.0, haze: 0.03 },
-  { fog: '#0f0e20', density: 0.028, moon: 0.0, canopy: 0.8, snow: 0.0, haze: 0.032 },
-  { fog: '#100f22', density: 0.026, moon: 0.1, canopy: 0.7, snow: 0.0, haze: 0.03 },
+  { fog: '#0f0e20', density: 0.028, moon: 0.0, canopy: 0.8, snow: 0.0, haze: 0.026 },
+  { fog: '#100f22', density: 0.026, moon: 0.1, canopy: 0.7, snow: 0.0, haze: 0.024 },
   { fog: '#130e17', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.0, haze: 0.012 },
   { fog: '#100f22', density: 0.022, moon: 0.7, canopy: 0.3, snow: 0.05, haze: 0.028 },
   { fog: '#121126', density: 0.02, moon: 1.0, canopy: 0.0, snow: 0.25, haze: 0.028 },
-  { fog: '#13122a', density: 0.018, moon: 0.85, canopy: 0.0, snow: 1.0, haze: 0.026 },
+  { fog: '#13122a', density: 0.018, moon: 0.75, canopy: 0.0, snow: 1.0, haze: 0.02 },
 ]

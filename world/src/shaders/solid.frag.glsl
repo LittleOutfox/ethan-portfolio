@@ -12,7 +12,7 @@ void main() {
   float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0) * (0.3 + 0.7 * max(dot(n, uMoonDir), 0.0));
   col += uRimColor * rim;
   float cover = smoothstep(0.5, 0.9, n.y) * smoothstep(0.3, 0.7, noise2(vWorld.xz * 3.0));
-  col = mix(col, uMoonColor * 0.04, cover * 0.85);
+  col = mix(col, uMoonColor * 0.03, cover * 0.85);
   col = hearth(col, vWorld, n);
   col = fog(col, vWorld);
   gl_FragColor = vec4(finish(col), 1.0);

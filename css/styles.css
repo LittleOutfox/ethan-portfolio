@@ -175,6 +175,11 @@ html.world-on .world { opacity: 1; }
   pointer-events: none; opacity: 0;
   background: radial-gradient(60% 55% at 68% 62%, rgba(var(--ember-rgb), 0.22), transparent 70%);
 }
+/* the world's own hearth already warms the den — the wash steps back so
+   the den's small type keeps its 4.5:1 over both */
+html.world-on .tint {
+  background: radial-gradient(60% 55% at 68% 62%, rgba(var(--ember-rgb), 0.17), transparent 70%);
+}
 
 .grain {
   /* -64px overscan is all the shake below ever needs — the old -50%

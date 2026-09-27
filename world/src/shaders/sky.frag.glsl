@@ -14,7 +14,7 @@ void main() {
   // the moon: a soft disc and a wide cold halo
   float m = max(dot(d, uMoonDir), 0.0);
   float disc = smoothstep(0.99978, 0.99987, m);
-  float halo = pow(m, 2000.0) * 0.3 + pow(m, 140.0) * 0.07 + pow(m, 14.0) * 0.035;
+  float halo = pow(m, 2000.0) * 0.3 + pow(m, 140.0) * 0.07 + pow(m, 14.0) * 0.028;
   col += uMoonColor * (disc * 0.5 + halo) * uMoon;
 
   // a far tree line painted just above the horizon, half lost in the haze
