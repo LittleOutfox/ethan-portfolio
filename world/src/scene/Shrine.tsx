@@ -51,11 +51,24 @@ export function Shrine({ U, gates }: { U: Uniforms; gates: number[] }) {
 
     // gates: the three the camera crosses (works is world time 4 → 5), then the far climb
     const place: { x: number; z: number; yaw: number; scale: number }[] = []
+    // A gate's pillars leave the screen while it is still ~3 m ahead (half its
+    // width over the lens's half-fov), so each great torii stands that far on
+    // from where the camera is when the page's own gate passes: both sweep
+    // past the edges together.
+    const LEAD = 3.2
+    const ahead: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
     for (const g of gates) {
       sample(4 + g, pose)
-      const ahead = sample(4 + g + 0.01, { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 })
-      const yaw = Math.atan2(ahead.pos[0] - pose.pos[0], ahead.pos[2] - pose.pos[2])
-      place.push({ x: pose.pos[0], z: pose.pos[2], yaw, scale: 1.6 })
+      let t = 4 + g
+      let travelled = 0
+      while (travelled < LEAD && t < 5) {
+        t += 0.002
+        sample(t, ahead)
+        travelled = Math.hypot(ahead.pos[0] - pose.pos[0], ahead.pos[2] - pose.pos[2])
+      }
+      sample(t + 0.01, pose)
+      const yaw = Math.atan2(pose.pos[0] - ahead.pos[0], pose.pos[2] - ahead.pos[2])
+      place.push({ x: ahead.pos[0], z: ahead.pos[2], yaw, scale: 1.6 })
     }
     // the far gates climb the shrine hill to the west of the summit
     const farYaw = Math.atan2(41 - 57, -132 + 92)

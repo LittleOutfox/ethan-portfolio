@@ -22,6 +22,19 @@ export const KEYS: Key[] = [
   { pos: [60, 11.4, -150], look: [60, 10.6, -220], fov: 45 },
 ]
 
+/**
+ * On a portrait phone the page stacks differently (the tails fox sits high
+ * and centred, the contact card fills the width), so a few keys look
+ * elsewhere there: straight at the moon behind the fox, and down across the
+ * snowfield so the moon rides above the card. Blended in by aspect.
+ */
+const PORTRAIT_LOOK: Partial<Record<number, Vec3>> = {
+  7: [60, 11.4, -160],
+  8: [60, 12.55, -160],
+  9: [60, -3.5, -220],
+}
+export const KEYS_PORTRAIT: Key[] = KEYS.map((k, i) => (PORTRAIT_LOOK[i] ? { ...k, look: PORTRAIT_LOOK[i]! } : k))
+
 /** The den's hearth, off the path to the right of the stair top. */
 export const HEARTH: Vec3 = [74, 9.8, -104]
 
