@@ -184,12 +184,10 @@
     vel: 0,        // damped scroll velocity, -1..1
     warm: 0,       // the den's warmth, 0..1
     intro: 0,      // 0 → 1 as the hero enters
-    entered: false,
     state: 'off',  // off → boot → ready → active, or failed
     report: null,  // (0..1) the world's honest build progress
     fail: null,    // the world could not run: fall back to the 2D ambience
-    frame: null,   // set by the world: draw one frame (ticker time, seconds)
-    onEnter: null  // set by the world: start the reveal
+    frame: null    // set by the world: draw one frame (ticker time, seconds)
   };
 
   // the 2D embers and snow are the fallback atmosphere — they run
@@ -205,7 +203,6 @@
     if (world.state !== 'ready' || !entered) return;
     world.state = 'active';
     doc.classList.add('world-on');
-    if (world.onEnter) world.onEnter();
   }
 
   world.report = function (p) {
@@ -527,7 +524,6 @@
       });
       setTimeout(reap, 1600); // fallback if transitionend never fires
     }
-    world.entered = true;
     wake();     // the 3D world, if it is ready…
     ambience(); // …or the 2D embers in its place
     if (lenis) lenis.start();
@@ -553,7 +549,7 @@
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') enter();
     });
   } else {
-    entered = world.entered = true; // no veil to wait behind
+    entered = true; // no veil to wait behind
     wake();
     ambience();
   }

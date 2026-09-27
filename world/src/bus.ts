@@ -15,12 +15,10 @@ export interface Bus {
   warm: number
   /** 0 → 1 as the hero enters */
   intro: number
-  entered: boolean
   state: 'off' | 'boot' | 'ready' | 'active' | 'failed'
   report(progress: number): void
   fail(why?: unknown): void
   frame: ((time: number) => void) | null
-  onEnter: (() => void) | null
   /** set by the world at boot: the tier it chose (for checks and debugging) */
   tier?: string
 }

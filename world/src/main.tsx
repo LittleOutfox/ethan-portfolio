@@ -98,11 +98,16 @@ async function boot(bus: Bus) {
   warmFrame(store.getState())
 
   // the host is 100vw × 100lvh, so this fires for real layout changes
-  // (a window resize, a phone rotating), not for a collapsing URL bar
+  // (a window resize, a phone rotating, a browser zoom — which also
+  // changes the pixel ratio), not for a collapsing URL bar
   let pending = 0
   window.addEventListener('resize', () => {
     cancelAnimationFrame(pending)
-    pending = requestAnimationFrame(() => store.getState().setSize(host.clientWidth, host.clientHeight, 0, 0))
+    pending = requestAnimationFrame(() => {
+      const st = store.getState()
+      st.setDpr(Math.min(window.devicePixelRatio || 1, tier.dpr))
+      st.setSize(host.clientWidth, host.clientHeight, 0, 0)
+    })
   })
 
   bus.frame = (time) => {
