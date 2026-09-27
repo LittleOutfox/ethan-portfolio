@@ -32,33 +32,57 @@
   // every below-fold fox lazy-loads on approach instead, so it never
   // steals bandwidth from the gated film during the veil
   var EAGER_FOX = { descending: 1, sitting: 1 };
-  // intrinsic viewBox size of each pose: width/height attributes make
-  // the browser reserve the fox's exact box BEFORE the lazy file loads.
-  // Without them a late-loading in-flow fox (bowing, howling) grows from
-  // zero height mid-scroll, shifting everything below it and stale-dating
-  // every ScrollTrigger pin measured further down — a visible jump at
-  // the tails pin. Keep in sync with the SVGs' viewBox values.
-  var FOX_DIMS = {
-    bowing: [665, 592], descending: [232, 533], diving: [399, 721],
-    howling: [546, 569], sitting: [674, 502], standing: [450, 750],
-    walking: [630, 404]
+  // The ink ships as lossless WebP rasters baked in Chrome from the
+  // drawings (tools/bake-fox-rasters.mjs). The autotraced SVGs carry
+  // 130k–500k path commands each, and the browser re-rasterized that
+  // soup whenever a mount's layer changed — which the choreography does
+  // on every scrolled frame: 20–100 ms main-thread stalls that landed as
+  // dropped frames through works, the den and the tails. A raster costs
+  // one decode, then rides the compositor.
+  //   dims   — the drawing's viewBox. width/height attributes make the
+  //            browser reserve the fox's exact box BEFORE a lazy file
+  //            loads; without them an in-flow fox grew from zero height
+  //            mid-scroll and stale-dated every ScrollTrigger pin below.
+  //   widths — the baked candidates (assets/kitsune/<pose>-<w>.webp),
+  //            each a 1:1 transcription at that pixel width. srcset lets
+  //            every display take the smallest one that still lands one
+  //            device pixel per baked pixel, so a 1x desktop never
+  //            decodes a retina bake and a 3x phone never upscales one.
+  // Each mount's data-fox-sizes (index.html) mirrors its CSS width rule
+  // per tier (css/styles.css) — keep them in sync when a rule changes.
+  var FOX = {
+    bowing: { dims: [665, 592], widths: [580, 680, 1160, 1360] },
+    descending: { dims: [232, 533], widths: [160, 320, 480] },
+    diving: { dims: [399, 721], widths: [310, 620] },
+    howling: { dims: [546, 569], widths: [520, 620, 1040, 1240] },
+    sitting: { dims: [674, 502], widths: [620, 840, 1240, 1680] },
+    standing: { dims: [450, 750], widths: [400, 800] },
+    walking: { dims: [630, 404], widths: [480, 960] }
   };
+  function foxFile(name, w) { return 'assets/kitsune/' + name + '-' + w + '.webp'; }
+  // the candidate the browser's own srcset choice lands on for a mount
+  // shown cssPx wide on this screen: the smallest that still covers one
+  // device pixel per baked pixel, else the largest
+  function foxPick(name, cssPx) {
+    var need = cssPx * (window.devicePixelRatio || 1), ws = FOX[name].widths;
+    for (var i = 0; i < ws.length; i++) if (ws[i] >= need) return foxFile(name, ws[i]);
+    return foxFile(name, ws[ws.length - 1]);
+  }
   document.querySelectorAll('[data-kfox]').forEach(function (el) {
     var name = el.getAttribute('data-kfox');
-    var src = 'assets/kitsune/' + name + '.svg';
-    // the glow layers are pre-baked WebPs (invert+brightness+blur
-    // rendered offline) — scrolling a fox into view never builds a
-    // live Gaussian-blur surface over a megabyte SVG raster, which
-    // was the mid-scroll hitch between chapters. Only the sharp ink
-    // stays vector (its color-matrix filter is cheap).
+    var fox = FOX[name];
+    // the glow layers are pre-baked WebPs too (invert+brightness+blur
+    // rendered offline, tools/bake-blooms.js) — scrolling a fox into
+    // view never builds a live Gaussian-blur surface
     var glow = 'assets/kitsune/' + name + '-bloom';
     var lazy = EAGER_FOX[name] ? '' : ' loading="lazy" decoding="async"';
-    var d = FOX_DIMS[name];
-    var size = d ? ' width="' + d[0] + '" height="' + d[1] + '"' : '';
+    var size = ' width="' + fox.dims[0] + '" height="' + fox.dims[1] + '"';
+    var srcset = fox.widths.map(function (w) { return foxFile(name, w) + ' ' + w + 'w'; }).join(', ');
+    var sizes = el.getAttribute('data-fox-sizes') || '100vw';
     el.innerHTML =
       (PHONE ? '' : '<img class="bloom2" data-baked src="' + glow + '2.webp" alt="" aria-hidden="true" draggable="false"' + lazy + '>') +
       '<img class="bloom" data-baked src="' + glow + '.webp" alt="" aria-hidden="true" draggable="false"' + lazy + '>' +
-      '<img class="sharp" src="' + src + '" alt="" draggable="false"' + lazy + size + '>';
+      '<img class="sharp" src="' + foxFile(name, fox.widths[fox.widths.length - 1]) + '" srcset="' + srcset + '" sizes="' + sizes + '" alt="" draggable="false"' + lazy + size + '>';
   });
 
   /* ------------------------------------------------------------
@@ -79,6 +103,9 @@
       ready = true;
       readyAt = performance.now();
       if (veilEl) veilEl.classList.add('ready');
+      // born disabled (index.html) so focus can only land on Enter once it can act
+      var btn = document.getElementById('veilEnter');
+      if (btn) btn.disabled = false;
     }
     function paint() {
       var p = 0, k;
@@ -128,28 +155,16 @@
   }
 
   // the first-seen artwork joins the gate: the veil fox and hero fox
-  // sharp layers must be fetched, decoded AND rasterized before Enter,
-  // so no fox can ever pop in after the veil lifts
+  // sharp layers must be fetched and decoded before Enter, so no fox
+  // can ever pop in after the veil lifts (a decoded bitmap paints in
+  // the same frame it is asked for)
   (function gateFoxes() {
     var sharps = document.querySelectorAll('.veil-spirit img.sharp, .hero-spirit img.sharp');
     if (!sharps.length) { gate.set('foxes', 1); return; }
     var done = 0;
-    function warm(img) {
-      // draw once at layout size so the first real paint after Enter
-      // finds a warm raster (SVG-as-img rasters are cached per size)
-      try {
-        var dprr = Math.min(window.devicePixelRatio || 1, 2);
-        var w = Math.round((img.clientWidth || 600) * dprr);
-        var h = Math.round((img.clientHeight || 600) * dprr);
-        if (!w || !h) return;
-        var c = document.createElement('canvas');
-        c.width = Math.min(w, 2048); c.height = Math.min(h, 2048);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      } catch (e) { /* warming is best-effort */ }
-    }
     Array.prototype.forEach.call(sharps, function (img) {
       var fin = function () { done += 1; gate.set('foxes', done / sharps.length); };
-      if (img.decode) img.decode().then(function () { warm(img); fin(); }, fin);
+      if (img.decode) img.decode().then(fin, fin);
       else if (img.complete) fin();
       else { img.addEventListener('load', fin); img.addEventListener('error', fin); }
     });
@@ -497,11 +512,23 @@
   var entered = false;
   var lenis = null;
 
+  // the veil is modal: while it is up nothing behind it may take focus,
+  // pointer or a screen reader's cursor (inert is simply ignored where
+  // unsupported, leaving the old behaviour)
+  function setGated(on) {
+    doc.classList.toggle('gated', on);
+    document.querySelectorAll('main, .nav').forEach(function (el) { el.inert = on; });
+  }
+
   function enter() {
     if (entered || !gate.isReady()) return; // the gate holds until the forest is loaded
     entered = true;
-    doc.classList.remove('gated');
+    setGated(false);
     window.scrollTo(0, 0); // the journey always begins at the first step
+    // the pins were measured while html.gated hid the scrollbar — remeasure
+    // now the gutter exists, or every pinned scene keeps a box one scrollbar
+    // wider than the viewport (5px off-centre, right anchors 10px out)
+    if (MOTION) ScrollTrigger.refresh();
     // reap the veil (and its decoded fox rasters) once its exit ends —
     // visibility:hidden alone pins that memory for the site's lifetime
     var reap = function () {
@@ -528,7 +555,7 @@
   }
 
   if (veil) {
-    doc.classList.add('gated'); // scroll is locked while the veil is up
+    setGated(true); // scroll and focus are locked while the veil is up
     document.getElementById('veilEnter').addEventListener('click', enter);
     // scroll-to-enter stays, but leftover trackpad inertia from the
     // loading wait must not skip the 100% settle and Enter reveal —
@@ -560,7 +587,7 @@
       // retire enter() — otherwise reduced-motion visitors sit behind
       // html.gated's overflow:hidden with no visible gate, and a later
       // stray enter() would scrollTo(0,0) out from under them
-      doc.classList.remove('gated');
+      setGated(false);
       entered = true;
       setTimeout(function () {
         if (veil && veil.parentNode) { veil.remove(); veil = null; }
@@ -599,7 +626,15 @@
       var target = document.querySelector(a.getAttribute('href'));
       if (!target || !lenis) return; // no Lenis: native anchor jump
       e.preventDefault();
-      lenis.scrollTo(target, { duration: 1.6 });
+      lenis.scrollTo(target, {
+        duration: 1.6,
+        // hand focus over where the glide lands, as the native jump would —
+        // the next Tab continues inside the chapter, not along the header
+        onComplete: function () {
+          if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+          target.focus({ preventScroll: true });
+        }
+      });
     });
   });
 
@@ -646,10 +681,12 @@
   function condense(mount, opts) {
     opts = opts || {};
     var imgs = mount.querySelectorAll('img');
-    gsap.set(imgs, { opacity: 0 });
-    gsap.set(mount, { y: opts.y === undefined ? 30 : opts.y });
+    // the rise rides the images, never the mount: the ambient mounts'
+    // own y is scrub-owned (parallax) and the hunt mount's is the idle
+    // breath — two writers on one transform fight (see velocity())
+    gsap.set(imgs, { opacity: 0, y: opts.y === undefined ? 30 : opts.y });
     var tl = gsap.timeline({ paused: true });
-    tl.to(mount, { y: 0, duration: 2.2, ease: 'power4.out' }, 0);
+    tl.to(imgs, { y: 0, duration: 2.2, ease: 'power4.out' }, 0);
     imgs.forEach(function (img, i) {
       var end = LAYER_OPACITY[img.className] || 1;
       tl.to(img, { opacity: end, duration: 1.6, ease: 'power4.out' }, i * 0.45);
@@ -732,8 +769,9 @@
 
     // the wordmark arrives letter by letter
     var ht = document.querySelector('.hero-title');
+    ht.setAttribute('aria-label', ht.textContent.trim()); // AT reads the word, not the glyphs
     ht.innerHTML = Array.from(ht.textContent).map(function (c) {
-      return '<span class="hc">' + c + '</span>';
+      return '<span class="hc" aria-hidden="true">' + c + '</span>';
     }).join('');
 
     gsap.set('.hero-eyebrow, .hero-sub', { opacity: 0, y: 24 });
@@ -758,11 +796,16 @@
         start: 'top top',
         end: '+=160%',
         pin: true,
+        // pins refresh first — every reveal above was created before them
+        // and must see their pinSpacing, or it fires a pin-length early
+        refreshPriority: 1,
         scrub: 0.8,
         invalidateOnRefresh: true // the per-glyph spread below is font-size-relative
       }
     })
-      .to(zoom, { scale: 1.55, ease: 'power1.in' }, 0)
+      // both push-ins span the timeline's full length (fade 0.45 + 0.5):
+      // at GSAP's default 0.5 they halted at peak speed, still ~90% opaque
+      .to(zoom, { scale: 1.55, ease: 'power1.in', duration: 0.95 }, 0)
       // the wordmark tracks apart via per-glyph transforms, NOT
       // letter-spacing: scrubbing letter-spacing reflows the char-split
       // title on every frame of the visit's first scroll gesture.
@@ -773,7 +816,8 @@
           var spread = 0.17 * parseFloat(getComputedStyle(ht).fontSize);
           return (i - mid) * spread;
         },
-        ease: 'power1.in'
+        ease: 'power1.in',
+        duration: 0.95
       }, 0)
       .to(zoom, { opacity: 0, ease: 'none' }, 0.45)
       .to('.hero-cue', { opacity: 0, ease: 'none', duration: 0.2 }, 0);
@@ -798,6 +842,7 @@
         start: 'top top',
         end: function () { return '+=' + getDist(); },
         pin: true,
+        refreshPriority: 1,
         scrub: 1,
         invalidateOnRefresh: true
       }
@@ -810,9 +855,12 @@
       onEnter: function () { foxTl.play(); }
     });
     // partly through the edge — hindquarters and tails in frame,
-    // and it slips a little further out as you follow
-    gsap.fromTo(foxMount, { x: function () { return window.innerWidth * 0.055; } }, {
-      x: function () { return window.innerWidth * 0.14; },
+    // and it slips a little further out as you follow. Travel is
+    // relative to the fox's own width so the crop reads the same on
+    // a 480px-capped fox at any viewport (vw-based travel walked it
+    // fully off-screen on ultrawide).
+    gsap.fromTo(foxMount, { xPercent: 16.5 }, {
+      xPercent: 42,
       ease: 'none',
       scrollTrigger: {
         trigger: '.hunt-pin', start: 'top top',
@@ -824,13 +872,18 @@
     // expo/power4 voice (a breath should be sinusoidal)
     gsap.to(foxMount, { y: -7, duration: 2.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
 
-    gsap.utils.toArray('.skill').forEach(function (el) {
+    gsap.utils.toArray('.skill').forEach(function (el, idx) {
+      // columns already inside the first frame (wide viewports) can't
+      // reveal on the horizontal cue — the track's time is 0 until the
+      // pin engages, so they'd all pop together at the lock. Those take
+      // the vertical approach cue instead, cascading left to right.
+      var inView = el.getBoundingClientRect().left < window.innerWidth * 0.88;
       gsap.fromTo(el, { opacity: 0, y: 70 }, {
         opacity: 1, y: 0, duration: 1, ease: 'expo.out',
-        scrollTrigger: {
-          trigger: el, containerAnimation: horiz,
-          start: 'left 88%', once: true
-        }
+        delay: inView ? idx * 0.12 : 0,
+        scrollTrigger: inView
+          ? { trigger: el, start: 'top 88%', once: true }
+          : { trigger: el, containerAnimation: horiz, start: 'left 88%', once: true }
       });
       var hanzi = el.querySelector('.skill-hanzi');
       gsap.fromTo(hanzi, { y: 50 }, {
@@ -861,6 +914,7 @@
         start: 'top top',
         end: '+=400%',
         pin: true,
+        refreshPriority: 1,
         scrub: 1,
         invalidateOnRefresh: true,
         // promote the gate layers only while the corridor is active —
@@ -978,12 +1032,16 @@
           start: 'top top',
           end: '+=320%',
           pin: true,
+          refreshPriority: 1,
           scrub: 1
         }
       });
       tl.eventCallback('onUpdate', function () {
-        var n = Math.floor((tl.time() - 0.75) / STEP);
-        setCount(Math.max(0, Math.min(TAILS - 1, n)));
+        // each flip lands 0.2 into its piece's reveal (pieces start at
+        // 1.0 + i*STEP), so the row and the drawn tail arrive together;
+        // before the first, n is -1 — all rows unlit, the count reads 01
+        var n = Math.floor((tl.time() - 1.2) / STEP);
+        setCount(Math.min(TAILS - 1, n));
       });
       return tl;
     }
@@ -1004,7 +1062,15 @@
     // how every piece once showed the entire fox.
     var VB = { w: 674, h: 502 };
     var ORIGIN = { x: 368, y: 322 };
-    var S = PHONE ? 1 : 2; // supersample for retina; phones render the fox far smaller
+    // canvas units per viewBox unit — set once the drawing lands, so the
+    // pieces are copied at the density this screen shows the scene (one
+    // device pixel per canvas pixel), never a fixed 2x that a 1x desktop
+    // downscales and a 3x phone upscales. The canvases take the raster's
+    // own pixel grid (CW × CH), never VB × S truncated: 502·S is a
+    // fraction, and an integer-floored height resampled every piece by
+    // one row — the artefact tools/bake-fox-rasters.mjs snaps its
+    // retina heights to avoid.
+    var S = 1, CW = VB.w, CH = VB.h;
 
     // boundary rays between tails, degrees around the fan base
     // (90 = straight up); tuned against a rendered contact sheet of the
@@ -1037,8 +1103,8 @@
 
     function shape(poly) {
       var c = document.createElement('canvas');
-      c.width = VB.w * S;
-      c.height = VB.h * S;
+      c.width = CW;
+      c.height = CH;
       var x = c.getContext('2d');
       if (typeof x.filter === 'string') x.filter = 'blur(' + 8 * S + 'px)'; // feather
       x.fillStyle = '#fff';
@@ -1053,8 +1119,8 @@
 
     function bake(art, keepPoly, erasePoly) {
       var c = document.createElement('canvas');
-      c.width = VB.w * S;
-      c.height = VB.h * S;
+      c.width = CW;
+      c.height = CH;
       var x = c.getContext('2d');
       x.drawImage(art, 0, 0, c.width, c.height);
       x.globalCompositeOperation = 'destination-in';
@@ -1099,9 +1165,17 @@
       art.onload = resolve;
       art.onerror = reject;
     });
-    art.src = 'assets/kitsune/sitting.svg';
+    // the same candidate the scene's own <img> resolves (its sizes rule
+    // mirrors this measurement), so the bake and the fallback drawing
+    // share one download
+    var sceneCss = spirit.getBoundingClientRect().width || 840;
+    art.src = foxPick('sitting', sceneCss);
     artLoaded.then(function () {
-      // defer the six supersampled bakes off the startup path — they
+      var need = sceneCss * (window.devicePixelRatio || 1);
+      CW = need >= art.naturalWidth ? art.naturalWidth : Math.round(need);
+      CH = Math.round(CW * art.naturalHeight / art.naturalWidth);
+      S = CW / VB.w;
+      // defer the six bakes off the startup path — they
       // cost one long main-thread task right around the visitor's
       // entrance; bake early only if the journey nears this chapter
       return new Promise(function (resolve) {
@@ -1126,6 +1200,11 @@
       // live invert/blur filters that the baked-glow WebPs opted out of
       baseImgs.forEach(function (img) {
         img.removeAttribute('data-baked');
+        // the sharp copy carries a srcset: point it at the bake too (a
+        // bare candidate is 1x), or the browser keeps the old selection's
+        // density on this src — a still-lazy image never re-resolves it
+        img.removeAttribute('sizes');
+        img.srcset = urls[0];
         img.src = urls[0];
       });
       // reveal only once the body-only bitmap is decoded, so the old
@@ -1196,7 +1275,10 @@
           if (!self.isActive) return;
           count.textContent = ch[1];
           document.querySelectorAll('.nav-links a').forEach(function (a) {
-            a.classList.toggle('active', a.getAttribute('data-nav') === ch[2]);
+            var on = a.getAttribute('data-nav') === ch[2];
+            a.classList.toggle('active', on);
+            // the ARIA state mirrors the visual one
+            if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
           });
         }
       });

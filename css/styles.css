@@ -76,6 +76,10 @@
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
   --zh: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
   --pad-x: 8vw;
+  /* chapter y-padding as a token: the phone tier overrides the value,
+     never the .chapter selector — restating it there defeated the
+     pinned and zeroed sections' own padding: 0 */
+  --ch-pad-y: clamp(120px, 12.5vw, 210px);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -106,7 +110,22 @@ body {
   outline-offset: 8px;
   color: var(--spirit);
 }
-.veil-enter:focus-visible .veil-enter-rule { width: 76px; background: var(--spirit); }
+.veil-enter:focus-visible .veil-enter-rule { transform: scaleX(1.652); background: var(--spirit); }
+
+/* press state: the colour each control reaches on hover, only earlier.
+   On touch (no hover, see the capability guards below) it is the tap's
+   only answer — a brief in-voice flash that eases back on release.
+   Colour only: the UA tap highlight is a translucent black that
+   vanishes on the ink, and normalizeScroll (main.js) already owns
+   touch-action on html/body. */
+.nav-links a:active, .pool-links a:active { color: var(--moon); transition-duration: var(--dur-1); }
+.wscene-visit:active { color: var(--spirit); border-color: var(--spirit-soft); transition-duration: var(--dur-1); }
+.pool-mail:active { color: var(--spirit); border-color: var(--spirit); transition-duration: var(--dur-1); }
+.veil-enter:active { color: var(--spirit); }
+
+/* a chapter that receives focus from the nav (main.js) is a landing
+   point, not a control — no ring around the whole section */
+main[tabindex="-1"]:focus, .chapter[tabindex="-1"]:focus { outline: none; }
 
 /* the scrollbar is part of the world, not the OS chrome.
    Standard properties only: modern engines (Chromium 121+, Safari
@@ -115,7 +134,7 @@ body {
    classic gutter — a regression, not a polish. */
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(var(--spirit-rgb), 0.3) var(--ink);
+  scrollbar-color: rgba(var(--spirit-rgb), 0.5) var(--ink); /* 0.5: the thumb's 3:1 floor on the ink track */
 }
 
 a { color: inherit; text-decoration: none; }
@@ -183,7 +202,9 @@ html.gated .grain { animation-play-state: paused; }
 }
 
 .cursor-halo {
-  position: fixed; top: 0; left: 0; z-index: 60;
+  /* above the veil (100): the spirit glow greets the cursor on the
+     gate itself, so Enter's grow and lean are seen, not only felt */
+  position: fixed; top: 0; left: 0; z-index: 110;
   width: 34px; height: 34px; border-radius: 50%;
   background: radial-gradient(circle, rgba(var(--spirit-rgb), 0.35), transparent 70%);
   pointer-events: none; mix-blend-mode: screen;
@@ -281,9 +302,13 @@ html.no-js .veil { display: none; }
 .veil-enter-rule {
   display: block; margin: 12px auto 0;
   width: 46px; height: 1px; background: var(--moon-faint);
-  transition: width var(--dur-2) var(--out-expo);
+  /* the rule grows 46 → 76px by scaleX (76/46), never by width — a solid
+     1px line scales pixel-identically and never touches layout. It moves
+     on the expo curve, the colour crossfades on the soft one — the same
+     pair the label uses — so the rule never snaps to spirit */
+  transition: transform var(--dur-2) var(--out-expo), background-color var(--dur-2) var(--out-soft);
 }
-.veil-enter:hover .veil-enter-rule { width: 76px; background: var(--spirit); }
+.veil-enter:hover .veil-enter-rule { transform: scaleX(1.652); background: var(--spirit); }
 
 /* ------------------------------------------------------------
    fixed chrome
@@ -298,14 +323,21 @@ html.no-js .veil { display: none; }
 
 .nav-mark { display: flex; align-items: baseline; gap: 12px; }
 .nav-hanzi { font-family: var(--zh); font-weight: 300; font-size: 17px; color: var(--spirit); }
-.nav-word { font-family: var(--serif); font-size: 15px; letter-spacing: 0.3em; }
+.nav-word { font-family: var(--serif); font-size: 15px; letter-spacing: 0.3em; transition: color var(--dur-2) var(--out-soft); }
+/* the mark answers like every other link — moon → spirit, the same
+   turn .veil-enter and .wscene-visit make; hover-only so a tap on a
+   touch device can't latch the colour */
+@media (hover: hover) {
+  .nav-mark:hover .nav-word { color: var(--spirit); }
+}
+.nav-mark:focus-visible .nav-word { color: var(--spirit); }
 
 .nav-links { display: flex; gap: clamp(16px, 2.6vw, 40px); }
 .nav-links a {
   font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
   color: var(--moon-dim);
   transition: color var(--dur-2) var(--out-soft);
-  position: relative; padding-bottom: 6px;
+  position: relative; padding: 8px 0 6px; /* top pad balances the underline's 6px so the caps centre on the mark */
 }
 .nav-links a::after {
   content: ''; position: absolute; left: 0; bottom: 0;
@@ -316,16 +348,38 @@ html.no-js .veil { display: none; }
   transform: scaleX(0); transform-origin: right;
   transition: transform var(--dur-2) var(--out-expo);
 }
-.nav-links a:hover, .nav-links a.active { color: var(--moon); }
+.nav-links a.active { color: var(--moon); }
 .nav-links a.active::after { transform: scaleX(1); transform-origin: left; }
 /* hover-only choreography stays behind a capability guard — on touch,
-   :hover latches after a tap and the state would stick */
+   :hover latches after a tap and the state would stick (the colour
+   too: a tapped link stayed lit beside the chapter really active) */
 @media (hover: hover) {
+  .nav-links a:hover { color: var(--moon); }
   .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+}
+/* keyboard focus takes the same sweep — outside the guard:
+   :focus-visible never latches on a tap */
+.nav-links a:focus-visible { color: var(--moon); }
+.nav-links a:focus-visible::after { transform: scaleX(1); transform-origin: left; }
+
+/* touch: the type stays 8–10px but the finger gets a 44px slot —
+   an invisible ::before (::after is the sweep line) on the nav, the
+   mark, the pool links and the visit links. Coarse-only: on a mouse
+   it would fire hover from 12px of empty header. The -4px side bleed
+   keeps clear air between phone nav neighbours. */
+@media (pointer: coarse) {
+  .nav-links a, .nav-mark, .pool-links a, .wscene-visit { position: relative; }
+  .nav-links a::before, .nav-mark::before, .pool-links a::before, .wscene-visit::before {
+    content: ''; position: absolute;
+    left: -4px; right: -4px; top: 50%; height: 44px;
+    transform: translateY(-50%);
+  }
 }
 
 .rail {
-  position: fixed; right: 3vw; top: 50%; z-index: 20;
+  /* on the chrome's 4vw line with the header and footer — at 3vw it
+     hung outboard of both on wide screens (35px spread at 3440) */
+  position: fixed; right: 4vw; top: 50%; z-index: 20;
   transform: translateY(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
@@ -396,7 +450,7 @@ html.no-js .veil { display: none; }
 
 main { position: relative; z-index: 4; }
 
-.chapter { position: relative; padding: clamp(120px, 12.5vw, 210px) var(--pad-x); }
+.chapter { position: relative; padding: var(--ch-pad-y) var(--pad-x); }
 
 .ch-grid {
   display: grid;
@@ -435,7 +489,7 @@ main { position: relative; z-index: 4; }
 .hero-title .hc { display: inline-block; }
 
 .edge-hanzi {
-  position: absolute; right: 3.5vw; top: 22vh;
+  position: absolute; right: 4vw; top: 22vh; /* the chrome's line, as the rail */
   writing-mode: vertical-rl;
   font-family: var(--zh); font-weight: 200;
   font-size: clamp(40px, 6vmin, 72px); letter-spacing: 0.4em;
@@ -544,11 +598,21 @@ main { position: relative; z-index: 4; }
   60%, 100% { transform: translateY(100%); }
 }
 
+/* short desktop viewports (1366×768, 1536×864, 1440×900): the 60vh fox
+   pushed the eyebrow up into the nav band and dropped the cue onto the
+   ground glow — trim the spirit and lift the cue. ≥951px tall and the
+   ≤960px tiers keep their own rules. Mirrored in the hero fox's
+   data-fox-sizes and its preload (index.html). */
+@media (min-width: 961px) and (max-height: 950px) {
+  .hero-spirit { width: clamp(320px, 46vh, 620px); }
+  .hero-cue { bottom: 3vh; }
+}
+
 /* ------------------------------------------------------------
    01 · origin
    ------------------------------------------------------------ */
 
-.origin .ch-grid { grid-template-columns: minmax(0, 6.5fr) minmax(0, 4fr); align-items: start; }
+.origin .ch-grid { grid-template-columns: minmax(0, 6.5fr) minmax(0, 4fr); align-items: start; row-gap: 0; /* 6vw is a column gap — the head's own margin is the head→body interval */ }
 .origin .ch-head { grid-column: 1 / -1; margin-bottom: clamp(46px, 5vw, 84px); }
 
 .origin-body { max-width: 58ch; }
@@ -568,7 +632,7 @@ main { position: relative; z-index: 4; }
 }
 .origin-facts dt {
   font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
-  color: var(--moon-faint); margin-bottom: 8px;
+  color: var(--moon-dim); margin-bottom: 8px; /* faint is for glyphs and rules, never words */
 }
 .origin-facts dd {
   font-family: var(--serif); font-size: 17px; color: var(--moon);
@@ -603,7 +667,7 @@ main { position: relative; z-index: 4; }
 .hunt-hint {
   margin-top: clamp(30px, 3.1vw, 52px);
   font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
-  color: var(--moon-faint);
+  color: var(--moon-dim);
 }
 
 .skill {
@@ -623,15 +687,18 @@ main { position: relative; z-index: 4; }
   font-size: clamp(30px, 3vw, 46px); line-height: 1;
   margin-bottom: clamp(12px, 1.25vw, 22px);
 }
-.skill p { color: var(--moon-dim); font-size: 14px; max-width: 30ch; }
+.skill p { color: var(--moon-dim); font-size: 14px; max-width: 34ch; text-wrap: balance; /* short 1–2 line runs break evenly, never a lone word (as .origin-facts dd) */ }
 .skill .skill-note {
   margin-top: clamp(8px, 0.9vw, 15px);
   font-family: var(--serif); font-style: italic;
-  font-size: 15px; color: var(--moon-faint);
+  font-size: 15px; color: var(--moon-dim);
+  max-width: 36ch; /* ch is measured in Cormorant here, so 36ch ≈ the Inter line's measure */
 }
 
 .hunt-outro {
-  min-width: 46vw;
+  /* capped like the intro — the couplet stops growing at 40px, so an
+     uncapped 46vw was just empty road at the end of the ultrawide hunt */
+  min-width: min(46vw, 760px);
   font-family: var(--serif); font-style: italic; font-weight: 300;
   font-size: clamp(24px, 2.6vw, 40px); line-height: 1.3;
   color: var(--moon-dim);
@@ -734,19 +801,24 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .wscene-title {
   font-family: var(--serif); font-weight: 300;
-  font-size: clamp(64px, 11vw, 185px); line-height: 0.95;
+  /* the 13vh term keeps the inscription inside the gate's band on short
+     laptops — vw alone set the meta on the tie beam at 1440×900 */
+  font-size: clamp(64px, min(11vw, 13vh), 185px); line-height: 0.95;
   letter-spacing: 0.015em;
+  text-wrap: balance; /* "Focus / or Fry", "Calming / Teddy Bear" — no one-word orphan under a giant title */
 }
 .wscene-line {
   font-family: var(--serif); font-style: italic;
   font-size: clamp(18px, 1.8vw, 26px); color: var(--moon-dim);
+  line-height: 1.55; /* the lede's leading (.origin-body .lead), not the body's 1.75 */
+  text-wrap: balance; /* even lines, never a lone "window." */
   margin-top: 3.4vh;
 }
 .wscene-role {
   display: inline-flex; align-items: center; gap: 18px;
   margin-top: 4.5vh;
   font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
-  color: var(--moon-faint);
+  color: var(--moon-dim);
 }
 .wscene-role::before, .wscene-role::after {
   content: ''; width: 52px; height: 1px; background: var(--hairline);
@@ -759,7 +831,6 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   padding-bottom: 3px;
   transition: color var(--dur-2) var(--out-soft), border-color var(--dur-2) var(--out-soft);
 }
-.wscene-visit:hover { color: var(--spirit); border-color: var(--spirit-soft); }
 /* layered hover: a spirit line sweeps over the resting hairline
    (enter-left / exit-right), and the ↗ answers a beat later */
 .wscene-visit, .pool-mail { position: relative; }
@@ -782,13 +853,25 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   display: inline-block;
   transition: transform var(--dur-1) var(--out-expo) 60ms;
 }
-/* hover-only: on touch, :hover latches after a tap and would stick */
+/* hover-only: on touch, :hover latches after a tap and would stick —
+   the colour included (a tapped link stayed lit after the new tab) */
 @media (hover: hover) {
+  .wscene-visit:hover { color: var(--spirit); border-color: var(--spirit-soft); }
+  .pool-mail:hover { color: var(--spirit); border-color: var(--spirit); }
+  .pool-links a:hover { color: var(--moon); }
   .wscene-visit:hover::after, .pool-mail:hover::after {
     transform: scaleX(1); transform-origin: left;
   }
   .wscene-visit:hover .visit-arrow { transform: translate(3px, -3px); }
 }
+/* keyboard focus takes the same choreography, outside the guard */
+.wscene-visit:focus-visible { color: var(--spirit); border-color: var(--spirit-soft); }
+.pool-mail:focus-visible { color: var(--spirit); border-color: var(--spirit); }
+.pool-links a:focus-visible { color: var(--moon); }
+.wscene-visit:focus-visible::after, .pool-mail:focus-visible::after {
+  transform: scaleX(1); transform-origin: left;
+}
+.wscene-visit:focus-visible .visit-arrow { transform: translate(3px, -3px); }
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
@@ -846,7 +929,11 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .fire-list li:hover .fire-name { color: var(--ember); }
   .fire-list li:hover .fire-name::after { opacity: 1; }
 }
-.fire-desc { font-size: 13px; color: var(--moon-dim); text-align: right; }
+.fire-desc {
+  font-size: 13px; color: var(--moon-dim); text-align: right;
+  max-width: 48ch; /* one tidy right column: two even lines, never a 92ch run */
+  text-wrap: balance;
+}
 
 /* ------------------------------------------------------------
    05 · nine tails
@@ -892,7 +979,9 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   position: absolute; right: var(--pad-x); top: 50%;
   transform: translateY(-50%);
   list-style: none;
-  width: min(320px, 34vw);
+  /* fill the room the fox scene (left 3vw, min(64vw, 840px)) leaves
+     beside it: 420px on both desktop tiers, never under 320px */
+  width: clamp(320px, calc(100vw - var(--pad-x) - 3vw - min(64vw, 840px) - 20px), 420px);
 }
 .tails-list li {
   display: flex; align-items: baseline; gap: 18px;
@@ -903,7 +992,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .tails-list li.lit { opacity: 1; }
 .tl-year { font-size: 10px; letter-spacing: 0.2em; color: var(--spirit); min-width: 42px; }
-.tl-mark { font-family: var(--serif); font-size: clamp(16px, 1.5vw, 21px); }
+.tl-mark { font-family: var(--serif); font-size: clamp(16px, 1.5vw, 21px); line-height: 1.4; text-wrap: pretty; }
 
 .tails-count {
   position: absolute; left: var(--pad-x); bottom: 7vh;
@@ -915,6 +1004,12 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   margin-right: 10px;
 }
 .tails-count-hanzi { font-family: var(--zh); color: var(--moon-faint); margin-left: 8px; }
+
+/* counters tick by textContent swap — tabular figures keep the static
+   suffix (' / 05 尾', ' / 03') from hopping as the digits change.
+   Old-style shapes stay; only the advance widths are fixed, the same
+   treatment .veil-pct already has. */
+.rail-count, .works-count, .tails-count { font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------
    06 · the moon pool
@@ -968,14 +1063,14 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   padding-bottom: 4px;
   transition: color var(--dur-2) var(--out-soft), border-color var(--dur-2) var(--out-soft);
 }
-.pool-mail:hover { color: var(--spirit); border-color: var(--spirit); }
+/* hover colours for the mail and links live with the works visit link
+   under the (hover: hover) guard above */
 
 .pool-links { display: flex; gap: 28px; margin-top: 26px; }
 .pool-links a {
   font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
   color: var(--moon-dim); transition: color var(--dur-2) var(--out-soft);
 }
-.pool-links a:hover { color: var(--moon); }
 
 .pool-whisper {
   margin-top: 30px; padding-top: 22px;
@@ -983,14 +1078,14 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   font-family: var(--serif); font-style: italic;
   font-size: 14px; color: var(--moon-dim);
 }
-.pool-whisper span { font-family: var(--zh); font-style: normal; font-size: 12px; margin-left: 10px; }
+.pool-whisper span { font-family: var(--zh); font-style: normal; font-size: 12px; margin-left: 10px; white-space: nowrap; /* the phrase never splits mid-way */ }
 
 .footer {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
   display: flex; align-items: center; justify-content: space-between;
   padding: 22px 4vw;
   font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--moon-faint);
+  color: var(--moon-dim);
 }
 .footer p[aria-hidden] { font-family: var(--zh); letter-spacing: 0.4em; }
 
@@ -1003,7 +1098,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 
   .rail, .edge-hanzi { display: none; }
   .nav { padding: 18px 5vw; }
-  .nav-word, .nav-links a[data-nav="fire"], .nav-links a[data-nav="tails"] { display: none; }
+  .nav-word { display: none; }
   .nav-hanzi { font-size: 15px; white-space: nowrap; }
   .nav-links { gap: 16px; }
   .nav-links a { font-size: 9px; letter-spacing: 0.18em; }
@@ -1032,7 +1127,17 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .tails-count { bottom: 4vh; }
 
   .pool-fox-wrap { width: 24vw; right: 8vw; }
-  .footer { flex-direction: column; gap: 6px; padding-bottom: 16px; }
+  .footer { flex-direction: column; gap: 6px; padding-bottom: 16px; text-align: center; }
+  .footer p { text-wrap: balance; } /* 375/360 phones wrap the © line — break it evenly, centred */
+}
+
+/* portrait tablets have the height to stack — fox above, marks below,
+   as the phone tier does; landscape keeps the ghosted overlay. Must sit
+   between the ≤960 and ≤480 blocks so phones still win. Mirrored in the
+   tails fox's data-fox-sizes (index.html). */
+@media (max-width: 960px) and (orientation: portrait) {
+  .tails-scene { width: min(66vw, 560px); top: 38%; opacity: 0.9; }
+  .tails-list { top: auto; bottom: 15vh; transform: translateX(50%); }
 }
 
 /* ------------------------------------------------------------
@@ -1040,11 +1145,13 @@ html.js:not(.reduced) .wgate { opacity: 0; }
    Nothing here touches viewports above 480px.
    ------------------------------------------------------------ */
 @media (max-width: 480px) {
-  .chapter { padding: clamp(90px, 28vw, 128px) var(--pad-x); }
+  :root { --ch-pad-y: clamp(90px, 28vw, 128px); }
 
   .nav { padding: 16px 4vw; }
-  .nav-links { gap: 10px; }
-  .nav-links a { font-size: 8px; letter-spacing: 0.14em; }
+  .nav-links { gap: 12px; }
+  .nav-links a { font-size: 9px; letter-spacing: 0.16em; }
+  /* a hand's width only holds four chapters — Den and Tails step aside here */
+  .nav-links a[data-nav="fire"], .nav-links a[data-nav="tails"] { display: none; }
 
   .hero-eyebrow { font-size: 11px; letter-spacing: 0.2em; text-indent: 0.2em; padding: 0 6vw; }
   .hero-eyebrow .hero-disc { display: none; } /* the discipline lives on in Awakening + Works */
@@ -1057,14 +1164,23 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .origin-facts dt { margin-bottom: 4px; }
 
   .hunt-fox { width: 150px; opacity: 0.45; bottom: 4vh; }
+  /* the closing line is set on one forced break; on a hand it must
+     still sit inside the gutters, so the type follows the width */
+  .hunt-outro { font-size: clamp(18px, 5.7vw, 24px); }
 
   .works-head { top: 9vh; }
   .works-head .ch-title { font-size: clamp(30px, 9.5vw, 40px); }
-  .wgate-frame { top: 56%; height: 54vh; }
-  .wgate-inner { max-width: 88vw; }
+  /* the inscription stays inside the pillars (88vw frame, 4% insets
+     → ~316px clear at 390); the description line that costs is paid
+     for with a taller gate and a lower seat under the tie-beam */
+  .wgate-frame { top: 56%; height: 60vh; }
+  .wgate-inner { max-width: 76vw; padding-top: 22vh; }
   .wscene-title { font-size: clamp(38px, 13.5vw, 60px); }
   .wscene-line { font-size: 16px; }
-  .wscene-role::before, .wscene-role::after { width: 24px; }
+  /* the role always wraps at this width — a balanced two-line block,
+     without flanking dashes that can only bracket one line */
+  .wscene-role { display: block; text-wrap: balance; }
+  .wscene-role::before, .wscene-role::after { display: none; }
 
   .fire .ch-grid { gap: clamp(32px, 10vw, 48px) 6vw; }
   .fire-fox { margin-top: 8px; }
@@ -1079,14 +1195,23 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .tails-count { bottom: 2.5vh; }
   .tails-count span#tailNum { font-size: 40px; }
 
-  .pool { padding-bottom: 42vh; }
+  .pool { padding: var(--ch-pad-y) 0 42vh; } /* today's vertical, minus the doubled side inset (.pool-content pads itself) */
   .pool-fox-wrap { width: 30vw; right: 6vw; bottom: 12%; }
+  /* the hanzi phrase takes its own line, flush under the English */
+  .pool-whisper span { display: block; margin: 4px 0 0; }
 }
 
 /* on very wide screens the columns drift apart — hold the
    composition together and let the spirits grow into the room
    instead of letting the middle go empty */
 @media (min-width: 1700px) {
+  /* the content gutter widens to the grid's own 1460 band (990px at
+     3440), so the absolute chapters — works head/count, tails
+     head/list/count, the pool — share the origin/fire left edge */
+  :root { --pad-x: max(8vw, calc(50vw - 730px)); }
+  .hunt-track { padding: 0 8vw; } /* the track keeps its travel */
+  .tails-scene { left: calc(var(--pad-x) - 5vw); } /* the same 5vw lead on the heading as 3vw/8vw below */
+  .pool-fox-wrap { right: max(18vw, var(--pad-x)); } /* flush with the band, like the origin/fire foxes */
   .ch-grid { max-width: 1460px; margin-inline: auto; }
   .origin-fox { width: min(44vw, 680px); }
   .fire-fox { width: min(40vw, 620px); }

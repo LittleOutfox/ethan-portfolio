@@ -18,7 +18,7 @@ A nine-tailed fox scroll-story portfolio. One continuous journey through a moonl
 
 ## Craft notes
 
-- **Hand-drawn ink foxes** — seven original SVG drawings, rendered as translucent moonlight spirits through a three-layer bloom (no raster AI art).
+- **Hand-drawn ink foxes** — seven original ink drawings, rendered as translucent moonlight spirits through a three-layer bloom (no raster AI art). The autotraced vectors are baked in Chrome to lossless rasters at every display density the page shows them (`tools/bake-fox-rasters.mjs`), so the ink is pixel-for-pixel the browser's own render and scrolling never re-rasterizes a megabyte of path data.
 - **One continuous journey** — a graded forest video scrubbed by total scroll progress, melted into the ink at every edge.
 - **Every tail is earned** — the sitting fox's five tails are baked into separate bitmaps at load (canvas alpha compositing over untouched artwork) and unfurl one per milestone.
 - **Proper Chinese** — every hanzi is Simplified Chinese, natively reviewed (起源 · 觉醒 · 炉火 · 蜕变 · 以狐为引); set in Noto Serif SC.
@@ -26,7 +26,7 @@ A nine-tailed fox scroll-story portfolio. One continuous journey through a moonl
 
 ## Stack
 
-Vanilla HTML / CSS / JavaScript. GSAP 3.12 (ScrollTrigger) and Lenis via CDN. No build step.
+Vanilla HTML / CSS / JavaScript. GSAP 3.12 (ScrollTrigger) and Lenis, self-hosted under `js/vendor/` (no CDN). No build step.
 
 ## Run locally
 
@@ -35,6 +35,12 @@ python -m http.server 4173
 ```
 
 Then open http://localhost:4173. A static server is required (the scroll-scrubbed video is fetched as a blob).
+
+If a fox drawing changes, rebake its rasters (needs Chrome and `playwright`; `npm i -D playwright sharp`):
+
+```
+node tools/bake-fox-rasters.mjs [pose ...]
+```
 
 ## Repository notes
 
