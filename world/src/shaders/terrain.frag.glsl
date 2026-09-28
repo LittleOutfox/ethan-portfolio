@@ -4,6 +4,9 @@ uniform vec3 uWater;
 #ifdef BLOOMS
 uniform vec4 uBlooms[BLOOMS]; // each spirit bloom's orb (xyz) and scale (w)
 #endif
+#ifdef PAWS
+uniform vec4 uPaws[PAWS]; // the spirit fox's pawprints: where (x, z), when, how bright
+#endif
 
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -83,6 +86,17 @@ void main() {
     float d = length(L);
     float k = exp(-pow(d / uBlooms[i].w, 2.0) * 0.16) * bloomLight(uBlooms[i].xyz);
     col += uAqua * k * 0.1 * (0.3 + 0.7 * max(dot(n, L / d), 0.0));
+  }
+  #endif
+
+  #ifdef PAWS
+  // the spirit fox's pawprints: a small soft light where each paw came down, fading as it runs on
+  for (int i = 0; i < PAWS; i++) {
+    vec4 pw = uPaws[i];
+    float age = uTime - pw.z;
+    if (age > 3.0) continue;
+    vec2 dd = vWorld.xz - pw.xy;
+    col += vec3(0.34, 0.66, 1.0) * exp(-dot(dd, dd) / 0.003) * exp(-age * 1.2) * pw.w * 0.14;
   }
   #endif
 

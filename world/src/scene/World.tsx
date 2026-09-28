@@ -11,6 +11,7 @@ import { Forest } from './Forest'
 import { Foxfire } from './Foxfire'
 import { Shrine } from './Shrine'
 import { Sky } from './Sky'
+import { SpiritFox } from './SpiritFox'
 import { Terrain } from './Terrain'
 
 /** The whole world. Everything is built during render (never in effects) so the boot's compile pass sees it all. */
@@ -30,6 +31,7 @@ export function World({ bus, tier }: { bus: Bus; tier: TierSpec }) {
       <Forest U={U} trees={trees} msaa={tier.antialias} />
       <Shrine U={U} gates={gates} />
       <Sky U={U} />
+      <SpiritFox bus={bus} U={U} />
       <Foxfire U={U} density={tier.density} gates={gates} />
       <Air U={U} density={tier.density} />
     </>

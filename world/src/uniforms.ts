@@ -43,6 +43,8 @@ export function makeUniforms() {
     uStreamB: { value: new Vector4(STREAM.a2, STREAM.f2, STREAM.p2, STREAM.width) },
     /** each spirit bloom's orb (xyz) and scale (w), for the light it throws on the snow */
     uBlooms: { value: bloomOrbs().map(([x, y, z, s]) => new Vector4(x, y, z, s)) },
+    /** the spirit fox's latest pawprints: where each came down (x, z), when (s), and how bright */
+    uPaws: { value: Array.from({ length: 24 }, () => new Vector4(0, 0, -100, 0)) },
   }
 }
 
