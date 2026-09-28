@@ -23,6 +23,7 @@ A nine-tailed fox scroll-story portfolio. One continuous journey through a moonl
 - **Every tail is earned** — the sitting fox's five tails are baked into separate bitmaps at load (canvas alpha compositing over untouched artwork) and unfurl one per milestone.
 - **Proper Chinese** — every hanzi is Simplified Chinese, natively reviewed (起源 · 觉醒 · 炉火 · 蜕变 · 以狐为引); set in Noto Serif SC.
 - **Motion with intent** — GSAP ScrollTrigger + Lenis; pinned chapters, masked line reveals, a horizontal hunt, gates you pass through. Reduced-motion and no-JS fallbacks included.
+- **A faster way through** — scrolling stays the story, but it can also be stepped through a beat at a time: the hero's Scroll cue, then a small wisp at the foot of the screen, glides to the next chapter, project or milestone (→ and ← step too). It only shows while the page is still, and a hand on the wheel always takes over.
 
 ## Stack
 

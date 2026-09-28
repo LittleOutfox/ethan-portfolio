@@ -939,6 +939,9 @@
     // cursor halo through the visible one
     gates.forEach(function (gate, i) {
       var at = 2 + i * STEP;
+      // the walkthrough stops here: the gate fully open, its inscription
+      // readable (in by at + 1.15, dissolving from at + STEP - 0.75)
+      tl.addLabel('gate' + i, at + 1.5);
       var numEl = gate.querySelector('.wscene-num');
       var inner = gate.querySelector('.wgate-inner');
 
@@ -1228,6 +1231,8 @@
         opacity: 1, scale: 1, duration: 0.68, ease: 'power2.out'
       }, 1.0 + i * STEP);
     });
+    // the walkthrough stops here: all five tails drawn, before the pin lets go
+    tl.addLabel('earned', 1.0 + (TAILS - 1) * STEP + 0.9);
     tl.to({}, { duration: 0.8 });
     pins.tails = tl;
   })();
@@ -1394,6 +1399,187 @@
         }
       });
     }
+  })();
+
+  // ---- the walkthrough: a faster way through ------------------------
+  // For a visitor short of time the story can be stepped through, a beat
+  // at a time: the hero's own Scroll cue is the first step, then a small
+  // wisp at the foot of the screen (the cue's hairline and drip, made
+  // small) glides on to the next — each chapter, the start and end of the
+  // hunt, each project fully open, the tails all earned, the snowfield.
+  // The arrow keys step too (→ on, ← back). Scrolling is untouched: the
+  // wisp only shows while the page is still, and a hand on the wheel or
+  // the screen takes over a glide. Stops are read from the live triggers
+  // at every step — every refresh moves them.
+  (function walkthrough() {
+    var wisp = document.querySelector('.wisp');
+    var cue = document.querySelector('.hero-cue');
+    if (!wisp || !cue) return;
+    var label = wisp.querySelector('.wisp-label');
+    var say = document.getElementById('wispSay');
+    var gates = gsap.utils.toArray('[data-wgate]');
+    var cards = document.querySelectorAll('#huntTrack .skill');
+    var fire = document.getElementById('fire');
+    var origin = document.getElementById('origin');
+    var TOL = 24;        // px either side of a stop that still counts as on it
+    var CUE_GONE = 0.21; // the hero timeline's cue has faded by here
+    var gliding = false, target = 0, tween = null, idle = null, hinted = false;
+
+    function docTop(el) { return el.getBoundingClientRect().top + window.scrollY; }
+    // where a pinned chapter's scrubbed timeline reaches `label`, in scroll px
+    function at(tl, name) {
+      var st = tl.scrollTrigger;
+      return st.start + (tl.labels[name] / tl.duration()) * (st.end - st.start);
+    }
+    function stops() {
+      var hunt = pins.hunt.scrollTrigger;
+      var wide = window.innerWidth > 960;
+      // cards a..b centred on screen, as far as the track can travel
+      var centre = function (a, b) {
+        var mid = (a.offsetLeft + b.offsetLeft + b.offsetWidth) / 2;
+        return hunt.start + Math.max(0, Math.min(hunt.end - hunt.start, mid - window.innerWidth / 2));
+      };
+      // a wide screen holds three skills: the second centred shows the
+      // first three, then the last two together; a narrow one holds one,
+      // so the first, then the last
+      var list = [
+        { y: 0, name: 'Origin' },
+        { y: docTop(origin), name: 'Awakening' },
+        { y: wide ? centre(cards[1], cards[1]) : centre(cards[0], cards[0]), name: 'The Hunt' },
+        { y: wide ? centre(cards[3], cards[4]) : centre(cards[4], cards[4]), name: 'More skills' }
+      ];
+      gates.forEach(function (g, i) {
+        var title = g.querySelector('.wscene-title');
+        list.push({ y: at(pins.works, 'gate' + i), name: title ? title.textContent : 'Works' });
+      });
+      // the den centred, where its fire burns warmest — but never so far
+      // that its heading slips up under the header on a short screen
+      var denCentre = docTop(fire) + fire.offsetHeight / 2 - window.innerHeight / 2;
+      var denHead = docTop(fire.querySelector('.ch-head')) - 0.12 * window.innerHeight;
+      list.push(
+        { y: Math.min(denCentre, denHead), name: 'The Den' },
+        { y: at(pins.tails, 'earned'), name: 'Tails' },
+        { y: ScrollTrigger.maxScroll(window), name: 'Say hello' }
+      );
+      list.forEach(function (s) { s.y = Math.round(s.y); });
+      return list;
+    }
+    // the next stop beyond `ref` (dir 1), or the last one before it (dir -1)
+    function beyond(list, ref, dir) {
+      var i;
+      if (dir > 0) {
+        for (i = 0; i < list.length; i++) if (list[i].y > ref + TOL) return list[i];
+      } else {
+        for (i = list.length - 1; i >= 0; i--) if (list[i].y < ref - TOL) return list[i];
+      }
+      return null;
+    }
+    function inOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+    function show(on) { wisp.classList.toggle('on', on); }
+    // while the page is still: show the way on, or nothing past the last beat
+    function update() {
+      idle = null;
+      if (!entered || gliding) { show(false); return; }
+      // over the hero its own cue is the first step; the wisp waits
+      if (pins.hero.progress() < CUE_GONE) { show(false); return; }
+      var stop = beyond(stops(), window.scrollY, 1);
+      if (!stop) { show(false); return; }
+      var text = 'Next · ' + stop.name;
+      if (label.textContent !== text) label.textContent = text;
+      wisp.setAttribute('aria-label', 'Next: ' + stop.name);
+      show(true);
+      // the first time it appears it says what it is — though never over
+      // the words of the page (a phone's paragraphs run under it): then it
+      // waits for a clearer stop
+      if (!hinted && !overText()) {
+        hinted = true;
+        wisp.classList.add('hint');
+        setTimeout(function () { wisp.classList.remove('hint'); }, 2600);
+      }
+    }
+    // is there text where the label would rise (a band above the wisp)?
+    function overText() {
+      var r = wisp.getBoundingClientRect();
+      var y = r.top - 14;
+      for (var dx = -120; dx <= 120; dx += 40) {
+        var stack = document.elementsFromPoint(r.left + r.width / 2 + dx, y);
+        for (var i = 0; i < stack.length; i++) {
+          var el = stack[i];
+          if (wisp.contains(el)) continue;
+          if (el.closest('p, h1, h2, h3, li, dt, dd, blockquote')) return true;
+        }
+      }
+      return false;
+    }
+    // any scroll hides it; it returns once the page has been still a moment
+    function settle() {
+      show(false);
+      if (idle) clearTimeout(idle);
+      idle = setTimeout(update, 700);
+    }
+
+    function glide(stop) {
+      var from = window.scrollY;
+      var screens = Math.abs(stop.y - from) / window.innerHeight;
+      var duration = Math.max(1, Math.min(2, 0.8 + 0.28 * screens));
+      gliding = true;
+      target = stop.y;
+      show(false);
+      var landed = function () {
+        gliding = false;
+        tween = null;
+        say.textContent = stop.name;
+        settle();
+      };
+      if (lenis) {
+        lenis.scrollTo(stop.y, { duration: duration, easing: inOut, onComplete: landed });
+      } else {
+        // touch: normalizeScroll owns the input, so drive the window directly
+        if (tween) tween.kill();
+        var p = { y: from };
+        tween = gsap.to(p, {
+          y: stop.y, duration: duration, ease: 'power2.inOut',
+          onUpdate: function () { window.scrollTo(0, p.y); },
+          onComplete: landed
+        });
+      }
+    }
+    function step(dir) {
+      if (!entered) return;
+      // mid-glide, the next step counts on from where this glide lands
+      var stop = beyond(stops(), gliding ? target : window.scrollY, dir);
+      if (stop) glide(stop);
+    }
+
+    wisp.addEventListener('click', function () { step(1); });
+    cue.addEventListener('click', function () {
+      if (pins.hero.progress() < CUE_GONE) step(1); // only while it can be seen
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      if (!entered || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      var el = document.activeElement;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      e.preventDefault();
+      step(e.key === 'ArrowRight' ? 1 : -1);
+    });
+    // a hand on the wheel or the screen takes the scroll back (Lenis drops
+    // its own glide for the wheel; the touch glide is ours to stop)
+    function takeOver() {
+      if (!gliding) return;
+      gliding = false;
+      if (tween) { tween.kill(); tween = null; }
+    }
+    window.addEventListener('wheel', takeOver, { passive: true });
+    window.addEventListener('touchstart', function (e) {
+      if (!wisp.contains(e.target) && !cue.contains(e.target)) takeOver();
+    }, { passive: true });
+
+    if (lenis) lenis.on('scroll', settle);
+    else window.addEventListener('scroll', settle, { passive: true });
+    wisp.hidden = false;
+    settle();
   })();
 
   // keep measurements honest once fonts and images arrive
