@@ -1513,8 +1513,11 @@
       return false;
     }
     // any scroll hides it; it returns once the page has been still a moment
+    // (without its first hint: that is over once the page moves, or it
+    // could come back over words that have scrolled under it)
     function settle() {
       show(false);
+      wisp.classList.remove('hint');
       if (idle) clearTimeout(idle);
       idle = setTimeout(update, 700);
     }
