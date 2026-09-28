@@ -133,7 +133,7 @@ export function makeGait(): Gait {
 }
 
 /** The legs never cycle faster than this (strides per second), however fast the scroll runs. */
-const MAX_CADENCE = 3.6
+const MAX_CADENCE = 4
 
 /** Advance the gait by `ds` metres run along its path (signed) over `dt` seconds. */
 export function stepGait(g: Gait, ds: number, dt: number): Gait {
@@ -145,13 +145,53 @@ export function stepGait(g: Gait, ds: number, dt: number): Gait {
     g.dir = ds > 0 ? 1 : -1
   } else g.still += dt
   g.run = ease(g.run, smooth(0.15, 1.0, g.speed), 8, dt)
-  g.gallop = ease(g.gallop, smooth(3.5, 8, g.speed), 4, dt)
-  const strideLength = 0.9 + 0.9 * g.gallop
+  g.gallop = ease(g.gallop, smooth(2, 5, g.speed), 8, dt)
+  const strideLength = 0.9 + 1.6 * g.gallop
   g.stride += Math.min(d / strideLength, MAX_CADENCE * dt)
   g.look = ease(g.look, smooth(0.25, 0.7, g.still), 5, dt)
   const resting = g.still > 1.8
   g.sit = ease(g.sit, resting ? 1 : 0, resting ? 2.2 : 9, dt)
   return g
+}
+
+/** How it moves along its path: not step for step with the scroll, but in dashes. */
+export interface Dash {
+  dashing: boolean
+  /** m/s */
+  speed: number
+}
+
+export function makeDash(): Dash {
+  return { dashing: false, speed: 0 }
+}
+
+/** How far behind its spot it lets you pull before it goes (m), and its dash (m/s). */
+const DASH_START = 2.2
+const DASH_SPEED = 10
+
+/**
+ * How far it runs this frame toward its spot, `gap` metres ahead along its
+ * path, while the spot moves at `targetSpeed` m/s. It waits while a gentle
+ * scroll draws the spot a little ahead, then dashes there, at its full pace
+ * almost at once, easing in over the last metre, and stops on it; a fast
+ * scroll (through the hunt a brisk wheel carries it at 30–40 m/s) it chases
+ * at once and runs with, a little faster, so it keeps its place.
+ */
+export function stepDash(d: Dash, gap: number, targetSpeed: number, dt: number): number {
+  if (!d.dashing && (gap > DASH_START || (targetSpeed > 6 && gap > 0.3))) d.dashing = true
+  if (!d.dashing) {
+    d.speed = 0
+    return 0
+  }
+  const want = Math.min(Math.max(DASH_SPEED, targetSpeed * 1.3), targetSpeed + 1.5 + 7 * gap)
+  d.speed = Math.min(want, d.speed + 250 * dt)
+  const step = Math.min(gap, d.speed * dt)
+  if (gap - step < 0.06 && targetSpeed < DASH_SPEED * 0.5) {
+    d.dashing = false
+    d.speed = 0
+    return gap
+  }
+  return step
 }
 
 // ---------------------------------------------------------------- the shape
@@ -176,15 +216,15 @@ const HEAD_GROUP = [2, 3, 4, 5, 6, 7, 8]
 /** Standing, alert. */
 function standing(): Bone[] {
   const bs: Bone[] = [
-    bone([0.17, 0.37, 0], 0.1, [-0.17, 0.36, 0], 0.078), // 0 torso: chest → hips
-    bone([0.19, 0.34, 0], 0.085, [0.26, 0.27, 0], 0.05), // 1 the ruff at its chest
-    bone([0.2, 0.41, 0], 0.062, [0.29, 0.5, 0], 0.052), // 2 neck
-    bone([0.29, 0.52, 0], 0.07, [0.35, 0.515, 0], 0.06), // 3 head
-    bone([0.36, 0.5, 0], 0.042, [0.5, 0.47, 0], 0.011), // 4 snout
-    bone([0.32, 0.49, 0.042], 0.046, [0.28, 0.465, 0.075], 0.026), // 5 cheek, left
-    bone([0.32, 0.49, -0.042], 0.046, [0.28, 0.465, -0.075], 0.026), // 6 cheek, right
-    bone([0.3, 0.56, 0.042], 0.034, [0.28, 0.7, 0.075], 0.004), // 7 ear, left
-    bone([0.3, 0.56, -0.042], 0.034, [0.28, 0.7, -0.075], 0.004), // 8 ear, right
+    bone([0.17, 0.37, 0], 0.092, [-0.17, 0.36, 0], 0.074), // 0 torso: chest → hips
+    bone([0.19, 0.345, 0], 0.066, [0.24, 0.29, 0], 0.042), // 1 the curve of its chest
+    bone([0.2, 0.41, 0], 0.05, [0.29, 0.5, 0], 0.045), // 2 neck, slender
+    bone([0.29, 0.52, 0], 0.062, [0.35, 0.515, 0], 0.054), // 3 head
+    bone([0.36, 0.5, 0], 0.036, [0.5, 0.47, 0], 0.009), // 4 muzzle, long and pointed
+    bone([0.325, 0.49, 0.03], 0.034, [0.3, 0.475, 0.05], 0.02), // 5 cheek, left
+    bone([0.325, 0.49, -0.03], 0.034, [0.3, 0.475, -0.05], 0.02), // 6 cheek, right
+    bone([0.3, 0.56, 0.04], 0.036, [0.28, 0.72, 0.08], 0.004), // 7 ear, left: tall, as the spirit foxes' are
+    bone([0.3, 0.56, -0.04], 0.036, [0.28, 0.72, -0.08], 0.004), // 8 ear, right
   ]
   for (const z of [0.055, -0.055]) {
     // 9–12 front legs: shoulder → elbow → paw
@@ -198,12 +238,12 @@ function standing(): Bone[] {
       bone([-0.19, 0.08, z], 0.016, [-0.17, 0.02, z], 0.02),
     )
   }
-  // 19–22 the tail, a great plume: it hangs, swells, and curls up at its tip like a flame
-  tail(bs, [[-0.23, 0.37, 0], [-0.33, 0.25, 0], [-0.45, 0.17, 0], [-0.6, 0.2, 0], [-0.7, 0.33, 0]])
+  // 19–22 the tail, a great plume, held low and sweeping back as a fox holds it
+  tail(bs, [[-0.23, 0.36, 0], [-0.34, 0.27, 0], [-0.46, 0.2, 0], [-0.6, 0.16, 0], [-0.72, 0.16, 0]])
   return bs
 }
 
-const TAIL_R = [0.045, 0.085, 0.11, 0.09, 0.028]
+const TAIL_R = [0.045, 0.08, 0.1, 0.085, 0.028]
 function tail(bs: Bone[], pts: V[]) {
   for (let k = 0; k < 4; k++) bs.push(bone(pts[k], TAIL_R[k], pts[k + 1], TAIL_R[k + 1]))
 }
@@ -216,15 +256,15 @@ function tail(bs: Bone[], pts: V[]) {
  */
 function sitting(): Bone[] {
   const bs: Bone[] = [
-    bone([0.07, 0.4, 0], 0.095, [-0.1, 0.14, 0], 0.09),
-    bone([0.09, 0.37, 0], 0.08, [0.12, 0.27, 0], 0.05),
-    bone([0.07, 0.45, 0], 0.062, [0.09, 0.55, 0], 0.052),
-    bone([0.08, 0.59, 0], 0.07, [0.13, 0.585, 0], 0.06),
-    bone([0.15, 0.57, 0], 0.042, [0.27, 0.55, 0], 0.011),
-    bone([0.11, 0.56, 0.042], 0.046, [0.07, 0.535, 0.075], 0.026),
-    bone([0.11, 0.56, -0.042], 0.046, [0.07, 0.535, -0.075], 0.026),
-    bone([0.08, 0.64, 0.042], 0.034, [0.06, 0.78, 0.075], 0.004),
-    bone([0.08, 0.64, -0.042], 0.034, [0.06, 0.78, -0.075], 0.004),
+    bone([0.07, 0.4, 0], 0.092, [-0.1, 0.14, 0], 0.088),
+    bone([0.09, 0.37, 0], 0.066, [0.12, 0.28, 0], 0.042),
+    bone([0.07, 0.45, 0], 0.05, [0.09, 0.55, 0], 0.045),
+    bone([0.08, 0.59, 0], 0.062, [0.13, 0.585, 0], 0.054),
+    bone([0.15, 0.57, 0], 0.036, [0.28, 0.55, 0], 0.009),
+    bone([0.115, 0.56, 0.03], 0.034, [0.08, 0.54, 0.05], 0.02),
+    bone([0.115, 0.56, -0.03], 0.034, [0.08, 0.54, -0.05], 0.02),
+    bone([0.08, 0.64, 0.04], 0.036, [0.06, 0.8, 0.08], 0.004),
+    bone([0.08, 0.64, -0.04], 0.036, [0.06, 0.8, -0.08], 0.004),
   ]
   for (const z of [0.04, -0.04]) {
     bs.push(bone([0.09, 0.3, z], 0.03, [0.1, 0.16, z], 0.02), bone([0.1, 0.16, z], 0.016, [0.11, 0.02, z], 0.02))
@@ -263,7 +303,7 @@ const TROT = [0, 0.5, 0.5, 0]
 const GALLOP = [0, 0.12, 0.55, 0.67]
 const legOffset = (k: number, gallop: number) => TROT[k] + (GALLOP[k] - TROT[k]) * gallop
 /** how far a paw reaches ahead of where it stands, at a trot → a gallop */
-const reachOf = (gallop: number) => 0.08 + 0.06 * gallop
+const reachOf = (gallop: number) => 0.08 + 0.08 * gallop
 
 /**
  * The legs (0 front left, 1 front right, 2 hind left, 3 hind right) whose
@@ -290,10 +330,11 @@ function running(phase: number, gallop: number): Bone[] {
   const s = Math.sin(tau * phase)
   // the body: bobbing at a trot, rocking and flexing at a gallop
   const bob = 0.016 * Math.cos(2 * tau * phase) * (1 - gallop)
-  const rock = 0.03 * s * gallop
-  const flex = 0.025 * Math.sin(tau * phase + 1) * gallop
-  const chest: V = [0.17 + flex, 0.37 + bob + rock, 0]
-  const hips: V = [-0.17 - flex, 0.36 + bob - rock, 0]
+  const rock = 0.045 * s * gallop
+  const flex = 0.04 * Math.sin(tau * phase + 1) * gallop
+  const low = 0.03 * gallop
+  const chest: V = [0.17 + flex, 0.37 + bob + rock - low, 0]
+  const hips: V = [-0.17 - flex, 0.36 + bob - rock - low, 0]
   const shift = (i: number, dx: number, dy: number) => {
     for (const p of [bs[i].a, bs[i].b]) {
       p[0] += dx
@@ -303,11 +344,11 @@ function running(phase: number, gallop: number): Bone[] {
   bs[0].a = chest
   bs[0].b = hips
   // the head rides steadier than the body, lower and further forward at speed; ears laid back
-  for (const i of [1, 2, 3, 4, 5, 6, 7, 8]) shift(i, flex + 0.02 * gallop, bob * 0.5 + rock * 0.6 - 0.03 * gallop)
-  for (const i of [7, 8]) bs[i].b[0] -= 0.04
+  for (const i of [1, 2, 3, 4, 5, 6, 7, 8]) shift(i, flex + 0.04 * gallop, bob * 0.5 + rock * 0.6 - 0.05 * gallop)
+  for (const i of [7, 8]) bs[i].b[0] -= 0.04 + 0.04 * gallop
   // legs, each at its own point in the stride
   const reach = reachOf(gallop)
-  const lift = 0.06 + 0.04 * gallop
+  const lift = 0.06 + 0.07 * gallop
   const legs = [
     { root: 9, front: true, z: 0.055, k: 0 },
     { root: 11, front: true, z: -0.055, k: 1 },
@@ -345,7 +386,7 @@ function running(phase: number, gallop: number): Bone[] {
     }
   }
   // the tail streams out behind, higher at a gallop, waving
-  const lift2 = 0.04 + 0.03 * gallop
+  const lift2 = 0.04 - 0.02 * gallop
   const pts: V[] = [[hips[0] - 0.06, hips[1] + 0.01, 0], [-0.37, 0.33, 0], [-0.53, 0.33, 0], [-0.7, 0.37, 0], [-0.83, 0.44, 0]]
   pts.forEach((p, k) => {
     if (k === 0) return

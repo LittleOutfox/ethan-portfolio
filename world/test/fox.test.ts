@@ -3,7 +3,7 @@ import { KEYS } from '../src/keys'
 import { fitFov, makeCameraPath, type Pose } from '../src/path'
 import { cameraSamples } from '../src/layout'
 import { forestFor } from '../src/trees'
-import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeFoxPath, makeGait, pawsDown, stepGait, type Gait } from '../src/fox'
+import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeDash, makeFoxPath, makeGait, pawsDown, stepDash, stepGait, type Gait } from '../src/fox'
 
 /** Where a world point lands on screen (3440×1440 unless told) at world time t (x right, y down, 0..1), and how far it is. */
 function onScreen(t: number, x: number, y: number, z: number, aspect = 3440 / 1440) {
@@ -104,11 +104,11 @@ describe('its gait', () => {
     return g
   }
 
-  it('strides by the distance run, not the time: the same ground covered slowly or briskly is the same number of strides', () => {
-    const slow = run(makeGait(), 1.5, 4) // 6 m at a walk-trot
-    const brisk = run(makeGait(), 3, 2) // 6 m at a trot
+  it('strides by the distance run, not the time: 6 m at an amble or a little quicker is the same number of strides', () => {
+    const slow = run(makeGait(), 1.2, 5)
+    const quicker = run(makeGait(), 1.8, 10 / 3)
     expect(slow.stride).toBeGreaterThan(2)
-    expect(Math.abs(slow.stride - brisk.stride)).toBeLessThan(0.35 * slow.stride)
+    expect(Math.abs(slow.stride - quicker.stride)).toBeLessThan(0.1 * slow.stride)
   })
 
   it('never blurs its legs: however fast the scroll, its stride rate has a ceiling', () => {
@@ -116,9 +116,8 @@ describe('its gait', () => {
     expect(g.stride).toBeLessThan(4.2)
   })
 
-  it('gallops when the scroll is fast and trots when it is slow', () => {
-    expect(run(makeGait(), 12, 1).gallop).toBeGreaterThan(0.8)
-    expect(run(makeGait(), 2, 1).gallop).toBeLessThan(0.2)
+  it('gallops whenever it dashes', () => {
+    expect(run(makeGait(), 9, 0.5).gallop).toBeGreaterThan(0.9)
   })
 
   it('stops when the scroll stops, looks back, then sits and waits', () => {
@@ -131,6 +130,51 @@ describe('its gait', () => {
     expect(g.sit).toBeGreaterThan(0.9)
     run(g, 4, 0.6)
     expect(g.sit).toBeLessThan(0.2)
+  })
+
+  it('dashes rather than walks: it waits while you pull a little ahead, then dashes to its spot and stops there', () => {
+    const d = makeDash()
+    const dt = 1 / 120
+    // a gentle scroll opens a gap slowly: it waits while you pull ahead…
+    let gap = 0
+    let waited = 0
+    for (let k = 0; k < 600; k++) {
+      gap += 1.5 * dt
+      const step = stepDash(d, gap, 1.5, dt)
+      if (step > 0) {
+        gap -= step
+        break
+      }
+      waited += dt
+    }
+    expect(waited).toBeGreaterThan(1)
+    // …then goes at a dash, never past its spot, and stops on it
+    let fastest = 0
+    for (let k = 0; k < 240 && gap > 0.05; k++) {
+      const step = stepDash(d, gap, 0, dt)
+      expect(step).toBeLessThanOrEqual(gap + 1e-9)
+      fastest = Math.max(fastest, step / dt)
+      gap -= step
+    }
+    expect(fastest).toBeGreaterThan(8)
+    expect(gap).toBeLessThan(0.1)
+    expect(d.dashing).toBe(false)
+  })
+
+  it('keeps up with a fast scroll: through the hunt a brisk wheel carries its spot at 30–40 m/s', () => {
+    const d = makeDash()
+    const dt = 1 / 120
+    let gap = 0
+    let speed = 0
+    let worst = 0
+    for (let k = 0; k < 240; k++) {
+      speed = Math.min(38, speed + 80 * dt) // the scroll picks up within half a second
+      gap += speed * dt
+      gap -= stepDash(d, gap, speed, dt)
+      worst = Math.max(worst, gap)
+    }
+    expect(worst).toBeLessThan(3)
+    expect(gap).toBeLessThan(1)
   })
 
   it('turns around when you scroll back', () => {
@@ -211,6 +255,17 @@ describe('its shape', () => {
     for (let i = 19; i < 23; i++) {
       expect(sit[i].b[0]).toBeLessThan(hips[0])
       expect(sit[i].b[1]).toBeLessThan(0.12)
+    }
+  })
+
+  it('is slender as the spirit foxes are, with no mane: a slim neck, a small chest ruff, cheeks close to its head', () => {
+    for (const bs of [pose({}), pose({ sit: 1 })]) {
+      expect(Math.max(bs[1].ra, bs[1].rb)).toBeLessThanOrEqual(0.07) // the ruff
+      expect(Math.max(bs[2].ra, bs[2].rb)).toBeLessThanOrEqual(0.052) // the neck
+      for (const i of [5, 6]) {
+        expect(Math.max(bs[i].ra, bs[i].rb)).toBeLessThanOrEqual(0.036) // the cheeks
+        expect(Math.abs(bs[i].b[2])).toBeLessThanOrEqual(0.055)
+      }
     }
   })
 

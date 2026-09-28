@@ -3,8 +3,9 @@
 // marched through from the camera. A blue spirit, as in the reference: pale
 // blue-white where the moon and the sky reach it, deep blue in its shadows,
 // a slow drift of light moving through it, its outline soft and luminous
-// (as the ink foxes' lines glow), bright eyes, foxfire flickering out of its
-// tail's tip and a faint aura about it. Only a little see-through.
+// (as the ink foxes' lines glow), bright eyes, its tail dissolving into
+// blue foxfire and a faint aura about it. See-through: a spirit, not a
+// creature of flesh.
 uniform vec4 uFoxBones[FOX_BONES * 2]; // per bone: (a, ra), (b, rb)
 uniform vec4 uFoxEyes[2];              // (centre, radius)
 uniform float uFoxFade;                // 0 gone … 1 fully here
@@ -91,7 +92,7 @@ void main() {
   // the aura: light gathered where the ray passes near the fox (gone well
   // before the edge of the box it is drawn in, so no box ever shows)
   vec3 azure = vec3(0.34, 0.66, 1.0);
-  vec3 aura = azure * exp(-max(dMin, 0.0) / 0.045) * 0.1 * (1.0 - smoothstep(0.05, 0.1, dMin));
+  vec3 aura = azure * exp(-max(dMin, 0.0) / 0.045) * 0.12 * (1.0 - smoothstep(0.05, 0.1, dMin));
 
   vec3 col = vec3(0.0);
   float a = 0.0;
@@ -104,9 +105,9 @@ void main() {
     float lit = max(dot(n, vMoon), 0.0);
     float sky = 0.5 + 0.5 * n.y;
     float light = clamp(0.15 + 0.5 * sky + 0.45 * lit, 0.0, 1.0);
-    vec3 fur = mix(vec3(0.12, 0.26, 0.72), vec3(0.78, 0.88, 1.0), light * light * (3.0 - 2.0 * light));
+    vec3 fur = mix(vec3(0.14, 0.32, 0.85), vec3(0.72, 0.86, 1.0), light * light * (3.0 - 2.0 * light));
     float flow = noise2(vec2(p.x * 7.0 - uTime * 0.35, p.y * 7.0 + p.z * 5.0));
-    col = fur * (0.21 + 0.06 * flow) + vec3(0.3, 0.62, 1.0) * pow(edge, 1.5) * 0.42;
+    col = fur * (0.22 + 0.07 * flow) + vec3(0.3, 0.62, 1.0) * pow(edge, 1.5) * 0.46;
     // its eyes: two small bright lights
     for (int e = 0; e < 2; e++) {
       float de = length(p - uFoxEyes[e].xyz) / uFoxEyes[e].w;
@@ -114,18 +115,18 @@ void main() {
     }
     // foxfire flickering out of its tail's tip
     vec3 tip = uFoxBones[2 * (FOX_BONES - 1) + 1].xyz;
-    float flame = 1.0 - smoothstep(0.02, 0.22, length(p - tip));
+    float flame = 1.0 - smoothstep(0.03, 0.3, length(p - tip));
     float flicker = 0.6 + 0.4 * sin(uTime * 9.0 + p.y * 40.0) * sin(uTime * 6.3 + p.z * 31.0);
-    col = mix(col, azure * 0.55 * flicker, flame * 0.75);
+    col = mix(col, vec3(0.3, 0.6, 1.0) * 0.55 * flicker, flame * 0.8);
     // nearly there in the middle, thinning toward its soft edge
-    a = mix(0.82, 0.3, pow(edge, 1.4)) * (1.0 - flame * 0.45 * flicker);
+    a = mix(0.62, 0.18, pow(edge, 1.3)) * (1.0 - flame * 0.7 * flicker);
   } else {
     // a near miss: the soft glow of its edge, feathered out a few pixels
     float px = length(at - vEye) / uScale;
     float wisps = noise2(vec2(at.x * 40.0 + at.z * 25.0, at.y * 40.0 - uTime * 0.6));
     float fringe = 1.0 - smoothstep(0.0, px * 3.5 + 0.016 * wisps, dMin);
     col = vec3(0.3, 0.62, 1.0) * 0.38;
-    a = fringe * fringe * 0.34;
+    a = fringe * fringe * 0.3;
   }
 
   // the mist and the page's veil touch it as they touch everything
