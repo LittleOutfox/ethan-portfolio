@@ -27,7 +27,6 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
   const s = useMemo(() => {
     const uniforms = {
       uFoxBones: { value: Array.from({ length: FOX_BONES * 2 }, () => new Vector4()) },
-      uFoxEyes: { value: [new Vector4(), new Vector4()] },
       uFoxFade: { value: 1 },
       uFoxBoxMin: { value: new Vector3(...FOX_BOX.min) },
       uFoxBoxMax: { value: new Vector3(...FOX_BOX.max) },
@@ -50,7 +49,6 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
       mesh,
       uniforms,
       bones: new Float32Array(FOX_BONES * 8),
-      eyes: new Float32Array(8),
       path: makeFoxPath(),
       gait: makeGait(),
       spot: { x: 0, y: 0, z: 0, heading: 0 } as FoxSpot,
@@ -123,11 +121,9 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     const lx = dx * c - dz * sn
     const lz = dx * sn + dz * c
     const toward = Math.max(-2, Math.min(2, Math.atan2(-lz, lx)))
-    foxPose(gait, state.clock.elapsedTime, toward * gait.look, s.bones, s.eyes)
+    foxPose(gait, state.clock.elapsedTime, toward * gait.look, s.bones)
     const bones = s.uniforms.uFoxBones.value
     for (let i = 0; i < FOX_BONES * 2; i++) bones[i].fromArray(s.bones, i * 4)
-    s.uniforms.uFoxEyes.value[0].fromArray(s.eyes, 0)
-    s.uniforms.uFoxEyes.value[1].fromArray(s.eyes, 4)
 
     // a touch dimmer while it waits for you; on a phone, where the page's text
     // fills the screen, it waits as a faint ghost; on a long jump across the

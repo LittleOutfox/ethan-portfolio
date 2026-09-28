@@ -423,10 +423,9 @@ function blend(poses: [Bone[], number][]): Bone[] {
 /**
  * The fox's shape for its gait at `time` (s), its head turned `look` radians
  * (toward +z when positive) to look back at you. Writes FOX_BONES round cones
- * into `bones` as (a.xyz, ra, b.xyz, rb), and its two eyes into `eyes` as
- * (xyz, radius).
+ * into `bones` as (a.xyz, ra, b.xyz, rb).
  */
-export function foxPose(g: Gait, time: number, look: number, bones: Float32Array, eyes: Float32Array) {
+export function foxPose(g: Gait, time: number, look: number, bones: Float32Array) {
   const wRun = Math.min(1, Math.max(0, g.run))
   const wSit = Math.min(1, Math.max(0, g.sit)) * (1 - wRun)
   const wStand = 1 - wRun - wSit
@@ -444,13 +443,6 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
     bs[i].b[2] += sway * 1.3
   }
 
-  // the eyes sit on the front of its head, either side of the snout's root
-  const head = bs[3]
-  const eyePts: V[] = [
-    [head.b[0] + 0.03, head.b[1] + 0.03, 0.05],
-    [head.b[0] + 0.03, head.b[1] + 0.03, -0.05],
-  ]
-
   // looking back: the head group turns about the neck's base
   if (Math.abs(look) > 1e-4) {
     const pivot = bs[2].a
@@ -466,12 +458,10 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
       if (i !== 2) turn(bs[i].a)
       turn(bs[i].b)
     }
-    eyePts.forEach(turn)
   }
 
   bs.forEach((b, i) => {
     bones.set([b.a[0], b.a[1], b.a[2], b.ra, b.b[0], b.b[1], b.b[2], b.rb], i * 8)
   })
-  eyePts.forEach((p, i) => eyes.set([p[0], p[1], p[2], 0.016], i * 4))
 }
 

@@ -3,11 +3,10 @@
 // marched through from the camera. A blue spirit, as in the reference: pale
 // blue-white where the moon and the sky reach it, deep blue in its shadows,
 // a slow drift of light moving through it, its outline soft and luminous
-// (as the ink foxes' lines glow), bright eyes, and its tail dissolving into
+// (as the ink foxes' lines glow), and its tail dissolving into
 // blue foxfire. No halo about it: its light stays within its outline.
 // See-through: a spirit, not a creature of flesh.
 uniform vec4 uFoxBones[FOX_BONES * 2]; // per bone: (a, ra), (b, rb)
-uniform vec4 uFoxEyes[2];              // (centre, radius)
 uniform float uFoxFade;                // 0 gone … 1 fully here
 uniform vec3 uFoxBoxMin;
 uniform vec3 uFoxBoxMax;
@@ -103,11 +102,6 @@ void main() {
     vec3 fur = mix(vec3(0.14, 0.32, 0.85), vec3(0.72, 0.86, 1.0), light * light * (3.0 - 2.0 * light));
     float flow = noise2(vec2(p.x * 7.0 - uTime * 0.35, p.y * 7.0 + p.z * 5.0));
     col = fur * (0.22 + 0.07 * flow) + vec3(0.3, 0.62, 1.0) * pow(edge, 1.5) * 0.46;
-    // its eyes: two small bright lights
-    for (int e = 0; e < 2; e++) {
-      float de = length(p - uFoxEyes[e].xyz) / uFoxEyes[e].w;
-      col += vec3(0.75, 0.95, 1.0) * (1.0 - smoothstep(0.5, 1.0, de)) * 0.5;
-    }
     // foxfire flickering out of its tail's tip
     vec3 tip = uFoxBones[2 * (FOX_BONES - 1) + 1].xyz;
     float flame = 1.0 - smoothstep(0.03, 0.3, length(p - tip));

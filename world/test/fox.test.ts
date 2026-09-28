@@ -191,9 +191,8 @@ describe('its gait', () => {
 
 describe('its shape', () => {
   const bones = new Float32Array(FOX_BONES * 8)
-  const eyes = new Float32Array(8)
   const pose = (g: Partial<Gait>, look = 0) => {
-    foxPose({ ...makeGait(), sit: 0, run: 0, ...g }, 0, look, bones, eyes)
+    foxPose({ ...makeGait(), sit: 0, run: 0, ...g }, 0, look, bones)
     const b = (i: number) => ({ a: [bones[i * 8], bones[i * 8 + 1], bones[i * 8 + 2]], ra: bones[i * 8 + 3], b: [bones[i * 8 + 4], bones[i * 8 + 5], bones[i * 8 + 6]], rb: bones[i * 8 + 7] })
     return Array.from({ length: FOX_BONES }, (_, i) => b(i))
   }
