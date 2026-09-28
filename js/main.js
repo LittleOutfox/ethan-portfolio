@@ -1,6 +1,6 @@
 /* ============================================================
    ORIGIN — a nine-tailed portfolio
-   spirit ink foxes · scroll-scrubbed forest journey · foxfire
+   spirit ink foxes · a 3D forest you travel through · foxfire
    ============================================================ */
 
 (function () {
@@ -11,13 +11,11 @@
   var hasGsap = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
   var MOTION = hasGsap && !reducedQuery.matches;
 
-  // device tiers — desktop behavior never changes; phones get a
-  // lighter journey (COARSE = any touch device, PHONE = small touch
-  // screen, LEAN = skip heavyweight assets entirely)
+  // device tiers — COARSE = any touch device, PHONE = small touch
+  // screen (drops the widest bloom layer). The 3D world tiers itself
+  // (world/src/tiers.ts).
   var COARSE = window.matchMedia('(pointer: coarse)').matches;
   var PHONE = COARSE && Math.min(window.screen.width, window.screen.height) < 820;
-  var conn = navigator.connection;
-  var LEAN = PHONE || !!(conn && (conn.saveData || /(^|\b)[23]g\b/.test(conn.effectiveType || '')));
 
   if (!MOTION) doc.classList.add('reduced');
 
@@ -30,7 +28,7 @@
 
   // veil + hero art loads eagerly (and is counted by the gate below);
   // every below-fold fox lazy-loads on approach instead, so it never
-  // steals bandwidth from the gated film during the veil
+  // steals bandwidth from the gated world during the veil
   var EAGER_FOX = { descending: 1, sitting: 1 };
   // The ink ships as lossless WebP rasters baked in Chrome from the
   // drawings (tools/bake-fox-rasters.mjs). The autotraced SVGs carry
@@ -87,16 +85,16 @@
 
   /* ------------------------------------------------------------
      2 · the loading gate — the forest readies itself before entry
-     The veil counts the journey in as it streams, and only offers
-     Enter once every frame can be summoned instantly.
+     The veil counts the world in as it builds, and only offers
+     Enter once its first frame has been drawn.
      ------------------------------------------------------------ */
 
   var gate = (function () {
     var veilEl = document.getElementById('veil');
     var pctEl = document.getElementById('veilPct');
     var fillEl = document.getElementById('veilFill');
-    var parts = { video: 0, foxes: 0, fonts: 0 };
-    var weights = { video: 0.75, foxes: 0.15, fonts: 0.1 };
+    var parts = { world: 0, foxes: 0, fonts: 0 };
+    var weights = { world: 0.6, foxes: 0.25, fonts: 0.15 };
     var ready = false, readyAt = 0;
     function open() {
       if (ready) return;
@@ -171,115 +169,79 @@
   })();
 
   /* ------------------------------------------------------------
-     3 · the journey — a forest that moves as you scroll
+     3 · the world — a moonlit forest you travel through
+     The 3D backdrop is its own small build (world/ → js/world/
+     scene.js). This page stays the only owner of the scroll: every
+     chapter writes its progress onto one plain object, and the world
+     reads it and draws when the ticker at the end of §7 asks it to.
      ------------------------------------------------------------ */
 
-  (function journey() {
-    var v = document.getElementById('journey');
-    if (!v) { gate.set('video', 1); return; }
-    if (reducedQuery.matches) { v.remove(); gate.set('video', 1); return; }
-    // phones and data-saver connections skip the scrubbed film: the
-    // ink, foxfire and snow carry the atmosphere, entry is instant,
-    // and no megabytes are spent on a background whisper
-    if (LEAN) { v.remove(); gate.set('video', 1); return; }
-    // fetch as blob: object URLs are fully seekable even when the
-    // server (e.g. python http.server) doesn't support range requests.
-    // Streamed so the veil can count the download in.
-    // ?v must stay in sync with the head's early-fetch (index.html),
-    // which starts this download at HTML-parse time
-    var SRC = 'assets/journey.mp4?v=10';
-    (window.__journeyFetch || fetch(SRC))
-      .then(function (r) {
-        if (!r.ok) throw new Error(r.status);
-        var total = +r.headers.get('Content-Length') || 0;
-        if (!r.body || !total) return r.blob();
-        var reader = r.body.getReader(), chunks = [], got = 0;
-        return new Promise(function (resolve, reject) {
-          (function pump() {
-            reader.read().then(function (res) {
-              if (res.done) { resolve(new Blob(chunks, { type: 'video/mp4' })); return; }
-              chunks.push(res.value);
-              got += res.value.length;
-              gate.set('video', Math.min(0.96, got / total)); // last 4% = first frame decoded
-              pump();
-            }).catch(reject);
-          })();
-        });
-      })
-      .then(function (b) {
-        v.src = URL.createObjectURL(b);
-        // late arrival after a failsafe entry: the gesture-time unlock
-        // ran against a src-less video, so re-run the muted play()
-        // trick or iPad scrubbing stays stuck on a blank frame
-        if (entered && typeof v.play === 'function') {
-          var pp = v.play();
-          if (pp && pp.then) pp.then(function () { v.pause(); }).catch(function () {});
-        }
-      })
-      .catch(function () { v.src = SRC; });
-    var dur = 0, cur = 0, dead = false;
+  var world = window.__world = {
+    // one 0..1 progress per story segment; the world's clock is their sum
+    p: { hero: 0, origin: 0, hunt: 0, trail: 0, works: 0, den: 0, climb: 0, tails: 0, snow: 0 },
+    gates: [],     // works progress at which each DOM gate passes through
+    tails: 0,      // tails earned, 0..5
+    vel: 0,        // damped scroll velocity, -1..1
+    warm: 0,       // the den's warmth, 0..1
+    intro: 0,      // 0 → 1 as the hero enters
+    state: 'off',  // off → boot → ready → active, or failed
+    report: null,  // (0..1) the world's honest build progress
+    fail: null,    // the world could not run: fall back to the 2D ambience
+    frame: null    // set by the world: draw one frame (ticker time, seconds)
+  };
 
-    v.addEventListener('loadedmetadata', function () {
-      dur = v.duration || 0;
-      // late arrival (honest-failsafe path): open on the scroll-mapped
-      // frame — never visibly fast-forward from frame 0 to catch up
-      if (maxScroll > 0 && window.scrollY > 0) {
-        cur = (window.scrollY / maxScroll) * Math.max(0, dur - 0.08);
-        try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
-      }
-      v.classList.add('ready');
-    });
-    v.addEventListener('loadeddata', function () { gate.set('video', 1); });
-    // iOS often withholds loadeddata for never-played video — canplay
-    // (or even metadata on stubborn builds) opens the gate instead;
-    // gate.set is monotonic so duplicates are harmless
-    v.addEventListener('canplay', function () { gate.set('video', 1); });
-    v.addEventListener('error', function () {
-      v.classList.remove('ready');
-      v.remove();
-      dead = true; // stop the scrub loop — its element is gone
-      gate.set('video', 1); // the journey is optional; entry is not
-    });
+  // the 2D embers and snow are the fallback atmosphere — they run
+  // exactly when the world can't
+  function worldOwnsAmbience() { return world.state === 'ready' || world.state === 'active'; }
+  function ambience() {
+    if (worldOwnsAmbience()) { if (window.__foxfireStop) window.__foxfireStop(); }
+    else if (entered && window.__foxfireStart) window.__foxfireStart();
+    if (window.__snowSync) window.__snowSync();
+  }
+  // show the world: on Enter, or on arrival after a failsafe entry
+  function wake() {
+    if (world.state !== 'ready' || !entered) return;
+    world.state = 'active';
+    doc.classList.add('world-on');
+  }
 
-    // scrubbing rules: never read layout in the loop (cache the page
-    // height), and never issue a seek while one is in flight — the
-    // video is encoded all-intra (every frame a keyframe) so each
-    // seek is a single-frame decode
-    var maxScroll = 0, lastW = window.innerWidth;
-    function measure() {
-      // on touch devices the browser chrome collapsing fires
-      // height-only resizes mid-scroll — remeasuring then would make
-      // the film's scrub target jump visibly
-      if (COARSE && window.innerWidth === lastW && maxScroll > 0) return;
-      lastW = window.innerWidth;
-      maxScroll = doc.scrollHeight - window.innerHeight;
+  world.report = function (p) {
+    if (world.state !== 'boot') return;
+    gate.set('world', p);
+    if (p >= 1) {
+      world.state = 'ready';
+      ambience();
+      wake();
     }
-    window.addEventListener('resize', measure);
-    window.addEventListener('load', measure);
-    if (hasGsap) ScrollTrigger.addEventListener('refresh', measure);
-    measure();
+  };
+  world.fail = function (why) {
+    if (world.state === 'failed') return;
+    world.state = 'failed';
+    world.frame = null;
+    doc.classList.remove('world-on');
+    gate.set('world', 1); // the world is optional; entry is not
+    ambience();
+    if (why && window.console) console.warn('[world] off:', why);
+  };
 
-    var lastT = 0, lastSeek = 0;
-    function tick(t) {
-      if (dead) return;
-      var dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 1 / 60;
-      lastT = t;
-      if (dur && maxScroll > 0 && !v.seeking) {
-        var target = (window.scrollY / maxScroll) * Math.max(0, dur - 0.08);
-        // frame-rate-independent damp: identical glide at 60Hz and 120Hz
-        cur += (target - cur) * (1 - Math.pow(0.88, dt * 60));
-        // seek in whole-frame steps (file is 24fps) at most ~30x/s —
-        // fewer, frame-sized seeks present far smoother than the old
-        // per-rAF micro-seeks, whose completion jitter read as stutter
-        if (Math.abs(cur - v.currentTime) > 1 / 24 && t - lastSeek > 33) {
-          lastSeek = t;
-          try { v.currentTime = cur; } catch (e) { /* not seekable yet */ }
-        }
-      }
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  })();
+  // the head script already preloads the module (same URL, so this
+  // reuses that download); append it now that the bus exists. Touch
+  // devices wait for idle so the veil paints first.
+  if (MOTION && window.__worldSrc) {
+    world.state = 'boot';
+    var loadWorld = function () {
+      var s = document.createElement('script');
+      s.type = 'module';
+      s.src = window.__worldSrc;
+      s.onerror = function () { world.fail('load'); };
+      document.body.appendChild(s);
+    };
+    if (COARSE && window.requestIdleCallback) window.requestIdleCallback(loadWorld, { timeout: 1500 });
+    else loadWorld();
+  } else {
+    gate.set('world', 1);
+  }
+
 
   /* ------------------------------------------------------------
      4 · foxfire — drifting spirit lights
@@ -340,6 +302,7 @@
     var lastY = window.scrollY, drift = 0;
 
     function frame() {
+      if (!started) return;
       var sy = window.scrollY;
       drift += (sy - lastY) * 0.03;
       drift *= 0.92;
@@ -378,19 +341,28 @@
         }
       }
       ctx.globalAlpha = 1;
-      requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     }
 
-    var started = false;
-    // the embers only spend frames once the veil lifts (enter() calls
-    // this) — before that they'd paint at full tilt behind an opaque
-    // screen, competing with the gated video download
+    var started = false, listening = false, raf = 0;
+    // the embers are the 3D world's stand-in (§3 starts and stops them):
+    // they only spend frames once the veil lifts, and only while the
+    // world isn't running — never both lights at once
     window.__foxfireStart = function () {
       if (started) return;
       started = true;
+      canvas.dataset.running = '1';
+      lastY = window.scrollY;
       resize();
-      window.addEventListener('resize', resize);
-      requestAnimationFrame(frame);
+      if (!listening) { listening = true; window.addEventListener('resize', resize); }
+      raf = requestAnimationFrame(frame);
+    };
+    window.__foxfireStop = function () {
+      if (!started) return;
+      started = false;
+      canvas.dataset.running = '0';
+      cancelAnimationFrame(raf);
+      ctx.clearRect(0, 0, W, H);
     };
     // the motion section swaps the warmth source to a #fire trigger
     window.__foxfireWarm = function (w) { externalWarm = true; targetWarm = w; };
@@ -486,17 +458,26 @@
     }
 
     // the loop only exists while the section is near the viewport —
-    // no idle rAF spin for a snowfield nobody can see
-    var io = new IntersectionObserver(function (entries) {
-      var vis = entries[0].isIntersecting;
-      if (vis && !visible) {
+    // no idle rAF spin for a snowfield nobody can see — and only while
+    // the 3D world, which brings its own snow, isn't running
+    var near = false;
+    function sync() {
+      var w = window.__world;
+      var run = near && !(w && (w.state === 'ready' || w.state === 'active'));
+      if (run && !visible) {
         visible = true;
         resize(true); // re-sync offsets/size skipped while away
         raf = requestAnimationFrame(frame);
-      } else if (!vis && visible) {
+      } else if (!run && visible) {
         visible = false;
         cancelAnimationFrame(raf);
+        ctx.clearRect(0, 0, W, H);
       }
+    }
+    window.__snowSync = sync;
+    var io = new IntersectionObserver(function (entries) {
+      near = entries[0].isIntersecting;
+      sync();
     }, { rootMargin: '100px' });
     io.observe(section);
 
@@ -543,13 +524,8 @@
       });
       setTimeout(reap, 1600); // fallback if transitionend never fires
     }
-    if (window.__foxfireStart) window.__foxfireStart(); // embers wake with the world
-    // a user gesture unlocks video decoding on iOS, so scrubbing renders
-    var v = document.getElementById('journey');
-    if (v && typeof v.play === 'function') {
-      var p = v.play();
-      if (p && p.then) p.then(function () { v.pause(); }).catch(function () {});
-    }
+    wake();     // the 3D world, if it is ready…
+    ambience(); // …or the 2D embers in its place
     if (lenis) lenis.start();
     if (MOTION && window.__heroEntrance) window.__heroEntrance.play();
   }
@@ -572,8 +548,10 @@
     window.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') enter();
     });
-  } else if (window.__foxfireStart) {
-    window.__foxfireStart(); // no veil to wait behind
+  } else {
+    entered = true; // no veil to wait behind
+    wake();
+    ambience();
   }
 
   /* ------------------------------------------------------------
@@ -597,6 +575,9 @@
   }
 
   gsap.registerPlugin(ScrollTrigger);
+  // the four pinned chapters register their scrubbed animation here, so
+  // the world's clock (end of this section) can follow them exactly
+  var pins = {};
   // touch-device stability: ignore the URL-bar's height-only resizes
   // and let ScrollTrigger drive touch scroll on the render tick so
   // pinned scenes stop jittering; both are no-ops with a mouse
@@ -670,6 +651,7 @@
       }
       var norm = Math.max(-1, Math.min(1, (velRaw / window.innerHeight) * 2));
       velNorm += (norm - velNorm) * (1 - Math.pow(0.9, dtMs / 16.7));
+      world.vel = velNorm;
       if (window.__foxfireEnergy) window.__foxfireEnergy(Math.abs(velNorm));
       for (var i = 0; i < lagSetters.length; i++) lagSetters[i](velNorm * VEL_LEAN);
     });
@@ -787,10 +769,12 @@
         { yPercent: 0, opacity: 1, stagger: 0.06, duration: 1.5, ease: 'expo.out' }, 0.25)
       .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 0.8)
       .to('.hero-sub', { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 1.0)
-      .add(condense(spirit, { y: 20 }).play(), 0.9);
+      .add(condense(spirit, { y: 20 }).play(), 0.9)
+      // the world's camera settles into its first frame with the title
+      .fromTo(world, { intro: 0 }, { intro: 1, duration: 2.8, ease: 'expo.out' }, 0);
     window.__heroEntrance = entrance;
 
-    gsap.timeline({
+    pins.hero = gsap.timeline({
       scrollTrigger: {
         trigger: '.hero-pin',
         start: 'top top',
@@ -847,6 +831,7 @@
         invalidateOnRefresh: true
       }
     });
+    pins.hunt = horiz;
 
     var foxMount = document.querySelector('.hunt-fox');
     var foxTl = condense(foxMount, { y: 0 });
@@ -981,19 +966,25 @@
         at + STEP - 0.7);
     });
     tl.to({}, { duration: 0.6 });
+    pins.works = tl;
+    // each gate sweeps past the screen edges midway through its
+    // pass-through tween — the world walks through its own torii there
+    world.gates = gates.map(function (g, i) {
+      return (2 + i * STEP + STEP - 0.7 + 0.5) / tl.duration();
+    });
   })();
 
   // ---- 04 · foxfire: the world warms ------------------------------
-  // warmth follows the chapter from here — replaces the canvas loop's
-  // per-frame getBoundingClientRect (identical curve: d = |1 - 2p|)
-  if (window.__foxfireWarm) {
-    ScrollTrigger.create({
-      trigger: '#fire', start: 'top bottom', end: 'bottom top',
-      onUpdate: function (self) {
-        window.__foxfireWarm(Math.max(0, 1 - 1.6 * Math.abs(1 - 2 * self.progress)));
-      }
-    });
-  }
+  // warmth follows the chapter from here — for the 3D world's hearth
+  // and for the 2D embers' fallback loop (identical curve: d = |1 - 2p|)
+  ScrollTrigger.create({
+    trigger: '#fire', start: 'top bottom', end: 'bottom top',
+    onUpdate: function (self) {
+      var w = Math.max(0, 1 - 1.6 * Math.abs(1 - 2 * self.progress));
+      world.warm = w;
+      if (window.__foxfireWarm) window.__foxfireWarm(w);
+    }
+  });
   gsap.fromTo('.tint', { opacity: 0 }, {
     opacity: 1, ease: 'none',
     scrollTrigger: { trigger: '#fire', start: 'top 75%', end: 'top 15%', scrub: true }
@@ -1019,6 +1010,7 @@
     function setCount(n) {
       if (n === current) return;
       current = n;
+      world.tails = Math.max(0, Math.min(TAILS, n + 1)); // tails earned so far
       num.textContent = '0' + Math.max(1, Math.min(TAILS, n + 1));
       listItems.forEach(function (li, i) {
         li.classList.toggle('lit', i <= n);
@@ -1237,6 +1229,7 @@
       }, 1.0 + i * STEP);
     });
     tl.to({}, { duration: 0.8 });
+    pins.tails = tl;
   })();
 
   // ---- 06 · the snowfield: the plunge -------------------------------
@@ -1245,6 +1238,41 @@
     y: 0, ease: 'power1.in',
     scrollTrigger: { trigger: '#pool', start: 'top bottom', end: 'center 45%', scrub: 1 }
   });
+
+  // ---- the world's clock ------------------------------------------
+  // The pinned chapters hand the 3D world their own scrubbed progress,
+  // so the forest moves in exact step with them; the stretches between
+  // pins get scrubbed tweens of their own. The world's time is the sum.
+  (function worldClock() {
+    function between(key, trigger, start, end) {
+      var from = {}, to = {
+        ease: 'none', immediateRender: false,
+        scrollTrigger: { trigger: trigger, start: start, end: end, scrub: 1, invalidateOnRefresh: true }
+      };
+      from[key] = 0;
+      to[key] = 1;
+      gsap.fromTo(world.p, from, to);
+    }
+    function edge(pin, which) { return function () { return pins[pin].scrollTrigger[which]; }; }
+    between('origin', null, edge('hero', 'end'), edge('hunt', 'start'));
+    between('trail', null, edge('hunt', 'end'), edge('works', 'start'));
+    between('den', '#fire', edge('works', 'end'), 'center center');
+    between('climb', '#fire', 'center center', edge('tails', 'start'));
+    between('snow', null, edge('tails', 'end'), 'max');
+
+    // The root timeline is the ticker's first listener, so by the time
+    // this one runs every scrub tween and Lenis have moved for this
+    // tick: copy the pins' progress and let the world draw — one loop
+    // for page and world, with no frame of lag between them.
+    gsap.ticker.add(function (time) {
+      world.p.hero = pins.hero.progress();
+      world.p.hunt = pins.hunt.progress();
+      world.p.works = pins.works.progress();
+      world.p.tails = pins.tails.progress();
+      if (!world.frame) return;
+      try { world.frame(time); } catch (e) { world.fail(e); }
+    });
+  })();
 
   // ---- chrome: rail, nav state, cursor ------------------------------
   (function chrome() {
