@@ -22,8 +22,8 @@ void main() {
   float orb = 1.0 - step(0.5, aKind);
   float ember = step(0.5, aKind) * (1.0 - step(1.5, aKind));
   float glow = step(1.5, aKind) * (1.0 - step(2.5, aKind));
+  float band = step(2.5, aKind) * (1.0 - step(7.5, aKind));
   float lantern = step(8.5, aKind);
-  float band = step(2.5, aKind) * (1.0 - lantern);
 
   // orbs and band lights hover; embers climb and are reborn at the fire
   p += (1.0 - ember - lantern) * vec3(sin(t * 0.7 + ph) * 0.5, sin(t * 1.1 + ph * 1.3) * 0.35, cos(t * 0.6 + ph) * 0.5);

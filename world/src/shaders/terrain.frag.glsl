@@ -23,15 +23,30 @@ void main() {
   float glint = step(0.9965, hash12(floor(gc))) * smoothstep(0.3, 0.0, length(fract(gc) - 0.5));
   glint *= (0.5 + 0.5 * sin(uTime * 3.0 + vWorld.x * 7.0)) * (1.0 - smoothstep(6.0, 20.0, distance(vWorld, cameraPosition)));
 
-  // the forest floor under snow: drifts lying over dark ground, a cold sheen
-  // where they face the moon, and none near the den's fire, where it melted
+  // the forest floor under deep, soft snow: gentle drifts, brighter where
+  // they face the sky and the moon, cool violet in the hollows, a crystal
+  // glinting here and there close by — melted only around the den's fire
   vec3 ground = mix(uInk, vec3(0.003, 0.0025, 0.008), 0.5) * (0.8 + 0.4 * mottle);
-  float drift = smoothstep(0.25, 0.55, noise2(vWorld.xz * 0.22) * 0.7 + mottle * 0.3);
-  drift *= smoothstep(5.0, 13.0, distance(vWorld.xz, uHearth.xz));
-  vec3 lying = mix(uFogColor * 1.2, mix(uSpirit, uFrost, 0.4) * 0.032, 0.45 + 0.3 * mottle) + uMoonColor * sheen * 0.01;
-  vec3 col = mix(ground, lying + uFrost * glint * 0.06, drift);
-  // the path is trodden dark through it
-  col = mix(col, ground * 1.3 + uSpirit * 0.004, vMask.x * 0.6);
+  float drifts = 0.62 + 0.43 * smoothstep(0.15, 0.85, noise2(vWorld.xz * 0.22) * 0.7 + mottle * 0.3);
+  // (shaded as soft mounds: a normal from the slope of a gentle noise, lit
+  // from the moon's side, so the snow rolls in light and shade)
+  vec2 mq = vWorld.xz * 0.3;
+  float m0 = noise2(mq);
+  vec3 mound = normalize(vec3((m0 - noise2(mq + vec2(0.06, 0.0))) * 7.0, 1.0, (m0 - noise2(mq + vec2(0.0, 0.06))) * 7.0));
+  float soft = 0.6 + 0.4 * max(dot(mound, normalize(vec3(0.2, 0.75, -0.62))), 0.0);
+  // (the snow at your feet is the brightest: it fills the bottom of the frame,
+  // where the page keeps no text)
+  float underfoot = 1.0 - smoothstep(6.0, 18.0, distance(vWorld, cameraPosition));
+  vec3 lying = mix(uSpirit, uMoonColor, 0.5) * 0.04 * (1.0 + 0.75 * underfoot) * drifts * soft * (0.75 + 0.25 * clamp(n.y, 0.0, 1.0));
+  // (and a fine frost sparkle over it, close by)
+  vec2 fc = vWorld.xz * 16.0;
+  float frost = step(0.985, hash12(floor(fc))) * smoothstep(0.35, 0.0, length(fract(fc) - 0.5))
+              * (0.4 + 0.6 * sin(uTime * 2.0 + hash12(floor(fc) + 7.0) * 30.0)) * (1.0 - smoothstep(4.0, 12.0, distance(vWorld, cameraPosition)));
+  lying = mix(lying, uFogColor * 1.3, 0.18) + uMoonColor * sheen * 0.014 + uFrost * (glint * 0.09 + max(frost, 0.0) * 0.08);
+  float melt = 1.0 - smoothstep(7.0, 18.0, distance(vWorld.xz, uHearth.xz));
+  vec3 col = mix(lying, ground, melt);
+  // the path is trodden softly through it, a shade darker
+  col = mix(col, col * 0.7, vMask.x * 0.6);
 
   // the spirit stream never freezes: dark water glowing blue from within,
   // light drifting downstream, the night sky mirrored in it (cooled a little

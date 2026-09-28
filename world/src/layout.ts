@@ -70,14 +70,17 @@ export function streamDistance(x: number, z: number): number {
 }
 
 /**
- * The great spirit trees, old willows of the widest kind: one at the forest's
- * edge, left of the meadow, its limbs reaching out over the path — the story
- * starts under it — and one alone out on the snowfield, where it ends. Each
- * stands in a glade of its own.
+ * The great trees, old willows of the widest kind: one at the forest's edge,
+ * left of the meadow, its limbs reaching out over the path — the story starts
+ * under it — one alone on a rise out on the snowfield, where it ends, and the
+ * grandest of all on the snow east of the summit, beside the moon as the
+ * tails are earned. Each stands in a glade of its own.
  */
-export const GREAT_TREES = [
+export const GREAT_TREES: { x: number; z: number; scale: number; kind: number; glade: number; rot?: number }[] = [
   { x: -11, z: 6, scale: 3.2, kind: 2, glade: 14 },
   { x: 3.5, z: -206.7, scale: 1.9, kind: 2, glade: 20 },
+  // turned so its long limbs reach east, away from the page's timeline
+  { x: 118, z: -184, scale: 3.3, kind: 2, glade: 26, rot: 0 },
 ]
 
 /**
@@ -192,7 +195,7 @@ export function placeTrees(density: number): Tree[] {
   const great: Tree[] = GREAT_TREES.map((g) => ({
     x: g.x, y: heightAt(g.x, g.z), z: g.z,
     radius: TRUNK[g.kind] * g.scale * 1.8, scale: g.scale,
-    rot: towardPath(g.x, g.z), lean: 0, kind: g.kind,
+    rot: g.rot ?? towardPath(g.x, g.z), lean: 0, kind: g.kind,
   }))
   const rng = mulberry32(7)
   const cam: [number, number][] = cameraSamples(0.02).map(([x, , z]) => [x, z])
@@ -220,4 +223,38 @@ export function placeTrees(density: number): Tree[] {
     all.push({ x, y: heightAt(x, z), z, radius, scale, rot, lean, kind })
   }
   return [...great, ...all.slice(0, Math.round(all.length * Math.min(1, Math.max(0, density))))]
+}
+
+export interface Flower {
+  x: number
+  y: number
+  z: number
+  /** sprite size (m) */
+  size: number
+  /** 0..1, for its own slow pulse */
+  phase: number
+}
+
+/**
+ * A rare glowing flower here and there on the snow near the journey: never
+ * on the path or in the stream. Seeded, and in random order, so a lower tier
+ * draws a prefix of the same flowers.
+ */
+export function placeFlowers(density: number): Flower[] {
+  const rng = mulberry32(13)
+  const cam = cameraSamples(0.02)
+  const out: Flower[] = []
+  for (let i = 0; i < 30; i++) {
+    const [cx, , cz] = cam[Math.floor(rng() * cam.length)]
+    const th = rng() * Math.PI * 2
+    const r = 3 + rng() * 11
+    const x = cx + Math.cos(th) * r
+    const z = cz + Math.sin(th) * r
+    const size = 0.55 + rng() * 0.25
+    const phase = rng()
+    if (distanceToCurve(x, z, ROUTE_XZ) < 2) continue
+    if (streamDistance(x, z) < STREAM.width + 1) continue
+    out.push({ x, y: heightAt(x, z) + size * 0.35, z, size, phase })
+  }
+  return out.slice(0, Math.round(out.length * Math.min(1, Math.max(0, density))))
 }

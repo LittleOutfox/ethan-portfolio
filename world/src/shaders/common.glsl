@@ -8,6 +8,7 @@ uniform vec3 uMoonColor;
 uniform vec3 uEmber;
 uniform vec3 uFrost;
 uniform vec3 uGlow;
+uniform vec3 uAqua;
 uniform vec3 uMoonDir;
 uniform vec3 uFogColor;
 uniform float uFogDensity;
@@ -66,9 +67,9 @@ vec3 finish(vec3 col) {
   vec2 uv = gl_FragCoord.xy / uResolution;
   float fromTop = 1.0 - uv.y;
   float band = max(0.65 * clamp(1.0 - fromTop / 0.26, 0.0, 1.0),
-                   0.82 * clamp((fromTop - 0.68) / 0.32, 0.0, 1.0));
+                   0.45 * clamp((fromTop - 0.76) / 0.24, 0.0, 1.0));
   col = mix(col, uInk, band);
-  vec2 q = vec2((uv.x - 0.5) / 1.15, (fromTop - 0.42) / 0.95);
+  vec2 q = vec2((uv.x - 0.5) / 1.15, (fromTop - 0.42) / 1.05);
   float vig = 0.92 * clamp((length(q) - 0.24) / 0.76, 0.0, 1.0);
   return mix(col, uInk, vig);
 }

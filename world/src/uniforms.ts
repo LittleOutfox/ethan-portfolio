@@ -15,8 +15,10 @@ export function makeUniforms() {
     uEmber: { value: new Color('#e0a05c') },
     /** frost: the periwinkle in the mist, the trees' glow, the glints in the snow */
     uFrost: { value: new Color('#b0acff') },
-    /** spirit light: the blue glowing in the roots and the stream */
+    /** spirit light: the blue glowing in the stream */
     uGlow: { value: new Color('#4aa8ff') },
+    /** aqua: the flowers in the snow */
+    uAqua: { value: new Color('#5ce8ff') },
     uMoonDir: { value: new Vector3(...MOON_DIR) },
     uFogColor: { value: new Color('#131226') },
     uFogDensity: { value: 0.02 },

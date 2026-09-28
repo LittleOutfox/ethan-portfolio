@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GREAT_TREES, ROUTE, STREAM, heightAt, placeTrees, distanceToCurve, streamDistance, streamZ } from '../src/layout'
+import { GREAT_TREES, ROUTE, STREAM, heightAt, placeFlowers, placeTrees, distanceToCurve, streamDistance, streamZ } from '../src/layout'
 import { KEYS } from '../src/keys'
 import { makeCameraPath, type Pose } from '../src/path'
 
@@ -88,10 +88,42 @@ describe('the great trees', () => {
     }
   })
 
-  it('one waits at the forest edge, one alone out on the snowfield', () => {
-    const [edge, snow] = GREAT_TREES
+  it('one waits at the forest edge, one alone out on the snowfield, and the grandest stands beyond the summit', () => {
+    const [edge, snow, grand] = GREAT_TREES
     expect(edge.z).toBeGreaterThan(-5)
     expect(edge.z).toBeLessThan(STREAM.z)
     expect(snow.z).toBeLessThan(-160)
+    expect(grand.scale).toBe(Math.max(...GREAT_TREES.map((g) => g.scale)))
+    // east of the summit, where the tails chapter looks out
+    expect(grand.x).toBeGreaterThan(90)
+    expect(grand.z).toBeLessThan(-150)
+  })
+})
+
+describe('the snow flowers', () => {
+  const flowers = placeFlowers(1)
+  const routeXZ: [number, number][] = ROUTE.map(([x, , z]) => [x, z])
+
+  it('are rare: an occasional flower along the whole journey', () => {
+    expect(flowers.length).toBeGreaterThanOrEqual(20)
+    expect(flowers.length).toBeLessThanOrEqual(70)
+  })
+
+  it('are big enough to show their petals', () => {
+    for (const f of flowers) expect(f.size).toBeGreaterThanOrEqual(0.5)
+  })
+
+  it('sit on the snow, off the path and out of the water', () => {
+    for (const f of flowers) {
+      expect(distanceToCurve(f.x, f.z, routeXZ)).toBeGreaterThan(2)
+      expect(streamDistance(f.x, f.z)).toBeGreaterThan(STREAM.width + 1)
+      expect(f.y).toBeCloseTo(heightAt(f.x, f.z) + f.size * 0.35, 5)
+    }
+  })
+
+  it('thin out, not rearrange, at lower density', () => {
+    const few = placeFlowers(0.4)
+    expect(few.length).toBeLessThan(flowers.length)
+    expect(few).toEqual(flowers.slice(0, few.length))
   })
 })
