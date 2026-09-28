@@ -62,4 +62,4 @@ The earlier iteration of this portfolio is preserved on the [`previous-attempt`]
 
 ---
 
-Designed & built by hand. 以狐为引 — the fox leads the way.
+以狐为引 — the fox leads the way.
