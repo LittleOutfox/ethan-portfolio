@@ -1306,6 +1306,68 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .pool-whisper span { display: block; margin: 4px 0 0; }
 }
 
+/* ------------------------------------------------------------
+   a phone held sideways — the ≤960 tier's width with barely 400px
+   of height (667×375 to 932×430). The stacks set for a taller
+   screen are sized by the height here instead, between the nav
+   (51px) and the foot of the screen, and the tails and the pool
+   spread out sideways where the width allows. Nothing here
+   touches a screen taller than 500px.
+   ------------------------------------------------------------ */
+@media (max-width: 960px) and (max-height: 500px) and (orientation: landscape) {
+  /* the veil: the falling fox shrinks with the height, the gate closes up */
+  .veil-spirit { width: 20vh; margin-bottom: 2.5vh; }
+  .veil-gate { margin-top: 5vh; }
+
+  /* the hero: the title and the sitting fox follow the height, the
+     column centred between the nav and the cue */
+  .hero-zoom { padding: 51px 0 calc(3vh + 56px); }
+  .hero-eyebrow { font-size: 12px; letter-spacing: 0.28em; text-indent: 0.28em; margin-bottom: 1.5vh; }
+  .hero-title { font-size: 18vh; }
+  .hero-sub { margin-top: 2vh; line-height: 1.8; }
+  .hero-spirit { width: 40vh; margin-top: 1vh; }
+  .hero-cue, .wisp { bottom: 3vh; }
+  .hero-cue-line { height: 30px; }
+
+  /* tails: the heading and the count down the left, the earned marks
+     on the right, as on a desk; the fox a ghost behind, sized to the
+     height */
+  .tails-head { top: calc(52px + 2vh); }
+  .tails-head .ch-label { margin-bottom: 12px; }
+  #tails .ch-title { font-size: clamp(34px, 11vh, 46px); }
+  .tails-scene { width: min(88vw, 125vh); top: 52%; }
+  .tails-list { right: var(--pad-x); top: calc(50% + 26px); transform: translateY(-50%); width: min(50vw, 420px); }
+  .tails-list li { padding: 0.9vh 0; gap: 12px; }
+  .tl-mark { font-size: 15px; }
+  .tails-count { bottom: 3vh; }
+  .tails-count span#tailNum { font-size: 44px; }
+
+  /* the pool fills the last screen: heading and card between the nav
+     and a one-line footer. The last spirit bloom stands at this view's
+     left edge (a fifth of the way in), so the column steps in past it,
+     as the band does on an ultrawide, and the card keeps short of the
+     ink fox (its strokes begin ~70% across) */
+  .pool { min-height: 100vh; padding: calc(52px + 2vh) 0 calc(34px + 2vh); }
+  .pool-content { padding-left: 25vw; padding-right: 0; }
+  .pool .ch-label { margin-bottom: 10px; }
+  .pool .ch-title { font-size: clamp(30px, 9vh, 42px); }
+  .pool-card { margin-top: 12px; padding: 12px 14px; max-width: calc(44vw - 8px); }
+  .pool-mail { font-size: 20px; }
+  .pool-links { margin-top: 10px; gap: 20px; }
+  .pool-whisper { margin-top: 10px; padding-top: 8px; }
+  .footer { flex-direction: row; padding: 10px 5vw 12px; }
+}
+/* below 720px across the card is too narrow for the phrase to share the
+   English line: it takes its own line, flush, as on a phone upright,
+   and the card closes up to pay for the line */
+@media (max-width: 720px) and (max-height: 500px) and (orientation: landscape) {
+  .pool-whisper span { display: block; margin: 4px 0 0; }
+  .pool .ch-label { margin-bottom: 6px; }
+  .pool-card { margin-top: 8px; padding: 10px 14px; }
+  .pool-links { margin-top: 8px; }
+  .pool-whisper { margin-top: 8px; padding-top: 6px; }
+}
+
 /* on very wide screens the columns drift apart — hold the
    composition together and let the spirits grow into the room
    instead of letting the middle go empty */
