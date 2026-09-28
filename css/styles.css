@@ -1028,9 +1028,25 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .tails-head { position: absolute; left: var(--pad-x); top: 12vh; z-index: 3; }
 
 .tails-scene {
-  position: absolute; left: 3vw; top: 52%;
-  transform: translateY(-48%);
-  width: min(64vw, 840px);
+  /* the drawing's box is 0.745 as tall as it is wide; its ear tips sit
+     17% of the way down it, in the heading's column, and its snow line
+     89%, above the count. Wherever the screen has room it keeps its size
+     and place (52% down, as it always sat); on a shorter screen it steps
+     down and shrinks just enough that its ears stay clear below the
+     heading and its snow clear above the count. --head-foot: the
+     heading's foot (12vh, the label, two lines of title) and a margin;
+     --count-top: the count's top (7vh up, 109px tall) less a margin. */
+  --head-foot: calc(12vh + 18px + 2.91 * clamp(44px, min(5.6vw, 9vh), 92px) + 20px);
+  --count-top: calc(93vh - 119px);
+  --w: min(64vw, 840px, calc((var(--count-top) - var(--head-foot)) / 0.536));
+  position: absolute; left: 3vw;
+  top: max(calc(52% - 0.358 * var(--w)), calc(var(--head-foot) - 0.1274 * var(--w)));
+  width: var(--w);
+}
+/* a short screen gives the title a little less height, so the fox keeps
+   more of its size (tall screens are untouched: 9vh is the larger there) */
+@media (min-width: 961px) {
+  #tails .ch-title { font-size: clamp(44px, min(5.6vw, 9vh), 92px); }
 }
 
 .tails-spirit {
