@@ -333,7 +333,7 @@ html.no-js .veil { display: none; }
 
 .nav-links { display: flex; gap: clamp(16px, 2.6vw, 40px); }
 .nav-links a {
-  font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; white-space: nowrap;
   color: var(--moon-dim);
   transition: color var(--dur-2) var(--out-soft);
   position: relative; padding: 8px 0 6px; /* top pad balances the underline's 6px so the caps centre on the mark */
@@ -468,7 +468,7 @@ main { position: relative; z-index: 4; }
 
 .ch-label {
   display: flex; align-items: center; gap: 16px;
-  font-size: 10px; letter-spacing: 0.38em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.38em; text-transform: uppercase;
   color: var(--moon-dim);
   margin-bottom: clamp(28px, 2.8vw, 48px);
 }
@@ -586,7 +586,7 @@ main { position: relative; z-index: 4; }
   position: absolute; bottom: 4vh; left: 50%;
   transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
-  font-size: 9px; letter-spacing: 0.5em; text-indent: 0.5em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.5em; text-indent: 0.5em; text-transform: uppercase;
   color: var(--moon-faint);
 }
 .hero-cue-line {
@@ -639,7 +639,7 @@ main { position: relative; z-index: 4; }
   border-top: 1px solid var(--hairline);
 }
 .origin-facts dt {
-  font-size: 9px; letter-spacing: 0.34em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase;
   color: var(--moon-dim); margin-bottom: 8px; /* faint is for glyphs and rules, never words */
 }
 .origin-facts dd {
@@ -674,7 +674,7 @@ main { position: relative; z-index: 4; }
 .hunt-intro { min-width: min(58vw, 760px); }
 .hunt-hint {
   margin-top: clamp(30px, 3.1vw, 52px);
-  font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
   color: var(--moon-dim);
 }
 
@@ -804,7 +804,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .wgate-inner { position: relative; max-width: min(52vw, 860px); padding-top: 8vh; pointer-events: auto; }
 
 .wscene-meta {
-  font-size: 10px; letter-spacing: 0.4em; text-indent: 0.4em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.4em; text-indent: 0.4em; text-transform: uppercase;
   color: var(--moon-dim); margin-bottom: 3.4vh;
 }
 .wscene-title {
@@ -825,7 +825,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .wscene-role {
   display: inline-flex; align-items: center; gap: 18px;
   margin-top: 4.5vh;
-  font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
   color: var(--moon-dim);
 }
 .wscene-role::before, .wscene-role::after {
@@ -833,7 +833,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .wscene-visit {
   display: inline-block; margin-top: 3vh;
-  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
   color: var(--moon-dim);
   border-bottom: 1px solid var(--hairline);
   padding-bottom: 3px;
@@ -999,7 +999,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   transition: opacity var(--dur-2) var(--out-soft);
 }
 .tails-list li.lit { opacity: 1; }
-.tl-year { font-size: 10px; letter-spacing: 0.2em; color: var(--spirit); min-width: 42px; }
+.tl-year { font-size: 11px; letter-spacing: 0.2em; color: var(--spirit); min-width: 42px; }
 .tl-mark { font-family: var(--serif); font-size: clamp(16px, 1.5vw, 21px); line-height: 1.4; text-wrap: pretty; }
 
 .tails-count {
@@ -1076,7 +1076,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 
 .pool-links { display: flex; gap: 28px; margin-top: 26px; }
 .pool-links a {
-  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
   color: var(--moon-dim); transition: color var(--dur-2) var(--out-soft);
 }
 
@@ -1092,7 +1092,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
   display: flex; align-items: center; justify-content: space-between;
   padding: 22px 4vw;
-  font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
   color: var(--moon-dim);
 }
 .footer p[aria-hidden] { font-family: var(--zh); letter-spacing: 0.4em; }
@@ -1108,8 +1108,8 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .nav { padding: 18px 5vw; }
   .nav-word { display: none; }
   .nav-hanzi { font-size: 15px; white-space: nowrap; }
-  .nav-links { gap: 16px; }
-  .nav-links a { font-size: 9px; letter-spacing: 0.18em; }
+  .nav-links { gap: 14px; }
+  .nav-links a { font-size: 11px; letter-spacing: 0.14em; }
 
   .ch-grid, .origin .ch-grid { grid-template-columns: 1fr; gap: clamp(40px, 6.5vw, 60px); }
   .origin-fox { width: min(70vw, 380px); margin: 0; justify-self: center; }
@@ -1143,6 +1143,12 @@ html.js:not(.reduced) .wgate { opacity: 0; }
    as the phone tier does; landscape keeps the ghosted overlay. Must sit
    between the ≤960 and ≤480 blocks so phones still win. Mirrored in the
    tails fox's data-fox-sizes (index.html). */
+/* below a small tablet's width six chapters no longer fit on one line at
+   11px — Den and Tails step aside here, as they do on phones */
+@media (max-width: 560px) {
+  .nav-links a[data-nav="fire"], .nav-links a[data-nav="tails"] { display: none; }
+}
+
 @media (max-width: 960px) and (orientation: portrait) {
   .tails-scene { width: min(66vw, 560px); top: 38%; opacity: 0.9; }
   .tails-list { top: auto; bottom: 15vh; transform: translateX(50%); }
@@ -1157,7 +1163,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 
   .nav { padding: 16px 4vw; }
   .nav-links { gap: 12px; }
-  .nav-links a { font-size: 9px; letter-spacing: 0.16em; }
+  .nav-links a { font-size: 11px; letter-spacing: 0.16em; }
   /* a hand's width only holds four chapters — Den and Tails step aside here */
   .nav-links a[data-nav="fire"], .nav-links a[data-nav="tails"] { display: none; }
 
