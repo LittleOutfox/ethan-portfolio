@@ -236,14 +236,15 @@ export const BLOOM = { orbY: 1.2, orbR: 0.26, glowR: 1.0, reach: 1.3 }
 /**
  * Where the spirit blooms grow, each placed by eye as a moment of its own: at
  * world time t it stands `ahead` metres in front of the camera and `side`
- * metres to its right (left if negative) — out where the page keeps no text.
- * By the stream as the story opens; at the forest's edge, walking in; beside
- * the torii stair; at the summit clearing's edge; out on the snowfield.
+ * metres to its right (left if negative) — out where the page keeps no text,
+ * and never in the opening view, which is the title's alone. At the forest's
+ * edge, walking in; partway up the torii stair and at its top; at the summit
+ * clearing's edge; out on the snowfield.
  */
 const BLOOM_SPOTS: { t: number; ahead: number; side: number; scale: number }[] = [
-  { t: 0, ahead: 16, side: 7.5, scale: 1.6 },
   { t: 1.2, ahead: 11, side: 6, scale: 1.3 },
   { t: 4.45, ahead: 9.5, side: -5.5, scale: 1.35 },
+  { t: 4.75, ahead: 9, side: 5.5, scale: 1.4 },
   { t: 7.6, ahead: 21, side: 9.5, scale: 1.5 },
   { t: 9, ahead: 14, side: -7, scale: 1.55 },
 ]

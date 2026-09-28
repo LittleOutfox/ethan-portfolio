@@ -2,6 +2,14 @@ varying vec3 vDir;
 
 float noise1(float x) { return noise2(vec2(x, 0.37)); }
 
+// one of the moon's seas: a soft dark patch on its face
+float sea(vec2 p, vec2 c, vec2 r) {
+  vec2 q = (p - c) / r;
+  return exp(-dot(q, q) * 2.0);
+}
+
+const float MOON_R = 0.0187; // the disc's angular radius (rad)
+
 void main() {
   vec3 d = normalize(vDir);
   float h = d.y;
@@ -28,10 +36,38 @@ void main() {
   vec3 belly = uFrost * 0.005 + uMoonColor * pow(m, 10.0) * 0.015 * uMoon;
   col = mix(col, fogTint(d) * 1.02 + belly, cloud * 0.75);
 
-  // the moon: a soft disc and a wide halo
-  float disc = smoothstep(0.99978, 0.99987, m);
-  float halo = pow(m, 2000.0) * 0.3 + pow(m, 140.0) * 0.07 + pow(m, 14.0) * 0.022;
-  col += uMoonColor * (disc * 0.5 + halo) * uMoon;
+  // the moon: a full moon with its seas (the darker maria, laid out as on
+  // the real one), a faint mottle of craters and bright Tycho below, its edge
+  // crisp and a little dimmer toward the limb; round it a faint cold glow
+  // and a soft, wide aureole, but no glare (a glare is what makes a disc a sun)
+  vec3 mx = normalize(cross(uMoonDir, vec3(0.0, 1.0, 0.0)));
+  vec3 my = cross(mx, uMoonDir);
+  vec2 p = vec2(dot(d, mx), dot(d, my)) / MOON_R; // right and up across the disc
+  float r = length(p);
+  float disc = (1.0 - smoothstep(1.0 - fwidth(r), 1.0 + fwidth(r), r)) * step(0.5, m);
+  vec3 face = vec3(0.0);
+  if (disc > 0.0) {
+    // (the seas' edges wander a little, and they run together as the real ones do)
+    vec2 w = p + (vec2(noise2(p * 3.0 + 5.0), noise2(p * 3.0 + 41.0)) - 0.5) * 0.18;
+    float seas = sea(w, vec2(-0.52, 0.0), vec2(0.34, 0.62))    // Oceanus Procellarum
+               + sea(w, vec2(-0.22, 0.38), vec2(0.3, 0.26))    // Imbrium
+               + sea(w, vec2(0.0, 0.72), vec2(0.45, 0.08))     // Frigoris
+               + sea(w, vec2(0.18, 0.36), vec2(0.17, 0.16))    // Serenitatis
+               + sea(w, vec2(0.32, 0.08), vec2(0.24, 0.2))     // Tranquillitatis
+               + sea(w, vec2(0.55, -0.15), vec2(0.15, 0.2))    // Fecunditatis
+               + sea(w, vec2(0.3, -0.28), vec2(0.1, 0.1))      // Nectaris
+               + sea(w, vec2(0.7, 0.28), vec2(0.11, 0.1))      // Crisium
+               + sea(w, vec2(-0.18, -0.34), vec2(0.2, 0.15))   // Nubium
+               + sea(w, vec2(-0.45, -0.42), vec2(0.1, 0.1));   // Humorum
+    seas = smoothstep(0.15, 0.85, seas + (noise2(p * 7.0 + 17.0) - 0.5) * 0.25);
+    float mottle = noise2(p * 14.0 + 3.0) * 0.6 + noise2(p * 31.0 + 9.0) * 0.4;
+    vec2 ty = p - vec2(-0.12, -0.66);
+    float tycho = exp(-dot(ty, ty) * 900.0) + exp(-dot(ty, ty) * 60.0) * 0.12;
+    float albedo = (mix(1.0, 0.7, seas) * (0.92 + 0.1 * mottle) + tycho * 0.25) * (1.0 - 0.18 * r * r);
+    face = mix(uMoonColor, uMoonColor * vec3(0.9, 0.93, 1.0), seas) * albedo;
+  }
+  float halo = pow(m, 3500.0) * 0.06 + pow(m, 140.0) * 0.06 + pow(m, 14.0) * 0.022;
+  col += (face * disc * 0.72 + mix(uMoonColor, uFrost, 0.3) * halo) * uMoon;
 
   // a far tree line painted just above the horizon, half lost in the haze:
   // canopy masses, then crowns, then the ragged tops of single trees
