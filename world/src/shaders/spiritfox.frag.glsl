@@ -48,7 +48,10 @@ float body(vec3 p) {
   for (int i = 0; i < FOX_BONES; i++) {
     vec4 A = uFoxBones[2 * i];
     vec4 B = uFoxBones[2 * i + 1];
-    d = smin(d, sdRoundCone(p, A.xyz, B.xyz, A.w, B.w), 0.03);
+    // its legs (bones 9–18) meet its body in a clean crease, as a fox's do;
+    // the rest of it flows together
+    float k = (i >= 9 && i < 19) ? 0.012 : 0.03;
+    d = smin(d, sdRoundCone(p, A.xyz, B.xyz, A.w, B.w), k);
   }
   return d;
 }

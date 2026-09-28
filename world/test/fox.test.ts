@@ -3,7 +3,7 @@ import { KEYS } from '../src/keys'
 import { fitFov, makeCameraPath, type Pose } from '../src/path'
 import { cameraSamples } from '../src/layout'
 import { forestFor } from '../src/trees'
-import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, type Gait } from '../src/fox'
+import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, stepHeading, type Gait } from '../src/fox'
 
 /** Where a world point lands on screen (3440×1440 unless told) at world time t (x right, y down, 0..1), and how far it is. */
 function onScreen(t: number, x: number, y: number, z: number, aspect = 3440 / 1440) {
@@ -210,6 +210,45 @@ describe('its gait', () => {
     expect(g.sit).toBeGreaterThan(0.9)
   })
 
+  it('sits down haunches first, and gets up haunches first', () => {
+    const g = run(makeGait(), 3, 1)
+    run(g, 0, 1.5)
+    // part way down, its hind end is further along than its front
+    expect(g.sitRear).toBeGreaterThan(g.sit + 0.1)
+    run(g, 0, 3)
+    expect(g.sit).toBeGreaterThan(0.9)
+    expect(g.sitRear).toBeGreaterThan(0.95)
+    // and as it gets up to go, its hind end rises first
+    run(g, 3, 0.1)
+    expect(g.sitRear).toBeLessThan(g.sit - 0.1)
+  })
+
+  it('steps round as it turns in place, and waits to sit until it has turned', () => {
+    const g = run(makeGait(), 3, 1)
+    run(g, 0, 0.5)
+    const before = g.stride
+    const dt = 1 / 120
+    for (let t = 0; t < 1; t += dt) stepGait(g, 0, dt, 1.5 * dt)
+    expect(g.stride - before).toBeGreaterThan(0.4)
+    expect(g.run).toBeGreaterThan(0.5)
+    expect(g.sit).toBeLessThan(0.1)
+  })
+
+  it('turns to face you as a fox turns: slowly at first, then round, and settles without overshooting', () => {
+    const h = { heading: 0, vel: 0 }
+    const dt = 1 / 120
+    let early = 0
+    let most = 0
+    for (let k = 0; k < 480; k++) {
+      stepHeading(h, Math.PI / 2, 3, dt)
+      if (k === 11) early = h.heading
+      most = Math.max(most, h.heading)
+    }
+    expect(early).toBeLessThan(0.08)
+    expect(Math.abs(h.heading - Math.PI / 2)).toBeLessThan(0.02)
+    expect(most).toBeLessThan(Math.PI / 2 + 0.02)
+  })
+
   it('turns around when you scroll back', () => {
     const g = run(makeGait(), 3, 1)
     expect(g.dir).toBe(1)
@@ -224,11 +263,12 @@ describe('its gait', () => {
 
 describe('its shape', () => {
   const bones = new Float32Array(FOX_BONES * 8)
-  const pose = (g: Partial<Gait>, look = 0) => {
-    foxPose({ ...makeGait(), sit: 0, run: 0, ...g }, 0, look, bones)
+  const pose = (g: Partial<Gait>, look = 0, time = 0) => {
+    foxPose({ ...makeGait(), sit: 0, sitRear: 0, run: 0, ...g }, time, look, bones)
     const b = (i: number) => ({ a: [bones[i * 8], bones[i * 8 + 1], bones[i * 8 + 2]], ra: bones[i * 8 + 3], b: [bones[i * 8 + 4], bones[i * 8 + 5], bones[i * 8 + 6]], rb: bones[i * 8 + 7] })
     return Array.from({ length: FOX_BONES }, (_, i) => b(i))
   }
+  const SIT: Partial<Gait> = { sit: 1, sitRear: 1 }
   /** a walk, a trot, a gallop, and the flying gallop of a fast scroll */
   const GAITS: Partial<Gait>[] = [
     { walk: 1, gallop: 0, speed: 0.7 },
@@ -264,9 +304,9 @@ describe('its shape', () => {
       }
     }
     inBox(pose({}))
-    inBox(pose({ sit: 1 }))
-    inBox(pose({ sit: 1 }, 2))
-    inBox(pose({ sit: 1 }, -2))
+    inBox(pose(SIT))
+    inBox(pose(SIT, 2))
+    inBox(pose(SIT, -2))
     for (let ph = 0; ph < 1; ph += 0.05) {
       for (const g of GAITS) inBox(pose({ run: 1, stride: ph, ...g }))
     }
@@ -274,14 +314,14 @@ describe('its shape', () => {
 
   it('sits down on its haunches', () => {
     const stand = pose({})
-    const sit = pose({ sit: 1 })
+    const sit = pose(SIT)
     const hips = (bs: ReturnType<typeof pose>) => bs[0].b[1]
     expect(hips(sit)).toBeLessThan(hips(stand) - 0.1)
     expect(lowest(sit)).toBeGreaterThan(-0.02)
   })
 
   it('sits as a fox sits: upright, its chest high over its haunches, forepaws together under its chest', () => {
-    const sit = pose({ sit: 1 })
+    const sit = pose(SIT)
     const [chest, hips] = [sit[0].a, sit[0].b]
     // (as the model sits: its chest well over the round mass of its haunches)
     expect(chest[1] - hips[1]).toBeGreaterThan(0.2)
@@ -297,7 +337,7 @@ describe('its shape', () => {
   })
 
   it("has a fox's proportions, measured from the fox model Ethan chose", () => {
-    const sit = pose({ sit: 1 })
+    const sit = pose(SIT)
     const top = Math.max(...sit.flatMap((x) => [x.a[1] + x.ra, x.b[1] + x.rb]))
     // sitting, 0.8 m to its ear tips (the model, scaled to that height)
     expect(top).toBeGreaterThan(0.78)
@@ -321,9 +361,68 @@ describe('its shape', () => {
     expect(sit[4].b[1] / top).toBeLessThan(0.8)
   })
 
+  /** its bones over one stride at a gait */
+  const stride = (g: Partial<Gait>, n = 50) => Array.from({ length: n }, (_, k) => pose({ run: 1, stride: k / n, ...g }))
+  const GALLOPING = GAITS[2]
+  const TROTTING = GAITS[1]
+  const range = (xs: number[]) => Math.max(...xs) - Math.min(...xs)
+
+  it('streams its tail straight out behind it as it runs, a little below its back, steady: never waving', () => {
+    for (const g of [TROTTING, GALLOPING]) {
+      const tips = stride(g).map((bs) => bs[22].b)
+      expect(range(tips.map((t) => t[2]))).toBeLessThan(0.01)
+      expect(range(tips.map((t) => t[1]))).toBeLessThan(0.08)
+      for (const bs of stride(g)) {
+        expect(bs[22].b[0]).toBeLessThan(bs[0].b[0] - 0.5)
+        expect(bs[22].b[1]).toBeLessThan(bs[19].a[1])
+      }
+    }
+  })
+
+  it('carries its head forward and low as it gallops, and its head moves with its stride', () => {
+    const stand = pose({})
+    const gallop = stride(GALLOPING).map((bs) => bs[3].b)
+    const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+    expect(mean(gallop.map((h) => h[1]))).toBeLessThan(stand[3].b[1] - 0.06)
+    expect(mean(gallop.map((h) => h[0]))).toBeGreaterThan(stand[3].b[0])
+    expect(range(gallop.map((h) => h[1]))).toBeGreaterThan(0.02)
+    expect(range(stride(TROTTING).map((bs) => bs[3].b[1]))).toBeGreaterThan(0.012)
+  })
+
+  it('looks about while it waits: its head is never quite still', () => {
+    const heads = Array.from({ length: 40 }, (_, k) => pose(SIT, 0, k * 0.25)[3].b)
+    expect(range(heads.map((h) => h[0])) + range(heads.map((h) => h[2]))).toBeGreaterThan(0.02)
+  })
+
+  it('reaches out in the stretch of a gallop and gathers its legs under it', () => {
+    let fore = -1
+    let hindBack = 1
+    let hindUnder = -1
+    for (const bs of stride(GALLOPING)) {
+      const [chest, hips] = [bs[0].a, bs[0].b]
+      for (const i of [10, 12]) fore = Math.max(fore, bs[i].b[0] - chest[0])
+      for (const i of [15, 18]) {
+        hindBack = Math.min(hindBack, bs[i].b[0] - hips[0])
+        hindUnder = Math.max(hindUnder, bs[i].b[0] - hips[0])
+      }
+    }
+    expect(fore).toBeGreaterThan(0.2)
+    expect(hindBack).toBeLessThan(-0.22)
+    expect(hindUnder).toBeGreaterThan(0.12)
+  })
+
+  it('runs on slender legs, clean of its body', () => {
+    for (const bs of [pose({}), ...stride(GALLOPING, 10)]) {
+      for (const i of [9, 11]) expect(bs[i].rb).toBeLessThanOrEqual(0.032) // at the elbow
+      for (const i of [10, 12]) expect(Math.max(bs[i].ra, bs[i].rb)).toBeLessThanOrEqual(0.028) // the fore leg
+      for (const i of [13, 16]) expect(bs[i].rb).toBeLessThanOrEqual(0.042) // at the knee
+      for (const i of [14, 15, 17, 18]) expect(Math.max(bs[i].ra, bs[i].rb)).toBeLessThanOrEqual(0.032) // the hind leg
+    }
+  })
+
   it('gives every bone a real length, so the shader never divides by zero', () => {
     for (const ph of [0, 0.2, 0.4, 0.6, 0.8]) {
-      for (const bs of [pose({}), pose({ sit: 1 }), ...GAITS.map((g) => pose({ run: 1, stride: ph, ...g }))]) {
+      for (const bs of [pose({}), pose(SIT), ...GAITS.map((g) => pose({ run: 1, stride: ph, ...g }))]) {
         for (const x of bs) {
           const len = Math.hypot(x.b[0] - x.a[0], x.b[1] - x.a[1], x.b[2] - x.a[2])
           expect(len).toBeGreaterThan(Math.abs(x.ra - x.rb) + 0.002)

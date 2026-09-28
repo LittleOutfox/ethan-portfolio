@@ -120,8 +120,12 @@ export interface Gait {
   walk: number
   /** 0 trotting … 1 galloping */
   gallop: number
-  /** 0 … 1 sitting */
+  /** 0 … 1 sitting: its front (chest and forelegs, head held high) */
   sit: number
+  /** 0 … 1 sitting: its hind end (haunches folded, tail round it), which leads as it sits and as it rises */
+  sitRear: number
+  /** how fast it is turning where it stands (rad/s, smoothed) */
+  turn: number
   /** 0 … 1 turned to look back at you */
   look: number
   /** +1 running on with the story, −1 running back */
@@ -132,7 +136,7 @@ export interface Gait {
 
 /** A fox that has not moved yet: sitting, looking back at you, waiting. */
 export function makeGait(): Gait {
-  return { stride: 0, speed: 0, run: 0, walk: 1, gallop: 0, sit: 1, look: 1, dir: 1, still: 10 }
+  return { stride: 0, speed: 0, run: 0, walk: 1, gallop: 0, sit: 1, sitRear: 1, turn: 0, look: 1, dir: 1, still: 10 }
 }
 
 /** The legs never cycle faster than this (strides per second), however fast the scroll runs: a fox's own gallop. */
@@ -142,26 +146,58 @@ const cadence = (v: number) => MAX_CADENCE * (1 - Math.exp(-v / 1.6))
 /** How far one stride carries it at a ground speed (m): short steps at a walk, long bounds at a gallop, and past a fox's own pace, leaps. */
 const strideLength = (v: number) => (v > 1e-3 ? v / cadence(v) : 1.6 / MAX_CADENCE)
 
-/** Advance the gait by `ds` metres run along its path (signed) over `dt` seconds. */
-export function stepGait(g: Gait, ds: number, dt: number): Gait {
+/** Turning where it stands, it steps round: its paws cover about this far (m) for each radian it turns. */
+const TURN_STEP = 0.22
+
+/** Advance the gait by `ds` metres run along its path (signed) and `turn` radians turned where it stands, over `dt` seconds. */
+export function stepGait(g: Gait, ds: number, dt: number, turn = 0): Gait {
   if (dt <= 0) return g
   const d = Math.abs(ds)
   g.speed = ease(g.speed, d / dt, 8, dt)
+  g.turn = ease(g.turn, turn / dt, 10, dt)
   // (the last creep of a smoothed scroll, a few centimetres a second, is standing still)
   if (d > 0.05 * dt) {
     g.still = 0
     g.dir = ds > 0 ? 1 : -1
   } else g.still += dt
-  g.run = ease(g.run, smooth(0.05, 0.35, g.speed), 8, dt)
+  const stepping = g.speed + TURN_STEP * Math.abs(g.turn)
+  g.run = ease(g.run, smooth(0.05, 0.35, stepping), 8, dt)
   g.walk = ease(g.walk, 1 - smooth(0.9, 1.7, g.speed), 6, dt)
   g.gallop = ease(g.gallop, smooth(3.2, 5.5, g.speed), 6, dt)
   // its legs cover the ground it runs over, stride for stride (and only
   // while it gathers speed from a standstill do they run short of it)
-  g.stride += Math.min(d / strideLength(g.speed), MAX_CADENCE * dt)
+  g.stride += Math.min((d + TURN_STEP * Math.abs(turn)) / strideLength(stepping), MAX_CADENCE * dt)
   g.look = ease(g.look, smooth(0.25, 0.7, g.still), 5, dt)
-  const resting = g.still > 1.8
-  g.sit = ease(g.sit, resting ? 1 : 0, resting ? 2.2 : 9, dt)
+  // once it has stopped and turned to you, it sits: haunches first, then its
+  // chest settles upright; it gets up haunches first too
+  const resting = g.still > 1.2 && Math.abs(g.turn) < 0.35
+  g.sitRear = ease(g.sitRear, resting ? 1 : 0, resting ? 3.2 : 14, dt)
+  g.sit = ease(g.sit, resting ? 1 : 0, resting ? 1.9 : 8, dt)
   return g
+}
+
+export interface Heading {
+  /** which way it faces: rotation about y, 0 facing +x */
+  heading: number
+  /** how fast it is turning (rad/s) */
+  vel: number
+}
+
+/**
+ * Turn toward `target` (rad) as a body turns: easing into the turn, sweeping
+ * round, easing out without overshooting (a critically damped spring,
+ * quicker at a higher `rate`). Returns how far it turned.
+ */
+export function stepHeading(h: Heading, target: number, rate: number, dt: number): number {
+  const start = h.heading
+  const n = Math.max(1, Math.ceil(dt * 120))
+  const step = dt / n
+  for (let k = 0; k < n; k++) {
+    const err = Math.atan2(Math.sin(target - h.heading), Math.cos(target - h.heading))
+    h.vel += (rate * rate * err - 2 * rate * h.vel) * step
+    h.heading += h.vel * step
+  }
+  return h.heading - start
 }
 
 /**
@@ -192,7 +228,7 @@ const REACH = [0.13, 0.15, 0.18]
  * under the belly to land.
  */
 const FORE_SWING = [[0, -1, 0], [0.25, -0.85, 0.85], [0.55, 0.1, 1], [0.82, 1.3, 0.5], [1, 1, 0]]
-const HIND_SWING = [[0, -1, 0], [0.28, -1.35, 0.45], [0.6, -0.3, 0.85], [0.85, 0.85, 0.4], [1, 1, 0]]
+const HIND_SWING = [[0, -1, 0], [0.28, -1.6, 0.45], [0.6, -0.35, 0.85], [0.85, 0.85, 0.4], [1, 1, 0]]
 
 /** A smooth track through keys (u, x, y), u rising from 0 to 1 (Catmull–Rom, its ends held). */
 function track(keys: number[][], u: number): [number, number] {
@@ -322,14 +358,14 @@ function standing(): Bone[] {
     const shoulder: V = [0.17, 0.35, z]
     const paw: V = [0.19, 0.022, z]
     const elbow = knee(shoulder, paw, FORE[0], FORE[1], -1)
-    bs.push(bone(shoulder, 0.05, elbow, 0.04), bone(elbow, 0.036, paw, 0.024))
+    bs.push(bone(shoulder, 0.04, elbow, 0.03), bone(elbow, 0.026, paw, 0.022))
   }
   for (const z of [0.06, -0.06]) {
     // 13–18 hind legs: hip → knee → hock → paw
     bs.push(
-      bone([-0.2, 0.33, z], 0.095, [-0.13, 0.2, z], 0.05),
-      bone([-0.13, 0.2, z], 0.04, [-0.22, 0.08, z], 0.028),
-      bone([-0.22, 0.08, z], 0.028, [-0.2, 0.022, z], 0.022),
+      bone([-0.2, 0.33, z], 0.095, [-0.12, 0.19, z], 0.04),
+      bone([-0.12, 0.19, z], 0.03, [-0.23, 0.075, z], 0.026),
+      bone([-0.23, 0.075, z], 0.026, [-0.2, 0.022, z], 0.022),
     )
   }
   // 19–22 the tail, a great plume, held low and sweeping back as a fox holds it
@@ -428,25 +464,54 @@ function moving(g: Gait): Bone[] {
   const st = strideOf(g)
   const tau = Math.PI * 2
   const ph = g.stride
+  // the body: dipping a little as the paws take its weight at a walk or a
+  // trot; at a gallop long and level, gathering and stretching, rising a
+  // little in the bound, running low
   const bob = -(0.006 * st.walk + 0.014 * st.trot) * Math.cos(2 * tau * (ph - st.D / 2))
-  const rise = 0.05 * st.gallop * (0.5 + 0.5 * Math.cos(tau * (ph - (st.D + 0.5) / 2)))
-  const gather = 0.05 * st.gallop * Math.cos(tau * (ph - 0.45))
-  const rock = 0.035 * st.gallop * Math.sin(tau * (ph - 0.55))
-  const y = bob + rise - 0.015 * st.trot - 0.03 * st.gallop
+  const rise = 0.03 * st.gallop * (0.5 + 0.5 * Math.cos(tau * (ph - (st.D + 0.5) / 2)))
+  const gather = 0.04 * st.gallop * Math.cos(tau * (ph - 0.45))
+  const rock = 0.015 * st.gallop * Math.sin(tau * (ph - 0.55))
+  const y = bob + rise - 0.015 * st.trot - 0.04 * st.gallop
   const chest: V = [0.17 - gather, 0.37 + y + rock, 0]
   const hips: V = [-0.2 + gather, 0.36 + y - rock, 0]
-  const shift = (i: number, dx: number, dy: number) => {
-    for (const p of [bs[i].a, bs[i].b]) {
-      p[0] += dx
-      p[1] += dy
-    }
-  }
   bs[0].a = chest
   bs[0].b = hips
-  // the head rides steadier than the body; at speed it reaches forward and low, its ears laid back
-  const reach = 0.03 * st.trot + 0.05 * st.gallop
-  for (const i of [1, 2, 3, 4, 5, 6, 7, 8]) shift(i, -gather + reach, 0.5 * y + 0.6 * rock - 0.02 * st.trot - 0.05 * st.gallop)
-  for (const i of [7, 8]) bs[i].b[0] -= 0.02 * st.trot + 0.07 * st.gallop
+  // the neck and head ride with the chest, the head steadier than the body
+  for (let i = 1; i <= 8; i++) {
+    for (const p of [bs[i].a, bs[i].b]) {
+      p[0] += chest[0] - 0.17
+      p[1] += (chest[1] - 0.37) * (i === 1 ? 1 : 0.6)
+    }
+  }
+  // the neck reaches forward and down with speed, the head held level at
+  // the end of it, nodding with the stride: as each fore paw lands at a walk
+  // or a trot, once a stride at a gallop
+  const reach = -(0.05 * st.walk + 0.2 * st.trot + 0.45 * st.gallop)
+  const nod =
+    -0.035 * st.walk * Math.cos(2 * tau * ph) -
+    0.04 * st.trot * Math.cos(2 * tau * (ph - 0.05)) -
+    0.05 * st.gallop * Math.cos(tau * (ph - 0.95))
+  const neck = bs[2].a
+  const turnXY = (p: V, pivot: V, angle: number) => {
+    const c = Math.cos(angle)
+    const s = Math.sin(angle)
+    const dx = p[0] - pivot[0]
+    const dy = p[1] - pivot[1]
+    p[0] = pivot[0] + dx * c - dy * s
+    p[1] = pivot[1] + dx * s + dy * c
+  }
+  turnXY(bs[2].b, neck, reach + nod)
+  for (let i = 3; i <= 8; i++) {
+    turnXY(bs[i].a, neck, reach + nod)
+    turnXY(bs[i].b, neck, reach + nod)
+  }
+  const skull: V = [bs[3].a[0], bs[3].a[1], 0]
+  for (let i = 3; i <= 8; i++) {
+    turnXY(bs[i].a, skull, -0.75 * reach)
+    turnXY(bs[i].b, skull, -0.75 * reach)
+  }
+  // ears laid back at speed
+  for (const i of [7, 8]) bs[i].b[0] -= 0.02 * st.trot + 0.06 * st.gallop
   // the legs: each paw where its stride puts it, the joints between found by reach
   for (let k = 0; k < 4; k++) {
     const paw = pawAt(k, st, ph)
@@ -480,18 +545,18 @@ function moving(g: Gait): Bone[] {
       bs[b + 2].b = paw
     }
   }
-  // the tail: hanging and swaying at a walk, streaming out behind, waving, at a gallop
-  const out = st.trot * 0.6 + st.gallop
+  // the tail: hanging low at a walk, swaying slowly; at a trot or a gallop
+  // streaming straight out behind, a little below its back, steady, with
+  // only a small bounce that follows the body's, late
+  const out = Math.min(1, st.trot + st.gallop)
   const hang: V[] = [[-0.3, 0.36, 0], [-0.42, 0.28, 0], [-0.56, 0.22, 0], [-0.71, 0.19, 0], [-0.85, 0.19, 0]]
-  const stream: V[] = [[-0.3, 0.37, 0], [-0.44, 0.35, 0], [-0.6, 0.36, 0], [-0.76, 0.39, 0], [-0.9, 0.44, 0]]
+  const stream: V[] = [[-0.3, 0.36, 0], [-0.45, 0.33, 0], [-0.61, 0.3, 0], [-0.77, 0.27, 0], [-0.92, 0.25, 0]]
   const pts = hang.map((h, k): V => {
     const p: V = [h[0] + (stream[k][0] - h[0]) * out, h[1] + (stream[k][1] - h[1]) * out, 0]
     p[0] += hips[0] + 0.2
-    p[1] += (hips[1] - 0.36) * (1 - k / 4)
-    if (k > 0) {
-      p[1] += 0.012 * k * Math.sin(tau * ph - k * 0.9) * (0.4 + 0.6 * st.gallop)
-      p[2] += 0.02 * k * Math.sin(tau * ph - k * 0.8)
-    }
+    p[1] += (hips[1] - 0.36) * (1 - k / 5)
+    p[1] += 0.006 * k * (st.trot * Math.cos(2 * tau * (ph - 0.1 * k)) + st.gallop * Math.sin(tau * (ph - 0.12 * k)))
+    p[2] += 0.008 * k * st.walk * Math.sin(tau * (ph - 0.1 * k))
     return p
   })
   bs.splice(19, 4)
@@ -499,26 +564,8 @@ function moving(g: Gait): Bone[] {
   return bs
 }
 
-/** Weighted sum of poses (their bones matched one to one). */
-function blend(poses: [Bone[], number][]): Bone[] {
-  const out = standing()
-  out.forEach((o, i) => {
-    o.a = [0, 0, 0]
-    o.b = [0, 0, 0]
-    o.ra = 0
-    o.rb = 0
-    for (const [p, w] of poses) {
-      if (w <= 0) continue
-      for (let k = 0; k < 3; k++) {
-        o.a[k] += p[i].a[k] * w
-        o.b[k] += p[i].b[k] * w
-      }
-      o.ra += p[i].ra * w
-      o.rb += p[i].rb * w
-    }
-  })
-  return out
-}
+/** The bones of its front (chest, neck, head, forelegs); bone 0 (chest → hips) has its chest end in front and its hip end behind. */
+const FRONT = (i: number) => i < 13
 
 /**
  * The fox's shape for its gait at `time` (s), its head turned `look` radians
@@ -527,13 +574,30 @@ function blend(poses: [Bone[], number][]): Bone[] {
  */
 export function foxPose(g: Gait, time: number, look: number, bones: Float32Array) {
   const wRun = Math.min(1, Math.max(0, g.run))
-  const wSit = Math.min(1, Math.max(0, g.sit)) * (1 - wRun)
-  const wStand = 1 - wRun - wSit
-  const poses: [Bone[], number][] = [[standing(), wStand], [sitting(), wSit]]
-  if (wRun > 0) poses.push([moving(g), wRun])
-  const bs = blend(poses)
+  const ease3 = (x: number) => {
+    const c = Math.min(1, Math.max(0, x))
+    return c * c * (3 - 2 * c)
+  }
+  // it sits in two parts: its front and its hind end, each easing in and out
+  const front = ease3(g.sit) * (1 - wRun)
+  const rear = ease3(g.sitRear) * (1 - wRun)
+  const stand = standing()
+  const sit = sitting()
+  const move = wRun > 0 ? moving(g) : null
+  const bs = standing()
+  const mixEnd = (i: number, end: 'a' | 'b', r: 'ra' | 'rb', wSit: number) => {
+    const wStand = 1 - wRun - wSit
+    for (let k = 0; k < 3; k++) {
+      bs[i][end][k] = stand[i][end][k] * wStand + sit[i][end][k] * wSit + (move ? move[i][end][k] * wRun : 0)
+    }
+    bs[i][r] = stand[i][r] * wStand + sit[i][r] * wSit + (move ? move[i][r] * wRun : 0)
+  }
+  for (let i = 0; i < FOX_BONES; i++) {
+    mixEnd(i, 'a', 'ra', FRONT(i) ? front : rear)
+    mixEnd(i, 'b', 'rb', FRONT(i) && i !== 0 ? front : rear)
+  }
 
-  // at rest it breathes, and its tail sways
+  // at rest it breathes, its tail sways, and it looks about a little
   const rest = 1 - wRun
   bs[0].ra += 0.003 * Math.sin(time * 2.1) * rest
   for (let i = 19; i < 23; i++) {
@@ -542,12 +606,30 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
     bs[i].a[2] += sway * (k > 1 ? 1 : 0)
     bs[i].b[2] += sway * 1.3
   }
+  const idleYaw = rest * (0.1 * Math.sin(time * 0.41) + 0.06 * Math.sin(time * 0.97 + 1.3))
+  const idlePitch = rest * (0.05 * Math.sin(time * 0.53 + 0.4) + 0.03 * Math.sin(time * 1.31))
+  const pivot = bs[2].a
+  if (Math.abs(idlePitch) > 1e-4) {
+    const c = Math.cos(idlePitch)
+    const s = Math.sin(idlePitch)
+    const tilt = (p: V) => {
+      const dx = p[0] - pivot[0]
+      const dy = p[1] - pivot[1]
+      p[0] = pivot[0] + dx * c - dy * s
+      p[1] = pivot[1] + dx * s + dy * c
+    }
+    tilt(bs[2].b)
+    for (let i = 3; i <= 8; i++) {
+      tilt(bs[i].a)
+      tilt(bs[i].b)
+    }
+  }
 
   // looking back: the head group turns about the neck's base
-  if (Math.abs(look) > 1e-4) {
-    const pivot = bs[2].a
-    const cs = Math.cos(look)
-    const sn = Math.sin(look)
+  const yaw = look + idleYaw
+  if (Math.abs(yaw) > 1e-4) {
+    const cs = Math.cos(yaw)
+    const sn = Math.sin(yaw)
     const turn = (p: V) => {
       const x = p[0] - pivot[0]
       const z = p[2] - pivot[2]
@@ -564,4 +646,3 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
     bones.set([b.a[0], b.a[1], b.a[2], b.ra, b.b[0], b.b[1], b.b[2], b.rb], i * 8)
   })
 }
-

@@ -4,7 +4,7 @@ import { BoxGeometry, CustomBlending, Mesh, OneFactor, OneMinusSrcAlphaFactor, V
 import vert from '../shaders/spiritfox.vert.glsl?raw'
 import frag from '../shaders/spiritfox.frag.glsl?raw'
 import type { Bus } from '../bus'
-import { FOX_BONES, FOX_BOX, foxPose, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, type FoxSpot } from '../fox'
+import { FOX_BONES, FOX_BOX, foxPose, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, stepHeading, type FoxSpot, type Heading } from '../fox'
 import { worldTime } from '../path'
 import type { Uniforms } from '../uniforms'
 import { worldMaterial } from './materials'
@@ -13,16 +13,14 @@ const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
   return t * t * (3 - 2 * t)
 }
-/** the shortest turn from one angle to another */
-const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
 /**
  * The spirit fox that travels with you: its spot on its path keeps a few
  * metres ahead of the camera (fox.ts), and it keeps to that spot as you
  * scroll, its gait driven by the ground it covers (a walk, a trot, a gallop,
  * its paws planted on the snow as they bear it); when you stop, it looks back
- * at you, turns to face you and sits. One draw: the box it stands in, marched
- * through by its shader.
+ * at you, steps round to face you and sits. One draw: the box it stands in,
+ * marched through by its shader.
  */
 export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
   const s = useMemo(() => {
@@ -54,7 +52,8 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
       gait: makeGait(),
       spot: { x: 0, y: 0, z: 0, heading: 0 } as FoxSpot,
       prev: { x: 0, z: 0, t: -1 },
-      heading: 0,
+      /** which way it faces, and how fast it is turning */
+      turn: { heading: 0, vel: 0 } as Heading,
       fade: 1,
       down: [] as number[],
       nextPaw: 0,
@@ -68,7 +67,7 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     const { spot, prev, gait } = s
     // it keeps its place beside you: its spot, wherever the scroll has brought you
     s.path(t, spot)
-    if (prev.t < 0) s.heading = spot.heading
+    if (prev.t < 0) s.turn.heading = spot.heading
     // how far it ran this frame, signed by the story's direction; a long jump
     // across the story it doesn't run: it thins away and forms again where you land
     let ds = prev.t < 0 ? 0 : Math.hypot(spot.x - prev.x, spot.z - prev.z) * Math.sign(t - prev.t)
@@ -79,24 +78,28 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     prev.x = spot.x
     prev.z = spot.z
     prev.t = t
-    const strideBefore = gait.stride
-    stepGait(gait, ds, dt)
-
-    // it faces the way it runs (turning round when you scroll back); once it
-    // has stopped, it turns to face you, and sits
+    // it faces the way it runs (turning round when you scroll back); a moment
+    // after it stops, it turns to face you, easing into the turn and out of
+    // it, and its legs step round as it turns
     const cam = state.camera.position
-    if (gait.still === 0) {
-      const way = spot.heading + (gait.dir < 0 ? Math.PI : 0)
-      s.heading += wrap(way - s.heading) * (1 - Math.exp(-dt * 9))
-    } else if (gait.still > 0.9) {
-      const toYou = Math.atan2(-(cam.z - spot.z), cam.x - spot.x)
-      s.heading += wrap(toYou - s.heading) * (1 - Math.exp(-dt * 2.5))
+    let facing = s.turn.heading
+    let rate = 6
+    if (gait.still < 0.3) {
+      facing = spot.heading + (gait.dir < 0 ? Math.PI : 0)
+      rate = 7
+    } else if (gait.still > 0.6) {
+      facing = Math.atan2(-(cam.z - spot.z), cam.x - spot.x)
+      rate = 3
     }
+    const turned = stepHeading(s.turn, facing, rate, dt)
+    const strideBefore = gait.stride
+    stepGait(gait, ds, dt, turned)
+
     // and its head leads: it looks back at you first
     const dx = cam.x - spot.x
     const dz = cam.z - spot.z
-    const c = Math.cos(s.heading)
-    const sn = Math.sin(s.heading)
+    const c = Math.cos(s.turn.heading)
+    const sn = Math.sin(s.turn.heading)
     const lx = dx * c - dz * sn
     const lz = dx * sn + dz * c
     const toward = Math.max(-2, Math.min(2, Math.atan2(-lz, lx)))
@@ -113,15 +116,15 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     s.uniforms.uFoxFade.value = s.fade
 
     s.mesh.position.set(spot.x, spot.y, spot.z)
-    s.mesh.rotation.y = s.heading
+    s.mesh.rotation.y = s.turn.heading
 
     // where a paw comes down it leaves a print of light in the snow
     s.down.length = 0
     pawsDown(strideBefore, gait.stride, gait, s.down)
     for (const k of s.down) {
       const [px, pz] = pawSpot(k, gait)
-      const ch = Math.cos(s.heading)
-      const sh = Math.sin(s.heading)
+      const ch = Math.cos(s.turn.heading)
+      const sh = Math.sin(s.turn.heading)
       const paw = U.uPaws.value[s.nextPaw]
       paw.set(spot.x + px * ch + pz * sh, spot.z - px * sh + pz * ch, state.clock.elapsedTime, s.fade * gait.run)
       s.nextPaw = (s.nextPaw + 1) % U.uPaws.value.length
