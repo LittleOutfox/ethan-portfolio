@@ -4,7 +4,7 @@ import { BoxGeometry, CustomBlending, Mesh, OneFactor, OneMinusSrcAlphaFactor, V
 import vert from '../shaders/spiritfox.vert.glsl?raw'
 import frag from '../shaders/spiritfox.frag.glsl?raw'
 import type { Bus } from '../bus'
-import { FOX_BONES, FOX_BOX, foxPose, makeDash, makeFoxPath, makeGait, pawSpot, pawsDown, stepDash, stepGait, type FoxSpot } from '../fox'
+import { FOX_BONES, FOX_BOX, foxPose, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, type FoxSpot } from '../fox'
 import { worldTime } from '../path'
 import type { Uniforms } from '../uniforms'
 import { worldMaterial } from './materials'
@@ -17,11 +17,12 @@ const smooth = (a: number, b: number, x: number) => {
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
 /**
- * The spirit fox that runs with you: its spot on its path keeps a few metres
- * ahead of the camera (fox.ts), and it follows that spot in dashes, a
- * bounding gallop whose stride is driven by the ground it covers; when you
- * stop, it looks back at you, turns to face you and sits. One draw: the box
- * it stands in, marched through by its shader.
+ * The spirit fox that travels with you: its spot on its path keeps a few
+ * metres ahead of the camera (fox.ts), and it keeps to that spot as you
+ * scroll, its gait driven by the ground it covers (a walk, a trot, a gallop,
+ * its paws planted on the snow as they bear it); when you stop, it looks back
+ * at you, turns to face you and sits. One draw: the box it stands in, marched
+ * through by its shader.
  */
 export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
   const s = useMemo(() => {
@@ -52,12 +53,6 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
       path: makeFoxPath(),
       gait: makeGait(),
       spot: { x: 0, y: 0, z: 0, heading: 0 } as FoxSpot,
-      target: { x: 0, y: 0, z: 0, heading: 0 } as FoxSpot,
-      dash: makeDash(),
-      /** its own place along its path, in world time: it chases the camera's */
-      u: -1,
-      targetPrev: { x: 0, z: 0 },
-      targetSpeed: 0,
       prev: { x: 0, z: 0, t: -1 },
       heading: 0,
       fade: 1,
@@ -70,36 +65,20 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     // real time, not the smoothed frame step: after a hitch it catches up rather than falling behind
     const dt = Math.min(delta, 0.25)
     const t = worldTime(bus.p)
-    const { spot, target, prev, gait } = s
-    // its spot, and how fast the scroll is carrying that along
-    s.path(t, target)
-    if (s.u < 0) {
-      s.u = t
-      s.targetPrev.x = target.x
-      s.targetPrev.z = target.z
-    }
-    const moved = Math.hypot(target.x - s.targetPrev.x, target.z - s.targetPrev.z) / Math.max(dt, 1e-3)
-    s.targetSpeed += (moved - s.targetSpeed) * (1 - Math.exp(-dt * 8))
-    s.targetPrev.x = target.x
-    s.targetPrev.z = target.z
-    // it dashes after its spot along its path; a long jump across the story
-    // it doesn't run: it thins away and forms again where you land
-    s.path(s.u, spot)
-    const gap = Math.hypot(target.x - spot.x, target.z - spot.z)
-    if (gap > 25) {
-      s.u = t
-      s.fade = 0
-    } else if (gap > 1e-4) {
-      const step = stepDash(s.dash, gap, s.targetSpeed, dt)
-      s.u += (t - s.u) * Math.min(1, step / gap)
-    }
-    s.path(s.u, spot)
+    const { spot, prev, gait } = s
+    // it keeps its place beside you: its spot, wherever the scroll has brought you
+    s.path(t, spot)
     if (prev.t < 0) s.heading = spot.heading
-    // how far it ran this frame, signed by the story's direction
-    const ds = prev.t < 0 ? 0 : Math.hypot(spot.x - prev.x, spot.z - prev.z) * Math.sign(s.u - prev.t)
+    // how far it ran this frame, signed by the story's direction; a long jump
+    // across the story it doesn't run: it thins away and forms again where you land
+    let ds = prev.t < 0 ? 0 : Math.hypot(spot.x - prev.x, spot.z - prev.z) * Math.sign(t - prev.t)
+    if (Math.abs(ds) > 25) {
+      ds = 0
+      s.fade = 0
+    }
     prev.x = spot.x
     prev.z = spot.z
-    prev.t = s.u
+    prev.t = t
     const strideBefore = gait.stride
     stepGait(gait, ds, dt)
 
@@ -138,9 +117,9 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
 
     // where a paw comes down it leaves a print of light in the snow
     s.down.length = 0
-    pawsDown(strideBefore, gait.stride, gait.gallop, s.down)
+    pawsDown(strideBefore, gait.stride, gait, s.down)
     for (const k of s.down) {
-      const [px, pz] = pawSpot(k, gait.gallop)
+      const [px, pz] = pawSpot(k, gait)
       const ch = Math.cos(s.heading)
       const sh = Math.sin(s.heading)
       const paw = U.uPaws.value[s.nextPaw]

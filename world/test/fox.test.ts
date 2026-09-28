@@ -3,7 +3,7 @@ import { KEYS } from '../src/keys'
 import { fitFov, makeCameraPath, type Pose } from '../src/path'
 import { cameraSamples } from '../src/layout'
 import { forestFor } from '../src/trees'
-import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeDash, makeFoxPath, makeGait, pawsDown, stepDash, stepGait, type Gait } from '../src/fox'
+import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, type Gait } from '../src/fox'
 
 /** Where a world point lands on screen (3440×1440 unless told) at world time t (x right, y down, 0..1), and how far it is. */
 function onScreen(t: number, x: number, y: number, z: number, aspect = 3440 / 1440) {
@@ -104,20 +104,92 @@ describe('its gait', () => {
     return g
   }
 
-  it('strides by the distance run, not the time: 6 m at an amble or a little quicker is the same number of strides', () => {
-    const slow = run(makeGait(), 1.2, 5)
-    const quicker = run(makeGait(), 1.8, 10 / 3)
-    expect(slow.stride).toBeGreaterThan(2)
-    expect(Math.abs(slow.stride - quicker.stride)).toBeLessThan(0.1 * slow.stride)
+  /** the four paws (front left, front right, hind left, hind right): bone and end */
+  const PAWS = [10, 12, 15, 18]
+  const bones = new Float32Array(FOX_BONES * 8)
+  /** Run at `speed` for a while, then watch each paw for `seconds`: where it is on the snow (world x along the path) and when it lands. */
+  const watch = (speed: number, seconds = 1.5, dt = 1 / 120) => {
+    const g = run(makeGait(), speed, 3, dt)
+    let s = 0
+    const trail: { s: number; stride: number; paws: { x: number; y: number }[] }[] = []
+    for (let k = 0; k < seconds / dt; k++) {
+      s += speed * dt
+      stepGait(g, speed * dt, dt)
+      foxPose(g, k * dt, 0, bones)
+      trail.push({ s, stride: g.stride, paws: PAWS.map((i) => ({ x: bones[i * 8 + 4], y: bones[i * 8 + 5] })) })
+    }
+    return { g, trail }
+  }
+  /** a paw bearing its weight is on the snow (a swinging paw, however low, is above it) */
+  const onSnow = (y: number) => y < 0.02201
+  /** the stride fraction at which each paw lands, in order */
+  const landings = (trail: ReturnType<typeof watch>['trail']) => {
+    const out: { paw: number; at: number }[] = []
+    for (let k = 1; k < trail.length; k++) {
+      trail[k].paws.forEach((p, i) => {
+        if (onSnow(p.y) && !onSnow(trail[k - 1].paws[i].y)) out.push({ paw: i, at: trail[k].stride })
+      })
+    }
+    return out
+  }
+
+  it('plants its paws: a paw on the snow stays where it came down while it runs on, at a walk, a trot and a gallop', () => {
+    for (const speed of [0.7, 2.5, 7]) {
+      const { trail } = watch(speed)
+      let planted = 0
+      for (let k = 1; k < trail.length; k++) {
+        trail[k].paws.forEach((p, i) => {
+          const q = trail[k - 1].paws[i]
+          if (onSnow(p.y) && onSnow(q.y)) {
+            planted++
+            expect(Math.abs(trail[k].s + p.x - (trail[k - 1].s + q.x))).toBeLessThan(0.002)
+          }
+        })
+      }
+      expect(planted).toBeGreaterThan(10)
+    }
   })
 
-  it('never blurs its legs: however fast the scroll, its stride rate has a ceiling', () => {
-    const g = run(makeGait(), 60, 1)
-    expect(g.stride).toBeLessThan(4.2)
+  it('walks, trots and gallops as a fox does: each paw in turn at a walk, the diagonal pairs together at a trot, the hind pair then the fore pair at a gallop', () => {
+    const order = (speed: number) => landings(watch(speed, 3).trail)
+    // a walk: hind left, fore left, hind right, fore right, a quarter stride apart
+    const walk = order(0.7)
+    const seq = walk.slice(0, 8).map((l) => l.paw).join('')
+    expect('20312031203120312031').toContain(seq)
+    for (let k = 1; k < 5; k++) expect(walk[k].at - walk[k - 1].at).toBeCloseTo(0.25, 1)
+    // a trot: fore left with hind right, fore right with hind left
+    const trot = order(2.5)
+    for (let k = 0; k + 1 < trot.length; k += 2) {
+      const pair = [trot[k].paw, trot[k + 1].paw].sort().join('')
+      expect(['03', '12']).toContain(pair)
+      expect(Math.abs(trot[k + 1].at - trot[k].at)).toBeLessThan(0.05)
+    }
+    // a gallop: the hinds land one after the other, then the fores
+    const gallop = order(7)
+    const hindFirst = gallop.findIndex((l) => l.paw >= 2)
+    const next4 = gallop.slice(hindFirst, hindFirst + 4).map((l) => l.paw >= 2)
+    expect(next4).toEqual([true, true, false, false])
   })
 
-  it('gallops whenever it dashes', () => {
-    expect(run(makeGait(), 9, 0.5).gallop).toBeGreaterThan(0.9)
+  it('lengthens its stride as it goes faster, and never cycles its legs faster than a fox can', () => {
+    const cadence = (speed: number) => {
+      const g = run(makeGait(), speed, 3)
+      const before = g.stride
+      run(g, speed, 1)
+      return g.stride - before
+    }
+    expect(cadence(0.5)).toBeLessThan(1.2)
+    expect(cadence(2.5)).toBeGreaterThan(2)
+    expect(cadence(2.5)).toBeLessThan(3.2)
+    expect(cadence(8)).toBeLessThan(3.7)
+    expect(cadence(60)).toBeLessThan(3.7)
+  })
+
+  it('gallops when the scroll runs fast, and walks when it runs slow', () => {
+    expect(run(makeGait(), 9, 1).gallop).toBeGreaterThan(0.9)
+    const slow = run(makeGait(), 0.6, 2)
+    expect(slow.walk).toBeGreaterThan(0.9)
+    expect(slow.gallop).toBeLessThan(0.05)
   })
 
   it('stops when the scroll stops, looks back, then sits and waits', () => {
@@ -132,49 +204,10 @@ describe('its gait', () => {
     expect(g.sit).toBeLessThan(0.2)
   })
 
-  it('dashes rather than walks: it waits while you pull a little ahead, then dashes to its spot and stops there', () => {
-    const d = makeDash()
-    const dt = 1 / 120
-    // a gentle scroll opens a gap slowly: it waits while you pull ahead…
-    let gap = 0
-    let waited = 0
-    for (let k = 0; k < 600; k++) {
-      gap += 1.5 * dt
-      const step = stepDash(d, gap, 1.5, dt)
-      if (step > 0) {
-        gap -= step
-        break
-      }
-      waited += dt
-    }
-    expect(waited).toBeGreaterThan(1)
-    // …then goes at a dash, never past its spot, and stops on it
-    let fastest = 0
-    for (let k = 0; k < 240 && gap > 0.05; k++) {
-      const step = stepDash(d, gap, 0, dt)
-      expect(step).toBeLessThanOrEqual(gap + 1e-9)
-      fastest = Math.max(fastest, step / dt)
-      gap -= step
-    }
-    expect(fastest).toBeGreaterThan(8)
-    expect(gap).toBeLessThan(0.1)
-    expect(d.dashing).toBe(false)
-  })
-
-  it('keeps up with a fast scroll: through the hunt a brisk wheel carries its spot at 30–40 m/s', () => {
-    const d = makeDash()
-    const dt = 1 / 120
-    let gap = 0
-    let speed = 0
-    let worst = 0
-    for (let k = 0; k < 240; k++) {
-      speed = Math.min(38, speed + 80 * dt) // the scroll picks up within half a second
-      gap += speed * dt
-      gap -= stepDash(d, gap, speed, dt)
-      worst = Math.max(worst, gap)
-    }
-    expect(worst).toBeLessThan(3)
-    expect(gap).toBeLessThan(1)
+  it('settles once the scroll has all but stopped: the last creep of a smoothed scroll is not running', () => {
+    const g = run(makeGait(), 4, 1)
+    run(g, 0.02, 3)
+    expect(g.sit).toBeGreaterThan(0.9)
   })
 
   it('turns around when you scroll back', () => {
@@ -196,6 +229,13 @@ describe('its shape', () => {
     const b = (i: number) => ({ a: [bones[i * 8], bones[i * 8 + 1], bones[i * 8 + 2]], ra: bones[i * 8 + 3], b: [bones[i * 8 + 4], bones[i * 8 + 5], bones[i * 8 + 6]], rb: bones[i * 8 + 7] })
     return Array.from({ length: FOX_BONES }, (_, i) => b(i))
   }
+  /** a walk, a trot, a gallop, and the flying gallop of a fast scroll */
+  const GAITS: Partial<Gait>[] = [
+    { walk: 1, gallop: 0, speed: 0.7 },
+    { walk: 0, gallop: 0, speed: 2.5 },
+    { walk: 0, gallop: 1, speed: 8 },
+    { walk: 0, gallop: 1, speed: 40 },
+  ]
   const lowest = (bs: ReturnType<typeof pose>) => Math.min(...bs.flatMap((x) => [x.a[1] - x.ra, x.b[1] - x.rb]))
 
   it('stands on its paws: its lowest point is the ground', () => {
@@ -228,8 +268,7 @@ describe('its shape', () => {
     inBox(pose({ sit: 1 }, 2))
     inBox(pose({ sit: 1 }, -2))
     for (let ph = 0; ph < 1; ph += 0.05) {
-      inBox(pose({ run: 1, stride: ph, gallop: 0 }))
-      inBox(pose({ run: 1, stride: ph, gallop: 1 }))
+      for (const g of GAITS) inBox(pose({ run: 1, stride: ph, ...g }))
     }
   })
 
@@ -244,7 +283,8 @@ describe('its shape', () => {
   it('sits as a fox sits: upright, its chest high over its haunches, forepaws together under its chest', () => {
     const sit = pose({ sit: 1 })
     const [chest, hips] = [sit[0].a, sit[0].b]
-    expect(chest[1] - hips[1]).toBeGreaterThan(0.24)
+    // (as the model sits: its chest well over the round mass of its haunches)
+    expect(chest[1] - hips[1]).toBeGreaterThan(0.2)
     for (const i of [10, 12]) {
       const paw = sit[i].b
       expect(Math.abs(paw[0] - chest[0])).toBeLessThan(0.07)
@@ -268,18 +308,22 @@ describe('its shape', () => {
       // broad ears, set wide: their tips a quarter of a metre apart
       expect(bs[7].b[2] - bs[8].b[2]).toBeGreaterThan(0.22)
       expect(bs[7].ra).toBeGreaterThanOrEqual(0.045)
-      // a deep chest, and a thick plume of a tail
-      expect(bs[0].ra).toBeGreaterThanOrEqual(0.11)
-      expect(Math.max(...[19, 20, 21, 22].map((i) => Math.max(bs[i].ra, bs[i].rb)))).toBeGreaterThanOrEqual(0.08)
+      // a deep, full body
+      expect(bs[0].ra).toBeGreaterThanOrEqual(0.125)
+      expect(bs[0].rb).toBeGreaterThanOrEqual(0.12)
     }
+    const thickest = (bs: ReturnType<typeof pose>) => Math.max(...[19, 20, 21, 22].map((i) => Math.max(bs[i].ra, bs[i].rb)))
+    // a great plume of a tail streaming behind it, and lying on the snow as the model's does when it sits
+    expect(thickest(pose({}))).toBeGreaterThanOrEqual(0.09)
+    expect(thickest(sit)).toBeGreaterThanOrEqual(0.07)
     // sitting, its muzzle at three quarters of its height
     expect(sit[4].b[1] / top).toBeGreaterThan(0.7)
     expect(sit[4].b[1] / top).toBeLessThan(0.8)
   })
 
   it('gives every bone a real length, so the shader never divides by zero', () => {
-    for (const ph of [0, 0.25, 0.5, 0.75]) {
-      for (const bs of [pose({}), pose({ sit: 1 }), pose({ run: 1, stride: ph, gallop: 1 })]) {
+    for (const ph of [0, 0.2, 0.4, 0.6, 0.8]) {
+      for (const bs of [pose({}), pose({ sit: 1 }), ...GAITS.map((g) => pose({ run: 1, stride: ph, ...g }))]) {
         for (const x of bs) {
           const len = Math.hypot(x.b[0] - x.a[0], x.b[1] - x.a[1], x.b[2] - x.a[2])
           expect(len).toBeGreaterThan(Math.abs(x.ra - x.rb) + 0.002)
@@ -290,9 +334,12 @@ describe('its shape', () => {
 })
 
 describe('its pawprints', () => {
-  it('puts each paw down once a stride, where the stride carries it', () => {
+  const trot = { ...makeGait(), walk: 0, gallop: 0, speed: 2.5 }
+  const gallop = { ...makeGait(), walk: 0, gallop: 1, speed: 8 }
+
+  it('puts each paw down once a stride', () => {
     const down: number[] = []
-    for (const g of [0, 1]) {
+    for (const g of [trot, gallop]) {
       down.length = 0
       pawsDown(0, 1, g, down)
       expect(down.sort()).toEqual([0, 1, 2, 3])
@@ -301,7 +348,7 @@ describe('its pawprints', () => {
 
   it('leaves none while it stands still', () => {
     const down: number[] = []
-    pawsDown(0.3, 0.3, 0, down)
+    pawsDown(0.3, 0.3, trot, down)
     expect(down).toEqual([])
   })
 
@@ -309,8 +356,43 @@ describe('its pawprints', () => {
     const down: number[] = []
     for (let a = 0; a < 1; a += 0.013) {
       down.length = 0
-      pawsDown(a, a + 0.1, 0.5, down)
+      pawsDown(a, a + 0.1, trot, down)
       expect(new Set(down).size).toBe(down.length)
+    }
+  })
+
+  it('leaves each print under the paw that made it', () => {
+    const bones = new Float32Array(FOX_BONES * 8)
+    const PAWS = [10, 12, 15, 18]
+    for (const speed of [0.7, 2.5, 7]) {
+      const g = makeGait()
+      const dt = 1 / 120
+      for (let k = 0; k < 360; k++) stepGait(g, speed * dt, dt)
+      let s = 0
+      const prints: { paw: number; x: number; z: number }[] = []
+      const down: number[] = []
+      let checked = 0
+      for (let k = 0; k < 240; k++) {
+        const before = g.stride
+        s += speed * dt
+        stepGait(g, speed * dt, dt)
+        foxPose(g, 0, 0, bones)
+        down.length = 0
+        pawsDown(before, g.stride, g, down)
+        for (const i of down) {
+          const [px, pz] = pawSpot(i, g)
+          prints[i] = { paw: i, x: s + px, z: pz }
+        }
+        // while a paw that left a print is on the snow, it stands on its print
+        PAWS.forEach((b, i) => {
+          const pr = prints[i]
+          if (!pr || bones[b * 8 + 5] > 0.02201) return
+          expect(Math.abs(s + bones[b * 8 + 4] - pr.x)).toBeLessThan(0.02)
+          expect(Math.abs(bones[b * 8 + 6] - pr.z)).toBeLessThan(0.02)
+          checked++
+        })
+      }
+      expect(checked).toBeGreaterThan(20)
     }
   })
 })

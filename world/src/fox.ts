@@ -4,9 +4,9 @@
 // shape to a shader that draws it as a soft translucent volume.
 //
 // Its proportions are taken from a fox model Ethan chose (a sitting fox):
-// its sitting pose was fitted to that model's silhouettes, side and front,
-// and the standing and running poses carry the same head, muzzle, ears,
-// neck, chest, legs and tail. Its own space: +x is where its nose points, +y
+// its sitting pose was fitted to that model's silhouettes, side, front and
+// top, and the standing and moving poses carry the same build: the head,
+// muzzle, cheeks and ears, the deep chest, sturdy legs and full body. Its own space: +x is where its nose points, +y
 // up, +z to its left; metres, standing about 0.48 m at the shoulder.
 import { KEYS } from './keys'
 import { ROUTE, heightAt } from './layout'
@@ -114,8 +114,10 @@ export interface Gait {
   stride: number
   /** ground speed (m/s), smoothed */
   speed: number
-  /** 0 standing … 1 running */
+  /** 0 standing … 1 on the move */
   run: number
+  /** 1 walking … 0 trotting */
+  walk: number
   /** 0 trotting … 1 galloping */
   gallop: number
   /** 0 … 1 sitting */
@@ -130,69 +132,152 @@ export interface Gait {
 
 /** A fox that has not moved yet: sitting, looking back at you, waiting. */
 export function makeGait(): Gait {
-  return { stride: 0, speed: 0, run: 0, gallop: 0, sit: 1, look: 1, dir: 1, still: 10 }
+  return { stride: 0, speed: 0, run: 0, walk: 1, gallop: 0, sit: 1, look: 1, dir: 1, still: 10 }
 }
 
-/** The legs never cycle faster than this (strides per second), however fast the scroll runs. */
-const MAX_CADENCE = 4
+/** The legs never cycle faster than this (strides per second), however fast the scroll runs: a fox's own gallop. */
+const MAX_CADENCE = 3.6
+/** Strides per second at a ground speed (m/s): about one at a slow walk, near three at a trot, a fox's full rate at a gallop. */
+const cadence = (v: number) => MAX_CADENCE * (1 - Math.exp(-v / 1.6))
+/** How far one stride carries it at a ground speed (m): short steps at a walk, long bounds at a gallop, and past a fox's own pace, leaps. */
+const strideLength = (v: number) => (v > 1e-3 ? v / cadence(v) : 1.6 / MAX_CADENCE)
 
 /** Advance the gait by `ds` metres run along its path (signed) over `dt` seconds. */
 export function stepGait(g: Gait, ds: number, dt: number): Gait {
   if (dt <= 0) return g
   const d = Math.abs(ds)
-  g.speed = ease(g.speed, d / dt, 10, dt)
-  if (d > 1e-5) {
+  g.speed = ease(g.speed, d / dt, 8, dt)
+  // (the last creep of a smoothed scroll, a few centimetres a second, is standing still)
+  if (d > 0.05 * dt) {
     g.still = 0
     g.dir = ds > 0 ? 1 : -1
   } else g.still += dt
-  g.run = ease(g.run, smooth(0.15, 1.0, g.speed), 8, dt)
-  g.gallop = ease(g.gallop, smooth(2, 5, g.speed), 8, dt)
-  const strideLength = 0.9 + 1.6 * g.gallop
-  g.stride += Math.min(d / strideLength, MAX_CADENCE * dt)
+  g.run = ease(g.run, smooth(0.05, 0.35, g.speed), 8, dt)
+  g.walk = ease(g.walk, 1 - smooth(0.9, 1.7, g.speed), 6, dt)
+  g.gallop = ease(g.gallop, smooth(3.2, 5.5, g.speed), 6, dt)
+  // its legs cover the ground it runs over, stride for stride (and only
+  // while it gathers speed from a standstill do they run short of it)
+  g.stride += Math.min(d / strideLength(g.speed), MAX_CADENCE * dt)
   g.look = ease(g.look, smooth(0.25, 0.7, g.still), 5, dt)
   const resting = g.still > 1.8
   g.sit = ease(g.sit, resting ? 1 : 0, resting ? 2.2 : 9, dt)
   return g
 }
 
-/** How it moves along its path: not step for step with the scroll, but in dashes. */
-export interface Dash {
-  dashing: boolean
-  /** m/s */
-  speed: number
+/**
+ * When each paw (fore left, fore right, hind left, hind right) comes down in
+ * the stride. A walk sets them down in turn, a quarter stride apart: hind
+ * left, fore left, hind right, fore right. A trot sets down the diagonal
+ * pairs together. A gallop (a fox's rotary gallop) sets down the hinds one
+ * after the other, then the fores: hind left, hind right, fore right, fore
+ * left, then a bound through the air.
+ */
+const WALK = [0, 0.5, 0.75, 0.25]
+const TROT = [0, 0.5, 0.5, 0]
+const GALLOP = [0, 0.9, 0.5, 0.6]
+/** Where each paw stands under it, in its own space (x, z). */
+const PAW_BASE: [number, number][] = [
+  [0.19, 0.055],
+  [0.19, -0.055],
+  [-0.2, 0.06],
+  [-0.2, -0.06],
+]
+/** How far a paw bearing its weight travels, at most, ahead of and behind where it stands (m): at a walk, a trot, a gallop. */
+const REACH = [0.13, 0.15, 0.18]
+/**
+ * A paw's swing forward at a gallop, as (u, x, y): u from lift-off (0) to
+ * touchdown (1); x in reaches (−1 where it lifted, +1 where it lands); y in
+ * lifts. A fore paw folds up and back under the chest, then reaches far out
+ * ahead and comes down; a hind paw trails out behind, then swings forward
+ * under the belly to land.
+ */
+const FORE_SWING = [[0, -1, 0], [0.25, -0.85, 0.85], [0.55, 0.1, 1], [0.82, 1.3, 0.5], [1, 1, 0]]
+const HIND_SWING = [[0, -1, 0], [0.28, -1.35, 0.45], [0.6, -0.3, 0.85], [0.85, 0.85, 0.4], [1, 1, 0]]
+
+/** A smooth track through keys (u, x, y), u rising from 0 to 1 (Catmull–Rom, its ends held). */
+function track(keys: number[][], u: number): [number, number] {
+  let i = 0
+  while (i < keys.length - 2 && u > keys[i + 1][0]) i++
+  const k0 = keys[Math.max(i - 1, 0)]
+  const k1 = keys[i]
+  const k2 = keys[i + 1]
+  const k3 = keys[Math.min(i + 2, keys.length - 1)]
+  const t = (u - k1[0]) / (k2[0] - k1[0])
+  const cr = (a: number, b: number, c: number, d: number) =>
+    0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t)
+  return [cr(k0[1], k1[1], k2[1], k3[1]), cr(k0[2], k1[2], k2[2], k3[2])]
 }
 
-export function makeDash(): Dash {
-  return { dashing: false, speed: 0 }
+interface Stride {
+  /** stride length (m) */
+  L: number
+  /** the part of a stride each paw spends on the snow */
+  D: number
+  /** how far ahead of where it stands a paw comes down (and how far behind it lifts off) */
+  R: number
+  /** how high a paw lifts as it swings forward */
+  lift: number
+  offsets: number[]
+  walk: number
+  trot: number
+  gallop: number
 }
 
-/** How far behind its spot it lets you pull before it goes (m), and its dash (m/s). */
-const DASH_START = 2.2
-const DASH_SPEED = 10
+/** The stride it runs at: its length, the share each paw bears, and the paws' timing, blended from a walk, a trot and a gallop. */
+function strideOf(g: Gait): Stride {
+  const gallop = Math.min(1, Math.max(0, g.gallop))
+  const walk = Math.min(1, Math.max(0, g.walk)) * (1 - gallop)
+  const trot = 1 - walk - gallop
+  const L = strideLength(g.speed)
+  // a paw bears it for longer at a walk than a gallop, and never beyond its reach
+  const reach = REACH[0] * walk + REACH[1] * trot + REACH[2] * gallop
+  const D = Math.min(0.62 * walk + 0.42 * trot + 0.28 * gallop, (2 * reach) / L)
+  const toGallop = gallop > walk ? 1 : 0 // the trot's hind right, counted the way that leads to the gallop
+  const offsets = [0, 1, 2, 3].map((k) => WALK[k] * walk + (k === 3 ? toGallop : TROT[k]) * trot + GALLOP[k] * gallop)
+  return { L, D, R: (D * L) / 2, lift: 0.035 * walk + 0.06 * trot + 0.1 * gallop, offsets, walk, trot, gallop }
+}
+
+const frac = (x: number) => x - Math.floor(x)
 
 /**
- * How far it runs this frame toward its spot, `gap` metres ahead along its
- * path, while the spot moves at `targetSpeed` m/s. It waits while a gentle
- * scroll draws the spot a little ahead, then dashes there, at its full pace
- * almost at once, easing in over the last metre, and stops on it; a fast
- * scroll (through the hunt a brisk wheel carries it at 30–40 m/s) it chases
- * at once and runs with, a little faster, so it keeps its place.
+ * Paw k, in its own space, at stride position `stride`. On the snow it stays
+ * where it came down: it slides back under the body exactly as far as the
+ * body runs on. Off the snow it swings forward in an arc to its next step.
  */
-export function stepDash(d: Dash, gap: number, targetSpeed: number, dt: number): number {
-  if (!d.dashing && (gap > DASH_START || (targetSpeed > 6 && gap > 0.3))) d.dashing = true
-  if (!d.dashing) {
-    d.speed = 0
-    return 0
+function pawAt(k: number, st: Stride, stride: number): V {
+  const psi = frac(stride - st.offsets[k])
+  const [bx, bz] = PAW_BASE[k]
+  if (psi < st.D) return [bx + st.R - psi * st.L, 0.022, bz]
+  const u = (psi - st.D) / (1 - st.D)
+  // at a walk or a trot, an arc: a fore paw lifts early, folding at the wrist; a hind paw evenly
+  let x = -1 + 2 * (0.5 - 0.5 * Math.cos(Math.PI * u))
+  let y = k < 2 ? Math.sin(Math.PI * Math.pow(u, 0.75)) : Math.sin(Math.PI * u)
+  // at a gallop, the full swing of a bounding stride
+  if (st.gallop > 0) {
+    const [gx, gy] = track(k < 2 ? FORE_SWING : HIND_SWING, u)
+    x += (gx - x) * st.gallop
+    y += (gy - y) * st.gallop
   }
-  const want = Math.min(Math.max(DASH_SPEED, targetSpeed * 1.3), targetSpeed + 1.5 + 7 * gap)
-  d.speed = Math.min(want, d.speed + 250 * dt)
-  const step = Math.min(gap, d.speed * dt)
-  if (gap - step < 0.06 && targetSpeed < DASH_SPEED * 0.5) {
-    d.dashing = false
-    d.speed = 0
-    return gap
+  return [bx + st.R * x, 0.022 + st.lift * (k < 2 ? 1 : 0.85) * y, bz]
+}
+
+/**
+ * The paws (0 fore left, 1 fore right, 2 hind left, 3 hind right) that came
+ * down on the snow as the stride ran from `from` to `to`.
+ */
+export function pawsDown(from: number, to: number, g: Gait, out: number[]): number[] {
+  const st = strideOf(g)
+  for (let k = 0; k < 4; k++) {
+    const o = st.offsets[k]
+    if (Math.floor(to - o) > Math.floor(from - o)) out.push(k)
   }
-  return step
+  return out
+}
+
+/** Where paw k stands on the snow now, in its own space (x, z): just after it comes down, the print it leaves. */
+export function pawSpot(k: number, g: Gait): [number, number] {
+  const p = pawAt(k, strideOf(g), g.stride)
+  return [p[0], p[2]]
 }
 
 // ---------------------------------------------------------------- the shape
@@ -211,32 +296,40 @@ export const FOX_BOX = { min: [-1.05, -0.08, -0.45] as V, max: [0.72, 0.98, 0.45
 
 const bone = (a: V, ra: number, b: V, rb: number): Bone => ({ a, ra, b, rb })
 
+/** The fore legs' reach: shoulder to elbow, elbow to paw (the shoulder hidden in the chest, as a fox's is). */
+const FORE = [0.17, 0.175]
+/** The shoulder blade swings with the leg: the share of a paw's reach the shoulder follows (and it dips as the leg reaches). */
+const SHOULDER_SWING = 0.4
+
 /** The head group (neck end, head, snout, cheeks, ears) turns about the neck's base to look back. */
 const HEAD_GROUP = [2, 3, 4, 5, 6, 7, 8]
 
 /** Standing, alert. */
 function standing(): Bone[] {
   const bs: Bone[] = [
-    bone([0.17, 0.37, 0], 0.12, [-0.2, 0.36, 0], 0.11), // 0 torso: chest → hips
-    bone([0.2, 0.34, 0], 0.095, [0.23, 0.25, 0], 0.07), // 1 the deep chest
-    bone([0.2, 0.43, 0], 0.085, [0.27, 0.52, 0], 0.078), // 2 neck
-    bone([0.28, 0.56, 0], 0.085, [0.37, 0.545, 0], 0.075), // 3 head
-    bone([0.39, 0.535, 0], 0.05, [0.545, 0.525, 0], 0.01), // 4 muzzle, long and pointed
-    bone([0.35, 0.525, 0.05], 0.055, [0.28, 0.505, 0.08], 0.04), // 5 cheek, left
-    bone([0.35, 0.525, -0.05], 0.055, [0.28, 0.505, -0.08], 0.04), // 6 cheek, right
-    bone([0.29, 0.605, 0.06], 0.05, [0.34, 0.725, 0.12], 0.005), // 7 ear, left: broad, set wide
-    bone([0.29, 0.605, -0.06], 0.05, [0.34, 0.725, -0.12], 0.005), // 8 ear, right
+    bone([0.17, 0.37, 0], 0.13, [-0.2, 0.36, 0], 0.125), // 0 torso: chest → hips
+    bone([0.2, 0.34, 0], 0.11, [0.23, 0.25, 0], 0.06), // 1 the deep chest
+    bone([0.2, 0.43, 0], 0.09, [0.3, 0.53, 0], 0.087), // 2 neck
+    bone([0.332, 0.566, 0], 0.1, [0.369, 0.546, 0], 0.09), // 3 head
+    bone([0.393, 0.536, 0], 0.072, [0.551, 0.517, 0], 0.01), // 4 muzzle, long and pointed
+    bone([0.351, 0.549, 0.05], 0.069, [0.3, 0.482, 0.081], 0.055), // 5 cheek, left
+    bone([0.351, 0.549, -0.05], 0.069, [0.3, 0.482, -0.081], 0.055), // 6 cheek, right
+    bone([0.328, 0.631, 0.072], 0.058, [0.341, 0.732, 0.136], 0.005), // 7 ear, left: broad, set wide
+    bone([0.328, 0.631, -0.072], 0.058, [0.341, 0.732, -0.136], 0.005), // 8 ear, right
   ]
   for (const z of [0.055, -0.055]) {
-    // 9–12 front legs: shoulder → elbow → paw
-    bs.push(bone([0.17, 0.3, z], 0.045, [0.18, 0.16, z], 0.03), bone([0.18, 0.16, z], 0.028, [0.19, 0.022, z], 0.022))
+    // 9–12 front legs: shoulder (in the chest) → elbow → paw
+    const shoulder: V = [0.17, 0.35, z]
+    const paw: V = [0.19, 0.022, z]
+    const elbow = knee(shoulder, paw, FORE[0], FORE[1], -1)
+    bs.push(bone(shoulder, 0.05, elbow, 0.04), bone(elbow, 0.036, paw, 0.024))
   }
   for (const z of [0.06, -0.06]) {
     // 13–18 hind legs: hip → knee → hock → paw
     bs.push(
-      bone([-0.2, 0.33, z], 0.085, [-0.13, 0.2, z], 0.045),
-      bone([-0.13, 0.2, z], 0.03, [-0.22, 0.08, z], 0.025),
-      bone([-0.22, 0.08, z], 0.025, [-0.2, 0.022, z], 0.022),
+      bone([-0.2, 0.33, z], 0.095, [-0.13, 0.2, z], 0.05),
+      bone([-0.13, 0.2, z], 0.04, [-0.22, 0.08, z], 0.028),
+      bone([-0.22, 0.08, z], 0.028, [-0.2, 0.022, z], 0.022),
     )
   }
   // 19–22 the tail, a great plume, held low and sweeping back as a fox holds it
@@ -244,41 +337,51 @@ function standing(): Bone[] {
   return bs
 }
 
+/** the tail's thickness along it, root to tip: a great plume */
 const TAIL_R = [0.045, 0.08, 0.1, 0.085, 0.028]
-function tail(bs: Bone[], pts: V[]) {
-  for (let k = 0; k < 4; k++) bs.push(bone(pts[k], TAIL_R[k], pts[k + 1], TAIL_R[k + 1]))
+function tail(bs: Bone[], pts: V[], r = TAIL_R) {
+  for (let k = 0; k < 4; k++) bs.push(bone(pts[k], r[k], pts[k + 1], r[k + 1]))
 }
 
 /**
- * Sitting as a fox sits (as the model sits): upright, its deep chest high and
+ * Sitting as a fox sits, as the model sits: upright, its deep chest high and
  * forward, its forelegs straight down and close together, its haunches folded
  * under it in a round mass, its hind paws tucked in beside its forepaws, and
  * its tail curled round one side of it on the snow, the tip by its forepaws.
+ * Every bone here was fitted to the model's silhouettes, side, front and top.
  */
 function sitting(): Bone[] {
   const bs: Bone[] = [
-    bone([0.07, 0.46, 0], 0.125, [-0.14, 0.2, 0], 0.13), // 0 torso: chest high and forward, down to the haunches
-    bone([0.09, 0.42, 0], 0.095, [0.11, 0.3, 0], 0.07), // 1 the deep chest
-    bone([0.05, 0.52, 0], 0.09, [0.08, 0.6, 0], 0.08), // 2 neck
-    bone([0.07, 0.63, 0], 0.085, [0.15, 0.62, 0], 0.075), // 3 head
-    bone([0.17, 0.61, 0], 0.05, [0.325, 0.6, 0], 0.01), // 4 muzzle
-    bone([0.13, 0.6, 0.05], 0.055, [0.06, 0.58, 0.08], 0.04), // 5 cheek, left
-    bone([0.13, 0.6, -0.05], 0.055, [0.06, 0.58, -0.08], 0.04), // 6 cheek, right
-    bone([0.075, 0.68, 0.06], 0.05, [0.125, 0.8, 0.12], 0.005), // 7 ear, left
-    bone([0.075, 0.68, -0.06], 0.05, [0.125, 0.8, -0.12], 0.005), // 8 ear, right
+    bone([0.069, 0.465, 0], 0.134, [-0.129, 0.234, 0], 0.147), // 0 torso: chest high and forward, down to the haunches
+    bone([0.099, 0.408, 0], 0.111, [0.096, 0.305, 0], 0.059), // 1 the deep chest
+    bone([0.047, 0.52, 0], 0.093, [0.084, 0.617, 0], 0.087), // 2 neck
+    bone([0.117, 0.641, 0], 0.1, [0.154, 0.621, 0], 0.09), // 3 head
+    bone([0.178, 0.611, 0], 0.072, [0.336, 0.592, 0], 0.01), // 4 muzzle
   ]
-  for (const z of [0.045, -0.045]) {
-    bs.push(bone([0.08, 0.34, z], 0.045, [0.09, 0.17, z], 0.03), bone([0.09, 0.17, z], 0.028, [0.12, 0.022, z], 0.022))
+  for (const s of [1, -1]) {
+    bs.push(bone([0.136, 0.624, s * 0.05], 0.069, [0.085, 0.557, s * 0.081], 0.055)) // 5, 6 cheeks
   }
-  for (const z of [0.045, -0.045]) {
-    const s = Math.sign(z)
+  for (const s of [1, -1]) {
+    bs.push(bone([0.113, 0.706, s * 0.072], 0.058, [0.126, 0.807, s * 0.136], 0.005)) // 7, 8 ears
+  }
+  for (const s of [1, -1]) {
+    const elbow: V = [0.067, 0.169, s * 0.045]
+    bs.push(bone([0.075, 0.34, s * 0.045], 0.043, elbow, 0.058), bone(elbow, 0.054, [0.134, 0.022, s * 0.016], 0.022))
+  }
+  for (const s of [1, -1]) {
+    const kn: V = [-0.036, 0.143, s * 0.083]
+    const hock: V = [-0.15, 0.025, s * 0.087]
     bs.push(
-      bone([-0.17, 0.17, z], 0.11, [-0.03, 0.1, z + s * 0.04], 0.055),
-      bone([-0.03, 0.1, z + s * 0.04], 0.03, [-0.15, 0.035, z + s * 0.05], 0.025),
-      bone([-0.15, 0.035, z + s * 0.05], 0.025, [0.03, 0.022, z + s * 0.04], 0.022),
+      bone([-0.185, 0.147, s * 0.009], 0.118, kn, 0.065),
+      bone(kn, 0.052, hock, 0.026),
+      bone(hock, 0.026, [0.03, 0.022, s * 0.043], 0.022),
     )
   }
-  tail(bs, [[-0.24, 0.12, -0.02], [-0.29, 0.085, -0.13], [-0.21, 0.1, -0.25], [-0.02, 0.09, -0.28], [0.15, 0.05, -0.23]])
+  tail(
+    bs,
+    [[-0.251, 0.09, -0.003], [-0.312, 0.048, -0.125], [-0.187, 0.073, -0.216], [0.027, 0.069, -0.292], [0.174, 0.046, -0.291]],
+    [0.066, 0.05, 0.073, 0.073, 0.041],
+  )
   return bs
 }
 
@@ -299,43 +402,39 @@ function knee(root: V, foot: V, l1: number, l2: number, bend: number): V {
 
 const dist = (a: V, b: V) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
 
-/** Where in the stride each leg is (front left, front right, hind left, hind right): a trot pairs the diagonals; a gallop takes them in turn, fronts then hinds. */
-const TROT = [0, 0.5, 0.5, 0]
-const GALLOP = [0, 0.12, 0.55, 0.67]
-const legOffset = (k: number, gallop: number) => TROT[k] + (GALLOP[k] - TROT[k]) * gallop
-/** how far a paw reaches ahead of where it stands, at a trot → a gallop */
-const reachOf = (gallop: number) => 0.08 + 0.08 * gallop
+/** Draw `p` in toward `root` (in x, y) until it is no further than `reach`; returns how far it moved it. */
+function within(root: V, p: V, reach: number): [number, number] {
+  const dx = p[0] - root[0]
+  const dy = p[1] - root[1]
+  const d = Math.hypot(dx, dy)
+  if (d <= reach) return [0, 0]
+  const k = reach / d - 1
+  p[0] += dx * k
+  p[1] += dy * k
+  return [dx * k, dy * k]
+}
 
 /**
- * The legs (0 front left, 1 front right, 2 hind left, 3 hind right) whose
- * paws came down on the snow as the stride ran from `from` to `to`: each
- * lands as its swing ends, a quarter of the way round its own stride.
+ * On the move: a walk, a trot or a gallop. Its paws are planted on the snow
+ * while they bear it and swing forward between steps; its body rides over
+ * them, dipping a little as the paws take its weight at a walk or a trot,
+ * and at a gallop bounding: its back gathered as the hind legs reach under
+ * it, stretched as the fore legs reach out, its chest rising off the hind
+ * legs' drive. The head rides steadier than the body; the tail hangs at a
+ * walk and streams out behind at a gallop.
  */
-export function pawsDown(from: number, to: number, gallop: number, out: number[]): number[] {
-  for (let k = 0; k < 4; k++) {
-    const o = legOffset(k, gallop) - 0.25
-    if (Math.floor(to + o) > Math.floor(from + o)) out.push(k)
-  }
-  return out
-}
-
-/** Where leg k's paw lands, in the fox's own space (x, z). */
-export function pawSpot(k: number, gallop: number): [number, number] {
-  return [(k < 2 ? 0.19 : -0.2) + reachOf(gallop), [0.055, -0.055, 0.06, -0.06][k]]
-}
-
-/** Running: a trot that stretches into a gallop, the legs reaching and lifting in turn, the body bobbing, the tail streaming behind. */
-function running(phase: number, gallop: number): Bone[] {
+function moving(g: Gait): Bone[] {
   const bs = standing()
+  const st = strideOf(g)
   const tau = Math.PI * 2
-  const s = Math.sin(tau * phase)
-  // the body: bobbing at a trot, rocking and flexing at a gallop
-  const bob = 0.016 * Math.cos(2 * tau * phase) * (1 - gallop)
-  const rock = 0.045 * s * gallop
-  const flex = 0.04 * Math.sin(tau * phase + 1) * gallop
-  const low = 0.03 * gallop
-  const chest: V = [0.17 + flex, 0.37 + bob + rock - low, 0]
-  const hips: V = [-0.2 - flex, 0.36 + bob - rock - low, 0]
+  const ph = g.stride
+  const bob = -(0.006 * st.walk + 0.014 * st.trot) * Math.cos(2 * tau * (ph - st.D / 2))
+  const rise = 0.05 * st.gallop * (0.5 + 0.5 * Math.cos(tau * (ph - (st.D + 0.5) / 2)))
+  const gather = 0.05 * st.gallop * Math.cos(tau * (ph - 0.45))
+  const rock = 0.035 * st.gallop * Math.sin(tau * (ph - 0.55))
+  const y = bob + rise - 0.015 * st.trot - 0.03 * st.gallop
+  const chest: V = [0.17 - gather, 0.37 + y + rock, 0]
+  const hips: V = [-0.2 + gather, 0.36 + y - rock, 0]
   const shift = (i: number, dx: number, dy: number) => {
     for (const p of [bs[i].a, bs[i].b]) {
       p[0] += dx
@@ -344,55 +443,56 @@ function running(phase: number, gallop: number): Bone[] {
   }
   bs[0].a = chest
   bs[0].b = hips
-  // the head rides steadier than the body, lower and further forward at speed; ears laid back
-  for (const i of [1, 2, 3, 4, 5, 6, 7, 8]) shift(i, flex + 0.04 * gallop, bob * 0.5 + rock * 0.6 - 0.05 * gallop)
-  for (const i of [7, 8]) bs[i].b[0] -= 0.04 + 0.04 * gallop
-  // legs, each at its own point in the stride
-  const reach = reachOf(gallop)
-  const lift = 0.06 + 0.07 * gallop
-  const legs = [
-    { root: 9, front: true, z: 0.055, k: 0 },
-    { root: 11, front: true, z: -0.055, k: 1 },
-    { root: 13, front: false, z: 0.06, k: 2 },
-    { root: 16, front: false, z: -0.06, k: 3 },
-  ]
-  for (const leg of legs) {
-    const psi = tau * (phase + legOffset(leg.k, gallop))
-    const swing = Math.cos(psi) // > 0 while the leg swings forward, lifted
-    const px = Math.sin(psi) * reach
-    const py = lift * Math.pow(Math.max(swing, 0), 1.5)
-    if (leg.front) {
-      const root: V = [chest[0], chest[1] - 0.07, leg.z]
-      const paw: V = [0.19 + px, 0.022 + py, leg.z]
-      const l1 = dist(bs[leg.root].a, bs[leg.root].b)
-      const l2 = dist(bs[leg.root + 1].a, bs[leg.root + 1].b)
-      const elbow = knee(root, paw, l1, l2, -1)
-      bs[leg.root].a = root
-      bs[leg.root].b = elbow
-      bs[leg.root + 1].a = elbow
-      bs[leg.root + 1].b = paw
+  // the head rides steadier than the body; at speed it reaches forward and low, its ears laid back
+  const reach = 0.03 * st.trot + 0.05 * st.gallop
+  for (const i of [1, 2, 3, 4, 5, 6, 7, 8]) shift(i, -gather + reach, 0.5 * y + 0.6 * rock - 0.02 * st.trot - 0.05 * st.gallop)
+  for (const i of [7, 8]) bs[i].b[0] -= 0.02 * st.trot + 0.07 * st.gallop
+  // the legs: each paw where its stride puts it, the joints between found by reach
+  for (let k = 0; k < 4; k++) {
+    const paw = pawAt(k, st, ph)
+    const z = PAW_BASE[k][1]
+    if (k < 2) {
+      // the shoulder blade swings with the leg, and dips as it reaches
+      const dx = paw[0] - PAW_BASE[k][0]
+      const root: V = [chest[0] + SHOULDER_SWING * dx, chest[1] - 0.02 - Math.min(1.5 * dx * dx, 0.05), z]
+      within(root, paw, (FORE[0] + FORE[1]) * 0.99)
+      const elbow = knee(root, paw, FORE[0], FORE[1], -1)
+      const b = 9 + k * 2
+      bs[b].a = root
+      bs[b].b = elbow
+      bs[b + 1].a = elbow
+      bs[b + 1].b = paw
     } else {
-      const root: V = [hips[0] + 0.01, hips[1] - 0.05, leg.z]
-      const paw: V = [-0.2 + px, 0.022 + py, leg.z]
-      const hock: V = [paw[0] - 0.02, paw[1] + 0.06, leg.z]
-      const l1 = dist(bs[leg.root].a, bs[leg.root].b)
-      const l2 = dist(bs[leg.root + 1].a, bs[leg.root + 1].b)
+      const b = 13 + (k - 2) * 3
+      const root: V = [hips[0] + 0.01, hips[1] - 0.05, z]
+      const hock: V = [paw[0] - 0.02, paw[1] + 0.06, z]
+      const l1 = dist(bs[b].a, bs[b].b)
+      const l2 = dist(bs[b + 1].a, bs[b + 1].b)
+      const pull = within(root, hock, (l1 + l2) * 0.99)
+      paw[0] += pull[0]
+      paw[1] += pull[1]
       const kn = knee(root, hock, l1, l2, 1)
-      bs[leg.root].a = root
-      bs[leg.root].b = kn
-      bs[leg.root + 1].a = kn
-      bs[leg.root + 1].b = hock
-      bs[leg.root + 2].a = hock
-      bs[leg.root + 2].b = paw
+      bs[b].a = root
+      bs[b].b = kn
+      bs[b + 1].a = kn
+      bs[b + 1].b = hock
+      bs[b + 2].a = hock
+      bs[b + 2].b = paw
     }
   }
-  // the tail streams out behind, higher at a gallop, waving
-  const lift2 = 0.04 - 0.02 * gallop
-  const pts: V[] = [[hips[0] - 0.1, hips[1] + 0.01, 0], [-0.44, 0.35, 0], [-0.6, 0.36, 0], [-0.76, 0.39, 0], [-0.9, 0.44, 0]]
-  pts.forEach((p, k) => {
-    if (k === 0) return
-    p[1] += lift2 * k * 0.3 + 0.012 * k * Math.sin(tau * phase - k * 0.9)
-    p[2] += 0.018 * k * Math.sin(tau * phase - k * 0.8)
+  // the tail: hanging and swaying at a walk, streaming out behind, waving, at a gallop
+  const out = st.trot * 0.6 + st.gallop
+  const hang: V[] = [[-0.3, 0.36, 0], [-0.42, 0.28, 0], [-0.56, 0.22, 0], [-0.71, 0.19, 0], [-0.85, 0.19, 0]]
+  const stream: V[] = [[-0.3, 0.37, 0], [-0.44, 0.35, 0], [-0.6, 0.36, 0], [-0.76, 0.39, 0], [-0.9, 0.44, 0]]
+  const pts = hang.map((h, k): V => {
+    const p: V = [h[0] + (stream[k][0] - h[0]) * out, h[1] + (stream[k][1] - h[1]) * out, 0]
+    p[0] += hips[0] + 0.2
+    p[1] += (hips[1] - 0.36) * (1 - k / 4)
+    if (k > 0) {
+      p[1] += 0.012 * k * Math.sin(tau * ph - k * 0.9) * (0.4 + 0.6 * st.gallop)
+      p[2] += 0.02 * k * Math.sin(tau * ph - k * 0.8)
+    }
+    return p
   })
   bs.splice(19, 4)
   tail(bs, pts)
@@ -430,7 +530,7 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
   const wSit = Math.min(1, Math.max(0, g.sit)) * (1 - wRun)
   const wStand = 1 - wRun - wSit
   const poses: [Bone[], number][] = [[standing(), wStand], [sitting(), wSit]]
-  if (wRun > 0) poses.push([running(g.stride % 1, g.gallop), wRun])
+  if (wRun > 0) poses.push([moving(g), wRun])
   const bs = blend(poses)
 
   // at rest it breathes, and its tail sways
