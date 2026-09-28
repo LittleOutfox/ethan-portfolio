@@ -1,3 +1,7 @@
 # the 3D world bundle is built from world/ (npm run build) — keep its
 # minified diff out of reviews
 js/world/scene.js -diff linguist-generated=true
+
+# the world's sources check out with LF on every machine, so its shaders
+# (bundled as raw strings) build to the same bytes wherever it is built
+world/src/** text eol=lf
