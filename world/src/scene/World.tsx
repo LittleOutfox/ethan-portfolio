@@ -28,7 +28,7 @@ export function World({ bus, tier }: { bus: Bus; tier: TierSpec }) {
       <Forest U={U} trees={trees} msaa={tier.antialias} />
       <Shrine U={U} gates={gates} />
       <Sky U={U} />
-      <Foxfire U={U} density={tier.density} />
+      <Foxfire U={U} density={tier.density} gates={gates} />
       <Air U={U} density={tier.density} />
     </>
   )

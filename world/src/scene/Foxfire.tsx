@@ -6,14 +6,15 @@ import { HEARTH, KEYS, MOON_DIR, SUMMIT } from '../keys'
 import { heightAt, mulberry32 } from '../layout'
 import { makeCameraPath, type Pose } from '../path'
 import type { Uniforms } from '../uniforms'
+import { toriiPlaces } from './Shrine'
 
 /**
  * Every light in the world that isn't the moon: spirit orbs leading the way
- * along the path and hanging in the trees, embers over the den's hearth, and
- * the five tail bands that rise behind the summit as each tail is earned.
- * One draw.
+ * along the path and hanging in the trees, lanterns beside the great torii,
+ * embers over the den's hearth, and the five tail bands that rise behind the
+ * summit as each tail is earned. One draw.
  */
-export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
+export function Foxfire({ U, density, gates }: { U: Uniforms; density: number; gates: number[] }) {
   const points = useMemo(() => {
     const rng = mulberry32(99)
     const pos: number[] = []
@@ -26,9 +27,11 @@ export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
     }
 
     // orbs: a procession low along the path, ahead of wherever the camera
-    // walks, and bigger, fewer ones hanging up among the trees — through the
-    // forest only: up on the summit the five tail bands are the lights. The
-    // sprite is the orb's width over 0.6 (the rest of it is the glow around).
+    // walks, and bigger, fewer ones hanging high among the trees — below and
+    // above eye level, so they frame the band the page's text reads in rather
+    // than crossing it. Through the forest and up to the shrine only: the den
+    // has its fire, and up on the summit the five tail bands are the lights.
+    // The sprite is the orb's width over 0.6 (the rest of it is the glow).
     const sample = makeCameraPath(KEYS)
     const a: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
     const b: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
@@ -44,8 +47,18 @@ export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
       const z = a.pos[2] + (fz / fl) * ahead + (fx / fl) * side
       add(x, heightAt(x, z) + low + rng() * (high - low), z, (width + rng() * grow) / 0.6, 0.5 + rng() * 0.6, 0)
     }
-    for (let i = 0; i < Math.round(140 * density); i++) orb(6.9, 1.5, 6.5, 0.8, 3.6, 0.1, 0.22)
-    for (let i = 0; i < Math.round(36 * density); i++) orb(6.6, 4, 12, 3, 8, 0.18, 0.26)
+    for (let i = 0; i < Math.round(110 * density); i++) orb(5.3, 1.5, 6.5, 0.3, 1.3, 0.1, 0.22)
+    for (let i = 0; i < Math.round(30 * density); i++) orb(5.3, 4, 12, 5, 9, 0.18, 0.26)
+
+    // a stone lantern either side of each great torii, a little outside its pillars
+    for (const g of toriiPlaces(gates).slice(0, 3)) {
+      for (const side of [-1, 1]) {
+        const off = side * (1.35 * g.scale + 1.3)
+        const x = g.x + Math.cos(g.yaw) * off
+        const z = g.z - Math.sin(g.yaw) * off
+        add(x, heightAt(x, z) + 1.1, z, 1.1, 0.9, 9)
+      }
+    }
 
     // the den: embers rising off the hearth, and the fire's own soft glow
     const [hx, hy, hz] = HEARTH
@@ -95,6 +108,6 @@ export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
     pts.frustumCulled = false
     pts.renderOrder = 20
     return pts
-  }, [U, density])
+  }, [U, density, gates])
   return <primitive object={points} />
 }

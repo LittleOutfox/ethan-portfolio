@@ -54,6 +54,7 @@
   --ink-2: #0d0b16;
   --moon: #ece7f4;
   /* channel tokens — retune a hue once, every alpha follows */
+  --ink-rgb: 8, 7, 13;
   --spirit-rgb: 168, 180, 236;
   --moon-rgb: 236, 231, 244;
   --ember-rgb: 224, 160, 92;
@@ -454,6 +455,15 @@ main { position: relative; z-index: 4; }
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   gap: 6vw; align-items: center;
+}
+
+/* Small text over the moving world keeps a soft ink halo: invisible on the
+   dark scene, it only shows when a light (an orb, a lantern, the moon's glow)
+   drifts behind the words, and keeps them readable while it passes. */
+.hero-sub, .ch-label, .origin-body p, .origin-facts dt, .origin-facts dd,
+.skill p, .hunt-outro p, .wgate-inner p, .fire-note, .fire-desc,
+.tl-year, .tl-mark, .footer p {
+  text-shadow: 0 0 3px rgba(var(--ink-rgb), 0.9), 0 0 12px rgba(var(--ink-rgb), 0.75);
 }
 
 .ch-label {

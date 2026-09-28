@@ -1,8 +1,8 @@
-// Spirit-forest trees, grown once at boot from a seed: a twisting trunk with
-// root flares, branches that arch out toward local +x (the forest turns each
-// tree so that side faces the path) and droop like a willow's, a second tier
-// of branches, and on the leafy archetypes a purple crown with curtains of
-// magenta strands hanging from the outer limbs.
+// Winter willows, grown once at boot from a seed: a twisting trunk with root
+// flares, branches that arch out toward local +x (the forest turns each tree
+// so that side faces the path) and droop like a willow's, a second tier of
+// branches, and on the leafy archetypes a snow-laden crown with curtains of
+// frosted strands hanging from the outer limbs.
 // Each tree is three geometries — bark tubes, crown cards the crown shader
 // cuts into clumps, and curtain cards the curtain shader cuts into strands —
 // and the forest instances a handful of trees.
@@ -238,9 +238,9 @@ function grow(
 
 export interface ArchetypeGeometry {
   bark: BufferGeometry
-  /** the purple crown clumps at the branch tips */
+  /** the snow-laden crown clumps at the branch tips */
   crown: BufferGeometry | null
-  /** the magenta willow curtains hanging from the outer limbs */
+  /** the frosted willow curtains hanging from the outer limbs */
   drapes: BufferGeometry | null
   /** the tree's frame, for keeping it clear of the camera */
   skeleton: Bone[]
@@ -311,7 +311,7 @@ function grow1(i: number): ArchetypeGeometry {
   }
   tips.push(trunk.pts[steps])
 
-  // a purple crown at the tips, and magenta curtains from the outer limbs
+  // a crown at the tips, and frosted curtains from the outer limbs
   const F = new Foliage()
   for (const tip of tips) {
     if (rng() < a.leaves * 0.6) {

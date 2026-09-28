@@ -1,7 +1,6 @@
-// Each curtain card, cut into hanging strands of uneven length: a dense fall
-// where they leave the branch that parts into single strands, deep violet at
-// the top, magenta through the fall, glowing pink at the tips, with the odd
-// blossom lit along them.
+// Each curtain card, cut into hanging strands of uneven length: a frosted
+// willow — a dense fall where they leave the branch that parts into single
+// strands, dark against the glowing mist, with ice glinting along them.
 varying vec2 vUv;
 varying vec4 vWorldSeed;
 
@@ -31,14 +30,12 @@ void main() {
     if (a < 0.5) discard;
   #endif
 
-  vec3 col = mix(vec3(0.01, 0.002, 0.022), vec3(0.045, 0.004, 0.034), smoothstep(0.0, 0.55, f));
-  col = mix(col, vec3(0.1, 0.012, 0.056), smoothstep(0.5, 0.9, f));
+  vec3 col = mix(vec3(0.002, 0.003, 0.008), vec3(0.004, 0.007, 0.017), smoothstep(0.0, 0.7, f));
   col *= 0.65 + 0.7 * fract(h1 * 13.7);
-  col += uBloom * 0.03 * smoothstep(0.82, 1.0, f); // the tips glow
-  // blossoms strung along the strands, glowing and slowly breathing
-  float bead = step(0.86, hash12(vec2(i * 3.1 + sd, floor(below * 26.0))));
-  float pulse = 0.6 + 0.4 * sin(uTime * 1.3 + h1 * 40.0 + below * 9.0);
-  col += uBloom * bead * pulse * 0.05 * smoothstep(0.2, 0.9, f);
+  // ice glinting along the strands, twinkling
+  float bead = step(0.9, hash12(vec2(i * 3.1 + sd, floor(below * 26.0))));
+  float twinkle = pow(0.5 + 0.5 * sin(uTime * 2.2 + h1 * 40.0 + below * 9.0), 4.0);
+  col += uFrost * bead * twinkle * 0.07 * smoothstep(0.2, 0.9, f);
 
   col = fog(col, vWorldSeed.xyz);
   gl_FragColor = vec4(finish(col), a);

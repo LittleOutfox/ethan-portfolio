@@ -34,6 +34,50 @@ function toriiGeometry(): BufferGeometry {
   return merged
 }
 
+export interface ToriiPlace {
+  x: number
+  z: number
+  /** rotation about y; the gate's local +x (its width) is world (cos yaw, 0, −sin yaw) */
+  yaw: number
+  scale: number
+}
+
+/**
+ * Where every torii stands: first the three great gates the camera crosses
+ * (works is world time 4 → 5), then the far gates climbing the shrine hill.
+ */
+export function toriiPlaces(gates: number[]): ToriiPlace[] {
+  const sample = makeCameraPath(KEYS)
+  const pose: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
+  const place: ToriiPlace[] = []
+  // A gate's pillars leave the screen while it is still ~3 m ahead (half its
+  // width over the lens's half-fov), so each great torii stands that far on
+  // from where the camera is when the page's own gate passes: both sweep
+  // past the edges together.
+  const LEAD = 3.2
+  const ahead: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
+  for (const g of gates) {
+    sample(4 + g, pose)
+    let t = 4 + g
+    let travelled = 0
+    while (travelled < LEAD && t < 5) {
+      t += 0.002
+      sample(t, ahead)
+      travelled = Math.hypot(ahead.pos[0] - pose.pos[0], ahead.pos[2] - pose.pos[2])
+    }
+    sample(t + 0.01, pose)
+    const yaw = Math.atan2(pose.pos[0] - ahead.pos[0], pose.pos[2] - ahead.pos[2])
+    place.push({ x: ahead.pos[0], z: ahead.pos[2], yaw, scale: 1.6 })
+  }
+  // the far gates climb the shrine hill to the west of the summit
+  const farYaw = Math.atan2(41 - 57, -132 + 92)
+  for (let k = 0; k < 14; k++) {
+    const f = k / 13
+    place.push({ x: 57 - f * 16, z: -92 - f * 40, yaw: farYaw, scale: 1.1 - f * 0.15 })
+  }
+  return place
+}
+
 /**
  * The shrine: stone steps up the stair, three great torii the camera walks
  * through exactly when the page's own gates pass (bus.gates, works progress),
@@ -41,45 +85,16 @@ function toriiGeometry(): BufferGeometry {
  */
 export function Shrine({ U, gates }: { U: Uniforms; gates: number[] }) {
   const meshes = useMemo(() => {
-    const sample = makeCameraPath(KEYS)
-    const pose: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
     const m = new Matrix4()
     const q = new Quaternion()
     const e = new Euler()
     const p = new Vector3()
     const s = new Vector3()
-
-    // gates: the three the camera crosses (works is world time 4 → 5), then the far climb
-    const place: { x: number; z: number; yaw: number; scale: number }[] = []
-    // A gate's pillars leave the screen while it is still ~3 m ahead (half its
-    // width over the lens's half-fov), so each great torii stands that far on
-    // from where the camera is when the page's own gate passes: both sweep
-    // past the edges together.
-    const LEAD = 3.2
-    const ahead: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
-    for (const g of gates) {
-      sample(4 + g, pose)
-      let t = 4 + g
-      let travelled = 0
-      while (travelled < LEAD && t < 5) {
-        t += 0.002
-        sample(t, ahead)
-        travelled = Math.hypot(ahead.pos[0] - pose.pos[0], ahead.pos[2] - pose.pos[2])
-      }
-      sample(t + 0.01, pose)
-      const yaw = Math.atan2(pose.pos[0] - ahead.pos[0], pose.pos[2] - ahead.pos[2])
-      place.push({ x: ahead.pos[0], z: ahead.pos[2], yaw, scale: 1.6 })
-    }
-    // the far gates climb the shrine hill to the west of the summit
-    const farYaw = Math.atan2(41 - 57, -132 + 92)
-    for (let k = 0; k < 14; k++) {
-      const f = k / 13
-      place.push({ x: 57 - f * 16, z: -92 - f * 40, yaw: farYaw, scale: 1.1 - f * 0.15 })
-    }
+    const place = toriiPlaces(gates)
     const torii = new InstancedMesh(
       toriiGeometry(),
       worldMaterial(U, vert, frag, {
-        uniforms: { uColor: { value: new Color(0.02, 0.004, 0.008) }, uRimColor: { value: new Color(0.034, 0.012, 0.024) } },
+        uniforms: { uColor: { value: new Color(0.03, 0.005, 0.004) }, uRimColor: { value: new Color(0.02, 0.02, 0.036) } },
       }),
       place.length,
     )
@@ -100,7 +115,7 @@ export function Shrine({ U, gates }: { U: Uniforms; gates: number[] }) {
     const steps = new InstancedMesh(
       new BoxGeometry(4.6, 0.4, 0.95),
       worldMaterial(U, vert, frag, {
-        uniforms: { uColor: { value: new Color(0.011, 0.01, 0.017) }, uRimColor: { value: new Color(0.014, 0.012, 0.026) } },
+        uniforms: { uColor: { value: new Color(0.009, 0.01, 0.017) }, uRimColor: { value: new Color(0.012, 0.014, 0.028) } },
       }),
       count,
     )

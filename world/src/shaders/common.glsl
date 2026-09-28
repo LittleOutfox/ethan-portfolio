@@ -6,7 +6,7 @@ uniform vec3 uInk;
 uniform vec3 uSpirit;
 uniform vec3 uMoonColor;
 uniform vec3 uEmber;
-uniform vec3 uBloom;
+uniform vec3 uFrost;
 uniform vec3 uGlow;
 uniform vec3 uMoonDir;
 uniform vec3 uFogColor;
@@ -32,15 +32,15 @@ float noise2(vec2 p) {
              mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
-// The fog's own colour: violet, warmed to rose all along the horizon, and
+// The fog's own colour: deep blue, a cold glow all along the horizon, and
 // brighter toward the moon where moonlight scatters in the mist — the glow
 // at the end of the path.
 vec3 fogTint(vec3 dir) {
   float s = max(dot(dir, uMoonDir), 0.0);
-  float rose = exp(-abs(dir.y) * 7.0);
-  vec3 lit = mix(uBloom, uSpirit, 0.45);
-  return uFogColor + uBloom * uHaze * 0.18 * rose
-       + lit * uHaze * 0.65 * (0.35 * pow(s, 6.0) + 0.65 * pow(s, 48.0));
+  float low = exp(-abs(dir.y) * 7.0);
+  vec3 lit = mix(uFrost, uGlow, 0.4);
+  return uFogColor + mix(uFrost, uGlow, 0.5) * uHaze * 0.12 * low
+       + lit * uHaze * 0.5 * (0.35 * pow(s, 6.0) + 0.65 * pow(s, 48.0));
 }
 
 // distance fog that lies thicker near the ground
