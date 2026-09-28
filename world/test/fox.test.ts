@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { KEYS } from '../src/keys'
-import { fitFov, makeCameraPath, type Pose } from '../src/path'
+import { makeFraming } from '../src/keys'
+import { fitFov, type Pose } from '../src/path'
 import { cameraSamples } from '../src/layout'
 import { forestFor } from '../src/trees'
-import { FOX_BONES, FOX_BOX, foxPose, groundAt, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, stepHeading, type Gait } from '../src/fox'
+import { FOX_BONES, FOX_BOX, foxKeys, foxPose, groundAt, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, stepHeading, type Gait } from '../src/fox'
 
 /** Where a world point lands on screen (3440×1440 unless told) at world time t (x right, y down, 0..1), and how far it is. */
 function onScreen(t: number, x: number, y: number, z: number, aspect = 3440 / 1440) {
   const p: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
-  makeCameraPath(KEYS)(t, p)
+  makeFraming()(t, aspect, p)
   const tv = Math.tan((fitFov(p.fov, aspect) * Math.PI) / 360)
   const f = p.look.map((v, k) => v - p.pos[k])
   const fl = Math.hypot(...f)
@@ -70,6 +70,90 @@ describe('the spirit fox’s path', () => {
       at(t, spot)
       expect(onScreen(t, spot.x, spot.y + 0.3, spot.z).sx).toBeGreaterThan(0.67)
       expect(onScreen(t, spot.x, spot.y + 0.3, spot.z, 1440 / 900).sx).toBeGreaterThan(0.8)
+    }
+  })
+
+  it('finishes out in the open on the snowfield, clear of the contact card and the ink fox, on every shape of screen', () => {
+    // measured on the page at its last scroll: where the ink fox's strokes (the plunging
+    // drawing) end and the chapter rail begins on a wide screen, and where the contact card
+    // ends and the ink fox begins on a tall one
+    const wide: [number, number, number, number][] = [
+      [3440, 1440, 0.701, 0.951], [2560, 1440, 0.771, 0.948], [1920, 1080, 0.801, 0.944], [1720, 1000, 0.798, 0.942],
+      [1512, 982, 0.796, 0.94], [1440, 900, 0.794, 0.938], [1366, 768, 0.793, 0.937], [1280, 800, 0.792, 0.936],
+      [1180, 820, 0.792, 0.934], [1024, 768, 0.791, 0.93],
+    ]
+    for (const [w, h, inkRight, railLeft] of wide) {
+      const end = { ...spot }
+      makeFoxPath(foxKeys(w / h, w))(9, end)
+      const { sx, sy } = onScreen(9, end.x, end.y + 0.3, end.z, w / h)
+      // right of the ink fox, its tail short of the rail
+      expect(sx).toBeGreaterThan(inkRight + 0.04)
+      expect(sx).toBeLessThan(railLeft - 0.05)
+      expect(sy).toBeGreaterThan(0.55)
+      expect(sy).toBeLessThan(0.95)
+    }
+    // the page's narrow layout on a phone held sideways: the ink fox stands further right, no rail
+    const narrow: [number, number, number][] = [[667, 375, 0.887], [844, 390, 0.891], [896, 414, 0.892], [932, 430, 0.892]]
+    for (const [w, h, inkRight] of narrow) {
+      const end = { ...spot }
+      makeFoxPath(foxKeys(w / h, w))(9, end)
+      const { sx, sy } = onScreen(9, end.x, end.y + 0.3, end.z, w / h)
+      expect(sx).toBeGreaterThan(inkRight)
+      expect(sx).toBeLessThan(0.93)
+      expect(sy).toBeGreaterThan(0.55)
+      expect(sy).toBeLessThan(0.95)
+    }
+    // how tall it sits there, ears and all
+    const bones = new Float32Array(FOX_BONES * 8)
+    foxPose({ ...makeGait(), run: 0 }, 0, 0, bones)
+    let top = 0
+    for (let i = 0; i < FOX_BONES; i++) top = Math.max(top, bones[i * 8 + 1] + bones[i * 8 + 3], bones[i * 8 + 5] + bones[i * 8 + 7])
+    const tall: [number, number, number, number, number][] = [
+      [360, 800, 0.547, 0.612, 0.924], [390, 844, 0.54, 0.614, 0.929], [430, 932, 0.52, 0.617, 0.935],
+      [768, 1024, 0.633, 0.667, 0.941], [820, 1180, 0.609, 0.668, 0.948], [1024, 1366, 0.602, 0.53, 0.97],
+      // and between tall and square, where the page stacks the same way
+      [900, 1050, 0.635, 0.669, 0.942], [1100, 1280, 0.621, 0.531, 0.968],
+    ]
+    for (const [w, h, cardBottom, inkLeft, footerTop] of tall) {
+      const end = { ...spot }
+      makeFoxPath(foxKeys(w / h, w))(9, end)
+      const { sx } = onScreen(9, end.x, end.y + 0.3, end.z, w / h)
+      // low on the left: its ears below the card, its paws above the footer, clear of the ink fox
+      const ears = onScreen(9, end.x, end.y + top, end.z, w / h).sy
+      const paws = onScreen(9, end.x, end.y, end.z, w / h).sy
+      expect(sx).toBeGreaterThan(0.12)
+      expect(sx).toBeLessThan(inkLeft - 0.15)
+      expect(ears).toBeGreaterThan(cardBottom + 0.03)
+      expect(paws).toBeLessThan(footerTop - 0.02)
+    }
+  })
+
+  it('keeps its path true whatever the screen: on the ground, clear of the trees and the camera, never doubling back', () => {
+    const trees = forestFor(1)
+    const cam = cameraSamples(0.01)
+    const screens = [[3440, 1440], [1920, 1080], [1024, 768], [844, 390], [1000, 1000], [900, 1050], [820, 1180], [390, 844]]
+    for (const [w, h] of screens) {
+      const at = makeFoxPath(foxKeys(w / h, w))
+      const p = { ...spot }
+      const q = { ...spot }
+      at(7.9, q)
+      let px = 0
+      let pz = 0
+      for (let t = 8; t <= 9.0001; t += 0.01) {
+        at(t, p)
+        expect(p.y).toBeCloseTo(groundAt(p.x, p.z), 5)
+        for (const tr of trees) expect(Math.hypot(tr.x - p.x, tr.z - p.z)).toBeGreaterThan(tr.radius + 0.5)
+        const [cx, , cz] = cam[Math.round(t * 100)]
+        expect(Math.hypot(cx - p.x, cz - p.z)).toBeGreaterThan(2.5)
+        const dx = p.x - q.x
+        const dz = p.z - q.z
+        if (Math.hypot(dx, dz) > 1e-4 && Math.hypot(px, pz) > 1e-4) expect(dx * px + dz * pz).toBeGreaterThan(-1e-6)
+        if (Math.hypot(dx, dz) > 1e-4) {
+          px = dx
+          pz = dz
+        }
+        Object.assign(q, p)
+      }
     }
   })
 

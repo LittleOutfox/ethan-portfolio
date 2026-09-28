@@ -7,7 +7,7 @@
 //   t2 on the path inside the forest (hunt)      t7 summit clearing (tails)
 //   t3 end of the trail truck (hunt)             t8 craned up, moon behind the fox
 //   t4 foot of the torii stair (works)           t9 out on the snowfield (contact)
-import type { Key, Vec3 } from './path'
+import { makeCameraPath, type Key, type Pose, type Vec3 } from './path'
 
 export const KEYS: Key[] = [
   { pos: [0, 1.7, 30], look: [0, 5, -60], fov: 45 },
@@ -26,14 +26,42 @@ export const KEYS: Key[] = [
  * On a portrait phone the page stacks differently (the tails fox sits high
  * and centred, the contact card fills the width), so a few keys look
  * elsewhere there: straight at the moon behind the fox, and down across the
- * snowfield so the moon rides above the card. Blended in by aspect.
+ * snowfield so the moon rides above the card, from a little higher (the same
+ * tilt, so the horizon and the moon keep their places) so that the snow
+ * below the card, where the spirit fox settles, lies a few metres off rather
+ * than at your feet. Blended in by aspect.
  */
-const PORTRAIT_LOOK: Partial<Record<number, Vec3>> = {
-  7: [60, 11.4, -160],
-  8: [60, 12.55, -160],
-  9: [60, -3.5, -220],
+const PORTRAIT: Partial<Record<number, { pos?: Vec3; look: Vec3 }>> = {
+  7: { look: [60, 11.4, -160] },
+  8: { look: [60, 12.55, -160] },
+  9: { pos: [60, 13, -150], look: [60, -1.9, -220] },
 }
-export const KEYS_PORTRAIT: Key[] = KEYS.map((k, i) => (PORTRAIT_LOOK[i] ? { ...k, look: PORTRAIT_LOOK[i]! } : k))
+export const KEYS_PORTRAIT: Key[] = KEYS.map((k, i) => ({ ...k, ...PORTRAIT[i] }))
+
+/** How far a screen leans portrait: 0 at square and wider, 1 from 0.72:1 on. */
+export function tallness(aspect: number): number {
+  const t = Math.min(1, Math.max(0, (1 - aspect) / 0.28))
+  return t * t * (3 - 2 * t)
+}
+
+/** The camera at world time t as a screen of this shape frames it: the journey's keys, with the portrait framing blended in on a tall screen. */
+export function makeFraming() {
+  const wide = makeCameraPath(KEYS)
+  const tall = makeCameraPath(KEYS_PORTRAIT)
+  const alt: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 45 }
+  return (t: number, aspect: number, out: Pose): Pose => {
+    wide(t, out)
+    const k = tallness(aspect)
+    if (k > 0) {
+      tall(t, alt)
+      for (let a = 0; a < 3; a++) {
+        out.pos[a] += (alt.pos[a] - out.pos[a]) * k
+        out.look[a] += (alt.look[a] - out.look[a]) * k
+      }
+    }
+    return out
+  }
+}
 
 /** The den's hearth, off the path to the right of the stair top. */
 export const HEARTH: Vec3 = [74, 9.8, -104]

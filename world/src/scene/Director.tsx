@@ -2,8 +2,8 @@ import { useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Vector2, Vector3, type PerspectiveCamera } from 'three'
 import type { Bus } from '../bus'
-import { KEYS, KEYS_PORTRAIT } from '../keys'
-import { fitFov, makeCameraPath, worldTime, type Pose } from '../path'
+import { makeFraming } from '../keys'
+import { fitFov, worldTime, type Pose } from '../path'
 import { gradeAt, makeGrade } from '../grade'
 import type { Uniforms } from '../uniforms'
 
@@ -18,12 +18,10 @@ const RAD = Math.PI / 180
  * journey and sets the shared light. No React state, no allocations.
  */
 export function Director({ bus, U }: { bus: Bus; U: Uniforms }) {
-  const path = useMemo(() => makeCameraPath(KEYS), [])
-  const portrait = useMemo(() => makeCameraPath(KEYS_PORTRAIT), [])
+  const frame = useMemo(() => makeFraming(), [])
   const s = useMemo(
     () => ({
       pose: { pos: [0, 0, 0], look: [0, 0, 0], fov: 45 } as Pose,
-      alt: { pos: [0, 0, 0], look: [0, 0, 0], fov: 45 } as Pose,
       look: new Vector3(),
       fwd: new Vector3(),
       right: new Vector3(),
@@ -53,14 +51,8 @@ export function Director({ bus, U }: { bus: Bus; U: Uniforms }) {
     const dt = Math.min(delta, 0.05)
     const t = worldTime(bus.p)
     const aspect = state.size.width / state.size.height
-    path(t, s.pose)
-
     // portrait phones frame a few moments differently (keys.ts)
-    const tall = smoothstep(1.0, 0.72, aspect)
-    if (tall > 0) {
-      portrait(t, s.alt)
-      for (let a = 0; a < 3; a++) s.pose.look[a] += (s.alt.look[a] - s.pose.look[a]) * tall
-    }
+    frame(t, aspect, s.pose)
 
     // before the entrance settles the camera sits a little back and up
     const k = 1 - bus.intro
