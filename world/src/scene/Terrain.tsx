@@ -35,6 +35,6 @@ function buildTerrain(): PlaneGeometry {
 
 export function Terrain({ U }: { U: Uniforms }) {
   const geometry = useMemo(buildTerrain, [])
-  const material = useMemo(() => worldMaterial(U, vert, frag), [U])
+  const material = useMemo(() => worldMaterial(U, vert, frag, { defines: { BLOOMS: U.uBlooms.value.length } }), [U])
   return <mesh geometry={geometry} material={material} />
 }

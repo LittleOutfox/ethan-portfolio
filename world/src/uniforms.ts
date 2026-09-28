@@ -2,7 +2,7 @@
 // per frame and every surface reads the same light.
 import { Color, Vector2, Vector3, Vector4 } from 'three'
 import { HEARTH, MOON_DIR } from './keys'
-import { STREAM } from './layout'
+import { STREAM, bloomOrbs } from './layout'
 
 export function makeUniforms() {
   return {
@@ -15,9 +15,11 @@ export function makeUniforms() {
     uEmber: { value: new Color('#e0a05c') },
     /** frost: the periwinkle in the mist, the trees' glow, the glints in the snow */
     uFrost: { value: new Color('#b0acff') },
-    /** spirit light: the blue glowing in the stream */
+    /** spirit light: the blue among the motes in the air and in the moonlit mist */
     uGlow: { value: new Color('#4aa8ff') },
-    /** aqua: the flowers in the snow */
+    /** the spirit stream's own light: blue-violet, of a piece with the mist */
+    uWater: { value: new Color('#7166ff') },
+    /** aqua: the spirit blooms' orbs, and the light they throw */
     uAqua: { value: new Color('#5ce8ff') },
     uMoonDir: { value: new Vector3(...MOON_DIR) },
     uFogColor: { value: new Color('#131226') },
@@ -39,6 +41,8 @@ export function makeUniforms() {
     /** the stream's centreline and half-width (layout.ts STREAM) */
     uStreamA: { value: new Vector4(STREAM.z, STREAM.a1, STREAM.f1, STREAM.p1) },
     uStreamB: { value: new Vector4(STREAM.a2, STREAM.f2, STREAM.p2, STREAM.width) },
+    /** each spirit bloom's orb (xyz) and scale (w), for the light it throws on the snow */
+    uBlooms: { value: bloomOrbs().map(([x, y, z, s]) => new Vector4(x, y, z, s)) },
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GREAT_TREES, ROUTE, STREAM, heightAt, placeFlowers, placeTrees, distanceToCurve, streamDistance, streamZ } from '../src/layout'
+import { BLOOM, GREAT_TREES, ROUTE, STREAM, bloomOrbs, cameraSamples, heightAt, placeBlooms, placeTrees, distanceToCurve, streamDistance, streamZ } from '../src/layout'
 import { KEYS } from '../src/keys'
 import { makeCameraPath, type Pose } from '../src/path'
 
@@ -100,30 +100,44 @@ describe('the great trees', () => {
   })
 })
 
-describe('the snow flowers', () => {
-  const flowers = placeFlowers(1)
+describe('the spirit blooms', () => {
+  const blooms = placeBlooms()
   const routeXZ: [number, number][] = ROUTE.map(([x, , z]) => [x, z])
 
-  it('are rare: an occasional flower along the whole journey', () => {
-    expect(flowers.length).toBeGreaterThanOrEqual(20)
-    expect(flowers.length).toBeLessThanOrEqual(70)
+  it('are very rare: a handful along the whole journey', () => {
+    expect(blooms.length).toBeGreaterThanOrEqual(4)
+    expect(blooms.length).toBeLessThanOrEqual(8)
   })
 
-  it('are big enough to show their petals', () => {
-    for (const f of flowers) expect(f.size).toBeGreaterThanOrEqual(0.5)
+  it('stand tall: every orb glows more than a metre above the snow', () => {
+    for (const b of blooms) expect(BLOOM.orbY * b.scale).toBeGreaterThan(1.1)
   })
 
-  it('sit on the snow, off the path and out of the water', () => {
-    for (const f of flowers) {
-      expect(distanceToCurve(f.x, f.z, routeXZ)).toBeGreaterThan(2)
-      expect(streamDistance(f.x, f.z)).toBeGreaterThan(STREAM.width + 1)
-      expect(f.y).toBeCloseTo(heightAt(f.x, f.z) + f.size * 0.35, 5)
+  it('grow in the snow beside the journey: off the path and its stair, out of the water', () => {
+    for (const b of blooms) {
+      expect(b.y).toBeCloseTo(heightAt(b.x, b.z), 5)
+      // the stair is 4.6 m wide; the roots reach BLOOM.reach
+      expect(distanceToCurve(b.x, b.z, routeXZ)).toBeGreaterThan(2.3 + BLOOM.reach * b.scale + 0.5)
+      expect(streamDistance(b.x, b.z)).toBeGreaterThan(STREAM.width + BLOOM.reach * b.scale)
     }
   })
 
-  it('thin out, not rearrange, at lower density', () => {
-    const few = placeFlowers(0.4)
-    expect(few.length).toBeLessThan(flowers.length)
-    expect(few).toEqual(flowers.slice(0, few.length))
+  it('stand clear of the camera, roots and all, the whole way', () => {
+    const cam = cameraSamples(0.01)
+    for (const b of blooms) {
+      const d = Math.min(...cam.map(([x, , z]) => Math.hypot(x - b.x, z - b.z)))
+      expect(d).toBeGreaterThan(BLOOM.reach * b.scale + 1.5)
+    }
+  })
+
+  it('each keep a clearing: no tree grows through one', () => {
+    const trees = placeTrees(1)
+    for (const b of blooms) {
+      for (const t of trees) expect(Math.hypot(t.x - b.x, t.z - b.z)).toBeGreaterThan(t.radius + BLOOM.reach * b.scale)
+    }
+  })
+
+  it('light the snow from their orbs', () => {
+    expect(bloomOrbs()).toEqual(blooms.map((b) => [b.x, b.y + BLOOM.orbY * b.scale, b.z, b.scale]))
   })
 })

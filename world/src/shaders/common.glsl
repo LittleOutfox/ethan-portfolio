@@ -61,6 +61,15 @@ vec3 hearth(vec3 col, vec3 wpos, vec3 n) {
   return col + uEmber * k * 0.05 * (0.25 + 0.75 * max(dot(n, L / d), 0.0));
 }
 
+// A spirit bloom's orb breathes slowly on its own clock, and shines in full
+// only near the camera: far off, its light would gather along the horizon,
+// where the page's text reads. Its orb, its glow and the light it throws on
+// the snow all keep this time.
+float bloomLight(vec3 orb) {
+  return (0.85 + 0.15 * sin(uTime * 0.8 + orb.x * 1.7 + orb.z * 1.3))
+       * mix(0.08, 1.0, 1.0 - smoothstep(18.0, 32.0, distance(cameraPosition, orb)));
+}
+
 // The page's old CSS veil, now drawn in the same pass: an ellipse centred
 // at 42% from the top, plus darker bands at the top and bottom edges.
 vec3 finish(vec3 col) {

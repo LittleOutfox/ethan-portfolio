@@ -5,8 +5,8 @@ import type { TierSpec } from '../tiers'
 import { forestFor } from '../trees'
 import { makeUniforms } from '../uniforms'
 import { Air } from './Air'
+import { Blooms } from './Blooms'
 import { Director } from './Director'
-import { Flowers } from './Flowers'
 import { Forest } from './Forest'
 import { Foxfire } from './Foxfire'
 import { Shrine } from './Shrine'
@@ -26,7 +26,7 @@ export function World({ bus, tier }: { bus: Bus; tier: TierSpec }) {
     <>
       <Director bus={bus} U={U} />
       <Terrain U={U} />
-      <Flowers U={U} density={tier.density} />
+      <Blooms U={U} />
       <Forest U={U} trees={trees} msaa={tier.antialias} />
       <Shrine U={U} gates={gates} />
       <Sky U={U} />

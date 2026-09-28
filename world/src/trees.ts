@@ -32,7 +32,7 @@ export const ARCHETYPES: Archetype[] = [
   { seed: 59, height: 14, radius: 0.66, reach: 7.5, branches: 4, gnarl: 1.0, leaves: 0.5 },
 ]
 
-class Builder {
+export class Builder {
   pos: number[] = []
   nor: number[] = []
   up: number[] = []

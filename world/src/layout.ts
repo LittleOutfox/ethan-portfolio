@@ -189,7 +189,7 @@ function towardPath(x: number, z: number): number {
  * order and filtered, so the first N trees are an even sample of the whole
  * forest — lower tiers take a prefix. Trees near the path are the big gnarled
  * framers, turned so their long branches reach out over it; none grows in the
- * stream or a great tree's glade.
+ * stream, a great tree's glade or a spirit bloom's clearing.
  */
 export function placeTrees(density: number): Tree[] {
   const great: Tree[] = GREAT_TREES.map((g) => ({
@@ -218,6 +218,7 @@ export function placeTrees(density: number): Tree[] {
     if (dCam < clear || dPath < clear) continue
     if (streamDistance(x, z) < STREAM.width + radius) continue
     if (GREAT_TREES.some((g) => Math.hypot(x - g.x, z - g.z) < g.glade)) continue
+    if (placeBlooms().some((b) => Math.hypot(x - b.x, z - b.z) < radius + BLOOM.reach * b.scale + 0.5)) continue
     const rot = framer ? towardPath(x, z) + (r3 - 0.5) * 1.2 : r3 * Math.PI * 2
     const lean = (r4 - 0.5) * 0.1
     all.push({ x, y: heightAt(x, z), z, radius, scale, rot, lean, kind })
@@ -225,36 +226,58 @@ export function placeTrees(density: number): Tree[] {
   return [...great, ...all.slice(0, Math.round(all.length * Math.min(1, Math.max(0, density))))]
 }
 
-export interface Flower {
+/**
+ * A spirit bloom's proportions at scale 1 (bloom.ts grows it to match): the
+ * height of its orb's centre, the orb's radius, the glow about it, and how
+ * far its roots reach across the snow (m).
+ */
+export const BLOOM = { orbY: 1.2, orbR: 0.26, glowR: 1.0, reach: 1.3 }
+
+/**
+ * Where the spirit blooms grow, each placed by eye as a moment of its own: at
+ * world time t it stands `ahead` metres in front of the camera and `side`
+ * metres to its right (left if negative) — out where the page keeps no text.
+ * By the stream as the story opens; at the forest's edge, walking in; beside
+ * the torii stair; at the summit clearing's edge; out on the snowfield.
+ */
+const BLOOM_SPOTS: { t: number; ahead: number; side: number; scale: number }[] = [
+  { t: 0, ahead: 16, side: 7.5, scale: 1.6 },
+  { t: 1.2, ahead: 11, side: 6, scale: 1.3 },
+  { t: 4.45, ahead: 9.5, side: -5.5, scale: 1.35 },
+  { t: 7.6, ahead: 21, side: 9.5, scale: 1.5 },
+  { t: 9, ahead: 14, side: -7, scale: 1.55 },
+]
+
+export interface Bloom {
   x: number
   y: number
   z: number
-  /** sprite size (m) */
-  size: number
-  /** 0..1, for its own slow pulse */
-  phase: number
+  scale: number
+  /** rotation about y: its local x–y plane (the tendril's arc over the orb) faces the camera at its moment */
+  rot: number
 }
 
-/**
- * A rare glowing flower here and there on the snow near the journey: never
- * on the path or in the stream. Seeded, and in random order, so a lower tier
- * draws a prefix of the same flowers.
- */
-export function placeFlowers(density: number): Flower[] {
-  const rng = mulberry32(13)
-  const cam = cameraSamples(0.02)
-  const out: Flower[] = []
-  for (let i = 0; i < 30; i++) {
-    const [cx, , cz] = cam[Math.floor(rng() * cam.length)]
-    const th = rng() * Math.PI * 2
-    const r = 3 + rng() * 11
-    const x = cx + Math.cos(th) * r
-    const z = cz + Math.sin(th) * r
-    const size = 0.55 + rng() * 0.25
-    const phase = rng()
-    if (distanceToCurve(x, z, ROUTE_XZ) < 2) continue
-    if (streamDistance(x, z) < STREAM.width + 1) continue
-    out.push({ x, y: heightAt(x, z) + size * 0.35, z, size, phase })
-  }
-  return out.slice(0, Math.round(out.length * Math.min(1, Math.max(0, density))))
+let blooms: Bloom[] | null = null
+
+/** The spirit blooms: the same few at every tier (they are cheap, and each is a moment). */
+export function placeBlooms(): Bloom[] {
+  if (blooms) return blooms
+  const sample = makeCameraPath(KEYS)
+  const pose: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
+  blooms = BLOOM_SPOTS.map(({ t, ahead, side, scale }) => {
+    sample(t, pose)
+    const [cx, , cz] = pose.pos
+    const fx = pose.look[0] - cx, fz = pose.look[2] - cz
+    const fl = Math.hypot(fx, fz) || 1
+    // forward and right along the ground: right of (fx, fz) is (−fz, fx)
+    const x = cx + (fx / fl) * ahead - (fz / fl) * side
+    const z = cz + (fz / fl) * ahead + (fx / fl) * side
+    return { x, y: heightAt(x, z), z, scale, rot: Math.atan2(cx - x, cz - z) }
+  })
+  return blooms
+}
+
+/** Each bloom's orb (x, y, z) and scale: the lights the terrain is lit by. */
+export function bloomOrbs(): [number, number, number, number][] {
+  return placeBlooms().map((b) => [b.x, b.y + BLOOM.orbY * b.scale, b.z, b.scale])
 }
