@@ -75,13 +75,17 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     const strideBefore = gait.stride
     stepGait(gait, ds, dt)
 
-    // it faces the way it runs (turning round when you scroll back), and keeps its heading at rest
+    // it faces the way it runs (turning round when you scroll back); once it
+    // has stopped, it turns to face you, and sits
+    const cam = state.camera.position
     if (gait.still === 0) {
       const target = spot.heading + (gait.dir < 0 ? Math.PI : 0)
       s.heading += wrap(target - s.heading) * (1 - Math.exp(-dt * 9))
+    } else if (gait.still > 0.9) {
+      const target = Math.atan2(-(cam.z - spot.z), cam.x - spot.x)
+      s.heading += wrap(target - s.heading) * (1 - Math.exp(-dt * 2.5))
     }
-    // at rest it turns its head to look back at you
-    const cam = state.camera.position
+    // and its head leads: it looks back at you first
     const dx = cam.x - spot.x
     const dz = cam.z - spot.z
     const c = Math.cos(s.heading)

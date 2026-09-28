@@ -198,6 +198,22 @@ describe('its shape', () => {
     expect(lowest(sit)).toBeGreaterThan(-0.02)
   })
 
+  it('sits as a fox sits: upright, its chest high over its haunches, forepaws together under its chest', () => {
+    const sit = pose({ sit: 1 })
+    const [chest, hips] = [sit[0].a, sit[0].b]
+    expect(chest[1] - hips[1]).toBeGreaterThan(0.24)
+    for (const i of [10, 12]) {
+      const paw = sit[i].b
+      expect(Math.abs(paw[0] - chest[0])).toBeLessThan(0.07)
+      expect(Math.abs(paw[2])).toBeLessThan(0.05)
+    }
+    // its tail lies on the snow behind it
+    for (let i = 19; i < 23; i++) {
+      expect(sit[i].b[0]).toBeLessThan(hips[0])
+      expect(sit[i].b[1]).toBeLessThan(0.12)
+    }
+  })
+
   it('gives every bone a real length, so the shader never divides by zero', () => {
     for (const ph of [0, 0.25, 0.5, 0.75]) {
       for (const bs of [pose({}), pose({ sit: 1 }), pose({ run: 1, stride: ph, gallop: 1 })]) {

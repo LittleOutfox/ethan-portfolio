@@ -38,9 +38,6 @@ export const KEYS_PORTRAIT: Key[] = KEYS.map((k, i) => (PORTRAIT_LOOK[i] ? { ...
 /** The den's hearth, off the path to the right of the stair top. */
 export const HEARTH: Vec3 = [74, 9.8, -104]
 
-/** Where the camera stands when all five tails are earned (key t8) — the tail bands rise in front of it. */
-export const SUMMIT: Vec3 = [60, 13.4, -116]
-
 /** Works progress of each DOM gate's pass-through, if the page hasn't published its own. */
 export const GATE_PASS_DEFAULT = [0.4, 0.64, 0.88]
 

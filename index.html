@@ -45,7 +45,7 @@
       if (!lean && !/[?&]world=off\b/.test(location.search) &&
           !matchMedia('(prefers-reduced-motion: reduce)').matches &&
           !matchMedia('(forced-colors: active)').matches) {
-        window.__worldSrc = new URL('js/world/scene.js?v=8', document.baseURI).href;
+        window.__worldSrc = new URL('js/world/scene.js?v=9', document.baseURI).href;
         var pre = document.createElement('link');
         pre.rel = 'modulepreload';
         pre.href = window.__worldSrc;
