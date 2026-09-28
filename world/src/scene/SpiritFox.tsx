@@ -4,7 +4,7 @@ import { BoxGeometry, CustomBlending, Mesh, OneFactor, OneMinusSrcAlphaFactor, V
 import vert from '../shaders/spiritfox.vert.glsl?raw'
 import frag from '../shaders/spiritfox.frag.glsl?raw'
 import type { Bus } from '../bus'
-import { FOX_BONES, FOX_BOX, foxPose, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, stepHeading, type FoxSpot, type Heading } from '../fox'
+import { FOX_BONES, FOX_BOX, foxKeys, foxPose, makeFoxPath, makeGait, pawSpot, pawsDown, stepGait, stepHeading, type FoxSpot, type Heading } from '../fox'
 import { worldTime } from '../path'
 import type { Uniforms } from '../uniforms'
 import { worldMaterial } from './materials'
@@ -49,6 +49,9 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
       uniforms,
       bones: new Float32Array(FOX_BONES * 8),
       path: makeFoxPath(),
+      /** the screen its path was laid for: where it settles at the end depends on it */
+      aspect: 0,
+      width: 0,
       gait: makeGait(),
       spot: { x: 0, y: 0, z: 0, heading: 0 } as FoxSpot,
       prev: { x: 0, z: 0, t: -1 },
@@ -65,6 +68,13 @@ export function SpiritFox({ bus, U }: { bus: Bus; U: Uniforms }) {
     const dt = Math.min(delta, 0.25)
     const t = worldTime(bus.p)
     const { spot, prev, gait } = s
+    const { width, height } = state.size
+    const aspect = width / height
+    if (Math.abs(aspect - s.aspect) > 0.01 * aspect || Math.abs(width - s.width) > 0.01 * width) {
+      s.aspect = aspect
+      s.width = width
+      s.path = makeFoxPath(foxKeys(aspect, width))
+    }
     // it keeps its place beside you: its spot, wherever the scroll has brought you
     s.path(t, spot)
     if (prev.t < 0) s.turn.heading = spot.heading

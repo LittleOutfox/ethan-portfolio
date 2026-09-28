@@ -8,9 +8,9 @@
 // top, and the standing and moving poses carry the same build: the head,
 // muzzle, cheeks and ears, the deep chest, sturdy legs and full body. Its own space: +x is where its nose points, +y
 // up, +z to its left; metres, standing about 0.48 m at the shoulder.
-import { KEYS } from './keys'
+import { KEYS, makeFraming, tallness } from './keys'
 import { ROUTE, heightAt } from './layout'
-import { makeCameraPath, type Key, type Pose } from './path'
+import { fitFov, makeCameraPath, type Key, type Pose } from './path'
 
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
@@ -41,7 +41,7 @@ export function groundAt(x: number, z: number): number {
  * the gates' pillars and their lanterns, clear of the works cards in the
  * middle of the view), beside the den's hearth, over the summit (out of the
  * craned-up view while the tails are earned) and out onto the snowfield,
- * where it sits on the left by the last spirit bloom.
+ * where it settles in the open (END).
  */
 const FOX_SPOTS: [number, number][] = [
   [18, 5], // 0 the opening: sitting beyond the stream, right of the drawn fox
@@ -62,14 +62,27 @@ const FOX_SPOTS: [number, number][] = [
   [10, 2],
   [10, 2], // 8 the tails (below the craned-up view)
   [9, 1],
-  [8, -3.6], // 9 the snowfield: on the left by the bloom, clear of the contact card
 ]
 
-/** FOX_SPOTS as ground points (x, z), one per half step of world time. */
-export function foxKeys(): [number, number][] {
+/**
+ * Where it settles at the end (world time 9), set on the screen rather than
+ * beside the camera, since the page's contact card and drawn fox sit
+ * differently on every shape of screen: how far across (0 left … 1 right)
+ * and how many metres ahead. On a wide screen that is right of the drawn fox
+ * plunging into the snow, short of the chapter rail (in the page's narrow
+ * layout, 960px across or less, the drawn fox stands further right and the
+ * rail is gone); on a tall one, where the card fills the width and the camera
+ * looks down across the snow, nearer, low on the left below the card.
+ * Screens between take whichever framing theirs is nearer: a blend of the
+ * two would set it down in the middle, on the card or the drawn fox.
+ */
+const END = { wide: { x: 0.86, ahead: 8 }, narrow: { x: 0.9, ahead: 8 }, tall: { x: 0.27, ahead: 5.5 } }
+
+/** FOX_SPOTS as ground points (x, z), one per half step of world time, ending at END as a screen of this shape and width (css px) frames it. */
+export function foxKeys(aspect = 3440 / 1440, width = 3440): [number, number][] {
   const cam = makeCameraPath(KEYS)
   const pose: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
-  return FOX_SPOTS.map(([ahead, side], i) => {
+  const keys = FOX_SPOTS.map(([ahead, side], i): [number, number] => {
     cam(i / 2, pose)
     const [cx, , cz] = pose.pos
     const fx = pose.look[0] - cx
@@ -77,6 +90,25 @@ export function foxKeys(): [number, number][] {
     const fl = Math.hypot(fx, fz) || 1
     return [cx + (fx / fl) * ahead - (fz / fl) * side, cz + (fz / fl) * ahead + (fx / fl) * side]
   })
+  // the end: the spot `ahead` in front of the camera and `side` to its right
+  // shows side / (depth · tan(half the view) · aspect) off centre; its depth
+  // follows the lie of the snow, so settle it in a few passes
+  makeFraming()(FOX_SPOTS.length / 2, aspect, pose)
+  const { x, ahead } = tallness(aspect) >= 0.5 ? END.tall : width > 960 ? END.wide : END.narrow
+  const [cx, cy, cz] = pose.pos
+  const f = pose.look.map((v, a) => v - pose.pos[a])
+  const fl = Math.hypot(...f)
+  const hl = Math.hypot(f[0], f[2])
+  const hx = f[0] / hl
+  const hz = f[2] / hl
+  const across = (2 * x - 1) * Math.tan((fitFov(pose.fov, aspect) * Math.PI) / 360) * aspect
+  let side = 0
+  for (let n = 0; n < 4; n++) {
+    const y = groundAt(cx + hx * ahead - hz * side, cz + hz * ahead + hx * side) + 0.3
+    side = across * ((ahead * hl + (y - cy) * f[1]) / fl)
+  }
+  keys.push([cx + hx * ahead - hz * side, cz + hz * ahead + hx * side])
+  return keys
 }
 
 export interface FoxSpot {
