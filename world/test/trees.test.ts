@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Matrix4, Vector3 } from 'three'
 import { ARCHETYPES, buildArchetype, forestFor, treeMatrix } from '../src/trees'
-import { cameraSamples, placeTrees } from '../src/layout'
+import { GREAT_TREES, cameraSamples, placeTrees } from '../src/layout'
 
 describe('the forest the world draws', () => {
   it('never puts a trunk, limb or leaf clump within 2 m of the camera', () => {
@@ -26,6 +26,11 @@ describe('the forest the world draws', () => {
 
   it('keeps most of the seeded forest (the clearance rule trims, it does not clear-cut)', () => {
     expect(forestFor(1).length).toBeGreaterThan(placeTrees(1).length * 0.85)
+  })
+
+  it('keeps the great trees: their limbs and curtains clear the camera too', () => {
+    const n = GREAT_TREES.length
+    expect(forestFor(1).slice(0, n)).toEqual(placeTrees(1).slice(0, n))
   })
 
   it('is still a prefix at lower density', () => {
@@ -73,17 +78,33 @@ describe('buildArchetype', () => {
     expect(agree).toBe(60)
   })
 
-  it('grows foliage cards (with uvs) only on the leafy archetypes', () => {
+  it('grows a crown and willow curtains (uv quads) on the leafy archetypes; bare trees have neither', () => {
     ARCHETYPES.forEach((a, i) => {
-      const leaves = trees[i].leaves
+      const { crown, drapes } = trees[i]
       if (a.leaves === 0) {
-        expect(leaves).toBeNull()
+        expect(crown).toBeNull()
+        expect(drapes).toBeNull()
       } else {
-        expect(leaves).not.toBeNull()
-        expect(leaves!.attributes.uv.count).toBe(leaves!.attributes.position.count)
-        expect(leaves!.attributes.position.count % 4).toBe(0) // whole quads
+        for (const g of [crown!, drapes!]) {
+          expect(g).not.toBeNull()
+          expect(g.attributes.uv.count).toBe(g.attributes.position.count)
+          expect(g.attributes.position.count % 4).toBe(0) // whole quads
+        }
       }
     })
+  })
+
+  it('hangs the curtains from the branches: every strand starts high and falls straight down', () => {
+    const g = trees[0].drapes!
+    const p = g.attributes.position, uv = g.attributes.uv
+    for (let q = 0; q < p.count; q += 4) {
+      // quad corners: 0,1 bottom (v = 0), 2,3 top (v = 1)
+      expect(uv.getY(q)).toBe(0)
+      expect(uv.getY(q + 3)).toBe(1)
+      expect(p.getY(q + 3)).toBeGreaterThan(p.getY(q))
+      expect(p.getX(q + 3)).toBeCloseTo(p.getX(q), 5)
+      expect(p.getY(q)).toBeGreaterThan(3) // the curtain never sweeps the ground
+    }
   })
 
   it('is deterministic', () => {

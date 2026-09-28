@@ -1,7 +1,8 @@
 // One uniforms object shared by every material: the Director writes it once
 // per frame and every surface reads the same light.
-import { Color, Vector2, Vector3 } from 'three'
+import { Color, Vector2, Vector3, Vector4 } from 'three'
 import { HEARTH, MOON_DIR } from './keys'
+import { STREAM } from './layout'
 
 export function makeUniforms() {
   return {
@@ -12,6 +13,10 @@ export function makeUniforms() {
     uSpirit: { value: new Color('#a8b4ec') },
     uMoonColor: { value: new Color('#ece7f4') },
     uEmber: { value: new Color('#e0a05c') },
+    /** the spirit blossom: the willows' magenta, and the rose in the haze */
+    uBloom: { value: new Color('#ff5cae') },
+    /** bioluminescence: the teal in the roots, the moss and the water */
+    uGlow: { value: new Color('#34ecd6') },
     uMoonDir: { value: new Vector3(...MOON_DIR) },
     uFogColor: { value: new Color('#131226') },
     uFogDensity: { value: 0.02 },
@@ -29,6 +34,9 @@ export function makeUniforms() {
     uPointer: { value: new Vector3(0, 0, 0) },
     /** px per metre at unit distance: drawing-buffer height / (2·tan(fov/2)) */
     uScale: { value: 800 },
+    /** the stream's centreline and half-width (layout.ts STREAM) */
+    uStreamA: { value: new Vector4(STREAM.z, STREAM.a1, STREAM.f1, STREAM.p1) },
+    uStreamB: { value: new Vector4(STREAM.a2, STREAM.f2, STREAM.p2, STREAM.width) },
   }
 }
 

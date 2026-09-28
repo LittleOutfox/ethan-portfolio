@@ -1,9 +1,11 @@
-// Gnarled trees, grown once at boot from a seed: a twisting trunk with root
-// flares, drooping main branches that reach toward local +x (the forest turns
-// each tree so that side faces the path — the arch the film had), a second
-// tier of branches, and on some trees clumps of dark crimson leaves.
-// Each tree is two geometries — bark tubes, and crossed foliage cards the
-// leaf shader cuts into leafy clumps — and the forest instances a handful.
+// Spirit-forest trees, grown once at boot from a seed: a twisting trunk with
+// root flares, branches that arch out toward local +x (the forest turns each
+// tree so that side faces the path) and droop like a willow's, a second tier
+// of branches, and on the leafy archetypes a purple crown with curtains of
+// magenta strands hanging from the outer limbs.
+// Each tree is three geometries — bark tubes, crown cards the crown shader
+// cuts into clumps, and curtain cards the curtain shader cuts into strands —
+// and the forest instances a handful of trees.
 import { BufferAttribute, BufferGeometry, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { cameraSamples, mulberry32, placeTrees, type Tree } from './layout'
 
@@ -18,13 +20,13 @@ export interface Archetype {
   branches: number
   /** how much the trunk and limbs twist */
   gnarl: number
-  /** 0 bare winter tree … 1 full crimson crown */
+  /** 0 bare tree … 1 full crown and curtains */
   leaves: number
 }
 
 export const ARCHETYPES: Archetype[] = [
   { seed: 11, height: 15, radius: 0.72, reach: 8.5, branches: 4, gnarl: 0.9, leaves: 0.8 },
-  { seed: 23, height: 18, radius: 0.55, reach: 6.5, branches: 5, gnarl: 0.55, leaves: 0.2 },
+  { seed: 23, height: 18, radius: 0.55, reach: 6.5, branches: 5, gnarl: 0.55, leaves: 0.5 },
   { seed: 37, height: 12, radius: 0.85, reach: 9.5, branches: 3, gnarl: 1.2, leaves: 1 },
   { seed: 41, height: 20, radius: 0.5, reach: 5.5, branches: 4, gnarl: 0.45, leaves: 0 },
   { seed: 59, height: 14, radius: 0.66, reach: 7.5, branches: 4, gnarl: 1.0, leaves: 0.5 },
@@ -91,7 +93,7 @@ class Builder {
   }
 }
 
-/** Foliage: a few crossed cards per clump; the leaf shader cuts each into ragged leaves. */
+/** Crown: a few crossed cards per clump; the crown shader cuts each into ragged leaves. */
 class Foliage {
   pos: number[] = []
   nor: number[] = []
@@ -139,7 +141,52 @@ class Foliage {
   }
 }
 
-/** A point of a tree's frame with its radius (m): trunk and limb centrelines, leaf clumps. */
+/**
+ * Willow curtains: pairs of crossed vertical cards hanging straight down from
+ * a branch. uv.y runs 1 at the branch to 0 at the hem; the curtain shader cuts
+ * each card into strands of uneven length that sway from the top.
+ */
+class Curtain {
+  pos: number[] = []
+  nor: number[] = []
+  uv: number[] = []
+  seed: number[] = []
+  idx: number[] = []
+
+  hang(rng: () => number, top: Vector3, length: number, width: number) {
+    for (let k = 0; k < 2; k++) {
+      const th = rng() * Math.PI + k * Math.PI * 0.5
+      const ux = Math.cos(th) * width * 0.5
+      const uz = Math.sin(th) * width * 0.5
+      const nx = -Math.sin(th)
+      const nz = Math.cos(th)
+      const sd = rng()
+      const base = this.pos.length / 3
+      // bottom-left, bottom-right, top-right, top-left
+      for (const [a, v] of [[-1, 0], [1, 0], [1, 1], [-1, 1]]) {
+        this.pos.push(top.x + ux * a, top.y - length * (1 - v), top.z + uz * a)
+        this.nor.push(nx, 0, nz)
+        this.uv.push((a + 1) / 2, v)
+        this.seed.push(sd)
+      }
+      this.idx.push(base, base + 1, base + 2, base, base + 2, base + 3)
+    }
+  }
+
+  geometry(): BufferGeometry | null {
+    if (!this.pos.length) return null
+    const g = new BufferGeometry()
+    g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3))
+    g.setAttribute('normal', new BufferAttribute(new Float32Array(this.nor), 3))
+    g.setAttribute('uv', new BufferAttribute(new Float32Array(this.uv), 2))
+    g.setAttribute('aSeed', new BufferAttribute(new Float32Array(this.seed), 1))
+    g.setIndex(this.idx)
+    g.computeBoundingSphere()
+    return g
+  }
+}
+
+/** A point of a tree's frame with its radius (m): trunk and limb centrelines, crown clumps, curtains. */
 export interface Bone {
   x: number
   y: number
@@ -191,7 +238,10 @@ function grow(
 
 export interface ArchetypeGeometry {
   bark: BufferGeometry
-  leaves: BufferGeometry | null
+  /** the purple crown clumps at the branch tips */
+  crown: BufferGeometry | null
+  /** the magenta willow curtains hanging from the outer limbs */
+  drapes: BufferGeometry | null
   /** the tree's frame, for keeping it clear of the camera */
   skeleton: Bone[]
 }
@@ -233,6 +283,8 @@ function grow1(i: number): ArchetypeGeometry {
 
   // main branches, the first two sweeping toward +x (the path side)
   const tips: Vector3[] = []
+  // where curtains may hang: the outer half of every limb
+  const anchors: Vector3[] = []
   for (let k = 0; k < a.branches; k++) {
     const f = 0.34 + (k / a.branches) * 0.5 + rng() * 0.08
     const at = Math.min(steps - 1, Math.round(f * steps))
@@ -243,6 +295,7 @@ function grow1(i: number): ArchetypeGeometry {
     const limb = grow(rng, trunk.pts[at], dir, len, trunk.radii[at] * 0.62, 0.05, 9, 0.35, 0.7 + rng() * 0.6, a.gnarl)
     B.tube(limb.pts, limb.radii, 7)
     tips.push(limb.pts[limb.pts.length - 1])
+    for (let q = 4; q < limb.pts.length; q += 2) anchors.push(limb.pts[q])
 
     // a second tier of branches
     const kids = 2 + Math.floor(rng() * 2)
@@ -253,20 +306,31 @@ function grow1(i: number): ArchetypeGeometry {
       const kid = grow(rng, limb.pts[g], kd, len * (0.35 + rng() * 0.25), limb.radii[g] * 0.65, 0.025, 6, 0.2, 0.9, a.gnarl * 0.8)
       B.tube(kid.pts, kid.radii, 5)
       tips.push(kid.pts[kid.pts.length - 1])
+      anchors.push(kid.pts[3], kid.pts[kid.pts.length - 1])
     }
   }
   tips.push(trunk.pts[steps])
 
-  // crimson foliage on the leafier archetypes
+  // a purple crown at the tips, and magenta curtains from the outer limbs
   const F = new Foliage()
   for (const tip of tips) {
-    if (rng() < a.leaves * 0.7) {
-      const size = 1.3 + rng() * 1.0
+    if (rng() < a.leaves * 0.6) {
+      const size = 1.2 + rng() * 0.8
       F.clump(rng, tip, size, 4)
       B.bones.push({ x: tip.x, y: tip.y, z: tip.z, r: size * 0.6 })
     }
   }
-  return { bark: B.geometry(), leaves: F.geometry(), skeleton: B.bones }
+  const C = new Curtain()
+  const HEM = 3.2 // no curtain hangs lower than this: the path stays walkable
+  for (const top of anchors) {
+    if (rng() >= a.leaves * 0.6) continue
+    const length = Math.min(2.2 + rng() * 2.6, top.y - HEM)
+    if (length < 1.2) continue
+    const width = 0.9 + rng() * 0.7
+    C.hang(rng, top, length, width)
+    for (const f of [0, 0.5, 1]) B.bones.push({ x: top.x, y: top.y - length * f, z: top.z, r: width * 0.5 })
+  }
+  return { bark: B.geometry(), crown: F.geometry(), drapes: C.geometry(), skeleton: B.bones }
 }
 
 const _e = new Euler()

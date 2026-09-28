@@ -1,6 +1,6 @@
 # ORIGIN — 起源
 
-A nine-tailed fox scroll-story portfolio. One continuous journey through a moonlit ink forest — each chapter earned, like every tail.
+A nine-tailed fox scroll-story portfolio. One continuous journey through a moonlit spirit forest — each chapter earned, like every tail.
 
 **Ethan Tiong** · Electrical Engineering @ University of Waterloo · RTL for ASIC & FPGA
 
@@ -19,7 +19,7 @@ A nine-tailed fox scroll-story portfolio. One continuous journey through a moonl
 ## Craft notes
 
 - **Hand-drawn ink foxes** — seven original ink drawings, rendered as translucent moonlight spirits through a three-layer bloom (no raster AI art). The autotraced vectors are baked in Chrome to lossless rasters at every display density the page shows them (`tools/bake-fox-rasters.mjs`), so the ink is pixel-for-pixel the browser's own render and scrolling never re-rasterizes a megabyte of path data.
-- **One continuous journey** — a real-time 3D moonlit forest that one camera travels through as you scroll: gnarled trees grown from a seed, a stone stair through three torii, a den with a hearth, a summit under the moon, a snowfield. Kitsunebi (foxfire) lead the way. The pinned chapters drive the camera with their own scrubbed progress, so the world moves in exact step with them — the great torii pass with the page's gates, and the moon brightens with each earned tail. No textures or models are downloaded; the whole world is one ~200 KB module (on the RTX 5060 Ti it was built on, a locked 119 Hz at 3440×1440).
+- **One continuous journey** — a real-time 3D spirit forest under the moon that one camera travels through as you scroll: gnarled willows grown from a seed, their magenta curtains swaying, teal light in their roots and in a stream at the forest's edge, where a great willow stands; a stone stair through three torii, a den with a hearth, a summit under the moon, and a snowfield where a lone willow waits and the snow falls slowly. Spirit orbs lead the way. The pinned chapters drive the camera with their own scrubbed progress, so the world moves in exact step with them — the great torii pass with the page's gates, and the moon brightens with each earned tail. No textures or models are downloaded; the whole world is one ~200 KB module (on the RTX 5060 Ti it was built on, it holds the display's refresh rate at 3440×1440).
 - **Every tail is earned** — the sitting fox's five tails are baked into separate bitmaps at load (canvas alpha compositing over untouched artwork) and unfurl one per milestone.
 - **Proper Chinese** — every hanzi is Simplified Chinese, natively reviewed (起源 · 觉醒 · 炉火 · 蜕变 · 以狐为引); set in Noto Serif SC.
 - **Motion with intent** — GSAP ScrollTrigger + Lenis; pinned chapters, masked line reveals, a horizontal hunt, gates you pass through. Reduced-motion and no-JS fallbacks included.

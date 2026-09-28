@@ -8,9 +8,10 @@ import { makeCameraPath, type Pose } from '../path'
 import type { Uniforms } from '../uniforms'
 
 /**
- * Every light in the world that isn't the moon: the kitsunebi leading the way
- * along the path, embers over the den's hearth, and the five tail bands that
- * rise behind the summit as each tail is earned. One draw.
+ * Every light in the world that isn't the moon: spirit orbs leading the way
+ * along the path and hanging in the trees, embers over the den's hearth, and
+ * the five tail bands that rise behind the summit as each tail is earned.
+ * One draw.
  */
 export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
   const points = useMemo(() => {
@@ -24,23 +25,27 @@ export function Foxfire({ U, density }: { U: Uniforms; density: number }) {
       kind.push(k)
     }
 
-    // the procession: ahead of wherever the camera walks, off to either side
+    // orbs: a procession low along the path, ahead of wherever the camera
+    // walks, and bigger, fewer ones hanging up among the trees — through the
+    // forest only: up on the summit the five tail bands are the lights. The
+    // sprite is the orb's width over 0.6 (the rest of it is the glow around).
     const sample = makeCameraPath(KEYS)
     const a: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
     const b: Pose = { pos: [0, 0, 0], look: [0, 0, 0], fov: 0 }
-    const wisps = Math.round(170 * density)
-    for (let i = 0; i < wisps; i++) {
-      const t = 0.25 + rng() * 8.6
+    const orb = (until: number, near: number, far: number, low: number, high: number, width: number, grow: number) => {
+      const t = 0.25 + rng() * (until - 0.25)
       sample(t, a)
       sample(Math.min(9, t + 0.08), b)
       const fx = b.pos[0] - a.pos[0], fz = b.pos[2] - a.pos[2]
       const fl = Math.hypot(fx, fz) || 1
       const ahead = 6 + rng() * 16
-      const side = (rng() < 0.5 ? -1 : 1) * (1.5 + rng() * 5)
+      const side = (rng() < 0.5 ? -1 : 1) * (near + rng() * (far - near))
       const x = a.pos[0] + (fx / fl) * ahead - (fz / fl) * side
       const z = a.pos[2] + (fz / fl) * ahead + (fx / fl) * side
-      add(x, heightAt(x, z) + 0.8 + rng() * 2.8, z, 0.18 + rng() * 0.3, 0.5 + rng() * 0.6, 0)
+      add(x, heightAt(x, z) + low + rng() * (high - low), z, (width + rng() * grow) / 0.6, 0.5 + rng() * 0.6, 0)
     }
+    for (let i = 0; i < Math.round(140 * density); i++) orb(6.9, 1.5, 6.5, 0.8, 3.6, 0.1, 0.22)
+    for (let i = 0; i < Math.round(36 * density); i++) orb(6.6, 4, 12, 3, 8, 0.18, 0.26)
 
     // the den: embers rising off the hearth, and the fire's own soft glow
     const [hx, hy, hz] = HEARTH

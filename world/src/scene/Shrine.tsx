@@ -79,7 +79,7 @@ export function Shrine({ U, gates }: { U: Uniforms; gates: number[] }) {
     const torii = new InstancedMesh(
       toriiGeometry(),
       worldMaterial(U, vert, frag, {
-        uniforms: { uColor: { value: new Color(0.017, 0.0055, 0.0055) }, uRimColor: { value: new Color(0.03, 0.016, 0.014) } },
+        uniforms: { uColor: { value: new Color(0.02, 0.004, 0.008) }, uRimColor: { value: new Color(0.034, 0.012, 0.024) } },
       }),
       place.length,
     )
@@ -100,7 +100,7 @@ export function Shrine({ U, gates }: { U: Uniforms; gates: number[] }) {
     const steps = new InstancedMesh(
       new BoxGeometry(4.6, 0.4, 0.95),
       worldMaterial(U, vert, frag, {
-        uniforms: { uColor: { value: new Color(0.012, 0.011, 0.016) }, uRimColor: { value: new Color(0.012, 0.014, 0.024) } },
+        uniforms: { uColor: { value: new Color(0.011, 0.01, 0.017) }, uRimColor: { value: new Color(0.014, 0.012, 0.026) } },
       }),
       count,
     )

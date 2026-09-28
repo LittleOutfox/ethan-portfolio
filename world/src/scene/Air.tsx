@@ -5,7 +5,7 @@ import frag from '../shaders/air.frag.glsl?raw'
 import { mulberry32 } from '../layout'
 import type { Uniforms } from '../uniforms'
 
-/** Motes in the forest that become snow on the snowfield — one GPU-animated draw around the camera. */
+/** Spirit pollen and slow snow (more of it out on the snowfield) — one GPU-animated draw around the camera. */
 export function Air({ U, density }: { U: Uniforms; density: number }) {
   const points = useMemo(() => {
     const rng = mulberry32(5)

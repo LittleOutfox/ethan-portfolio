@@ -51,9 +51,40 @@ export function distanceToCurve(x: number, z: number, pts: [number, number][]): 
 }
 
 /**
+ * The spirit stream: it winds across the meadow just before the forest edge,
+ * and the camera crosses it on the way in. Its centreline is z as a function
+ * of x (two sines); terrain.frag.glsl draws the water from the same numbers.
+ */
+export const STREAM = { z: 17, a1: 3, f1: 0.08, p1: 0.4, a2: 1.2, f2: 0.21, p2: -1.3, width: 1.9 }
+
+export function streamZ(x: number): number {
+  const s = STREAM
+  return s.z + s.a1 * Math.sin(s.f1 * x + s.p1) + s.a2 * Math.sin(s.f2 * x + s.p2)
+}
+
+/** Distance (m) from (x, z) to the stream's centreline, measured across the water. */
+export function streamDistance(x: number, z: number): number {
+  const s = STREAM
+  const slope = s.a1 * s.f1 * Math.cos(s.f1 * x + s.p1) + s.a2 * s.f2 * Math.cos(s.f2 * x + s.p2)
+  return Math.abs(z - streamZ(x)) / Math.sqrt(1 + slope * slope)
+}
+
+/**
+ * The great spirit trees, old willows of the widest kind: one at the forest's
+ * edge, left of the meadow, its limbs reaching out over the path — the story
+ * starts under it — and one alone out on the snowfield, where it ends. Each
+ * stands in a glade of its own.
+ */
+export const GREAT_TREES = [
+  { x: -11, z: 6, scale: 3.2, kind: 2, glade: 14 },
+  { x: 3.5, z: -206.7, scale: 1.9, kind: 2, glade: 20 },
+]
+
+/**
  * Ground height. Near the route it takes the route's own elevation (a smooth,
  * distance-weighted blend over its segments, so the stair climbs without
- * cliffs); away from it the ground rolls gently.
+ * cliffs); away from it the ground rolls gently, except along the stream,
+ * which lies level in a shallow bed.
  */
 export function heightAt(x: number, z: number): number {
   let wsum = 0, esum = 0, dmin = Infinity
@@ -72,7 +103,13 @@ export function heightAt(x: number, z: number): number {
   const roll = 0.7 * Math.sin(x * 0.11 + 1.3) * Math.sin(z * 0.09 - 0.7) + 0.35 * Math.sin(x * 0.23 + z * 0.17)
   // the shrine's hill, west of the summit, where the far torii climb
   const hill = 9 * Math.exp(-((x - 38) ** 2 + (z + 136) ** 2) / (2 * 16 * 16))
-  return esum / wsum + (roll + hill) * smoothstep(4, 22, dmin)
+  const ds = streamDistance(x, z)
+  const level = smoothstep(STREAM.width, STREAM.width + 10, ds)
+  const bed = 0.25 * (1 - smoothstep(STREAM.width * 0.5, STREAM.width + 0.8, ds))
+  // the snowfield's tree stands on a low hill, its roots clear of the drifts
+  const [, lone] = GREAT_TREES
+  const rise = 5 * Math.exp(-((x - lone.x) ** 2 + (z - lone.z) ** 2) / (2 * 12 * 12))
+  return esum / wsum + (roll + hill) * smoothstep(4, 22, dmin) * level - bed + rise
 }
 
 export interface Tree {
@@ -88,6 +125,7 @@ export interface Tree {
   /** which archetype to draw (trees.ts) */
   kind: number
 }
+
 
 /** trunk radius of each archetype in trees.ts (kept here so layout stays three-free to test) */
 const TRUNK = [0.72, 0.55, 0.85, 0.5, 0.66]
@@ -137,13 +175,25 @@ function nearestOnRoute(x: number, z: number): [number, number] {
   return best
 }
 
+/** Turn a tree so its long branches (local +x) reach toward the path. */
+function towardPath(x: number, z: number): number {
+  const [px, pz] = nearestOnRoute(x, z)
+  return Math.atan2(-(pz - z), px - x)
+}
+
 /**
- * The seeded forest. Candidates are drawn in random order and filtered, so the
- * first N trees are an even sample of the whole forest — lower tiers take a prefix.
- * Trees near the path are the big gnarled framers, turned so their long
- * branches reach out over it.
+ * The seeded forest: the great trees first, then candidates drawn in random
+ * order and filtered, so the first N trees are an even sample of the whole
+ * forest — lower tiers take a prefix. Trees near the path are the big gnarled
+ * framers, turned so their long branches reach out over it; none grows in the
+ * stream or a great tree's glade.
  */
 export function placeTrees(density: number): Tree[] {
+  const great: Tree[] = GREAT_TREES.map((g) => ({
+    x: g.x, y: heightAt(g.x, g.z), z: g.z,
+    radius: TRUNK[g.kind] * g.scale * 1.8, scale: g.scale,
+    rot: towardPath(g.x, g.z), lean: 0, kind: g.kind,
+  }))
   const rng = mulberry32(7)
   const cam: [number, number][] = cameraSamples(0.02).map(([x, , z]) => [x, z])
   const all: Tree[] = []
@@ -163,11 +213,11 @@ export function placeTrees(density: number): Tree[] {
     const radius = TRUNK[kind] * scale * 1.8
     const clear = radius + 3
     if (dCam < clear || dPath < clear) continue
-    const [px, pz] = nearestOnRoute(x, z)
-    const toward = Math.atan2(-(pz - z), px - x)
-    const rot = framer ? toward + (r3 - 0.5) * 1.2 : r3 * Math.PI * 2
+    if (streamDistance(x, z) < STREAM.width + radius) continue
+    if (GREAT_TREES.some((g) => Math.hypot(x - g.x, z - g.z) < g.glade)) continue
+    const rot = framer ? towardPath(x, z) + (r3 - 0.5) * 1.2 : r3 * Math.PI * 2
     const lean = (r4 - 0.5) * 0.1
     all.push({ x, y: heightAt(x, z), z, radius, scale, rot, lean, kind })
   }
-  return all.slice(0, Math.round(all.length * Math.min(1, Math.max(0, density))))
+  return [...great, ...all.slice(0, Math.round(all.length * Math.min(1, Math.max(0, density))))]
 }
