@@ -251,22 +251,31 @@ describe('its shape', () => {
       expect(Math.abs(paw[0] - chest[0])).toBeLessThan(0.07)
       expect(Math.abs(paw[2])).toBeLessThan(0.05)
     }
-    // its tail lies on the snow behind it
-    for (let i = 19; i < 23; i++) {
-      expect(sit[i].b[0]).toBeLessThan(hips[0])
-      expect(sit[i].b[1]).toBeLessThan(0.12)
-    }
+    // its tail lies on the snow, curled round one side of it toward its forepaws
+    for (let i = 19; i < 23; i++) expect(sit[i].b[1]).toBeLessThan(0.12)
+    expect(Math.min(...[19, 20, 21, 22].map((i) => sit[i].b[2]))).toBeLessThan(-0.2)
+    expect(sit[22].b[0]).toBeGreaterThan(hips[0])
   })
 
-  it('is slender as the spirit foxes are, with no mane: a slim neck, a small chest ruff, cheeks close to its head', () => {
-    for (const bs of [pose({}), pose({ sit: 1 })]) {
-      expect(Math.max(bs[1].ra, bs[1].rb)).toBeLessThanOrEqual(0.07) // the ruff
-      expect(Math.max(bs[2].ra, bs[2].rb)).toBeLessThanOrEqual(0.052) // the neck
-      for (const i of [5, 6]) {
-        expect(Math.max(bs[i].ra, bs[i].rb)).toBeLessThanOrEqual(0.036) // the cheeks
-        expect(Math.abs(bs[i].b[2])).toBeLessThanOrEqual(0.055)
-      }
+  it("has a fox's proportions, measured from the fox model Ethan chose", () => {
+    const sit = pose({ sit: 1 })
+    const top = Math.max(...sit.flatMap((x) => [x.a[1] + x.ra, x.b[1] + x.rb]))
+    // sitting, 0.8 m to its ear tips (the model, scaled to that height)
+    expect(top).toBeGreaterThan(0.78)
+    expect(top).toBeLessThan(0.83)
+    for (const bs of [sit, pose({})]) {
+      // a big head: about a third of a metre from the back of its skull to the tip of its muzzle
+      expect(bs[4].b[0] + bs[4].rb - (bs[3].a[0] - bs[3].ra)).toBeGreaterThan(0.3)
+      // broad ears, set wide: their tips a quarter of a metre apart
+      expect(bs[7].b[2] - bs[8].b[2]).toBeGreaterThan(0.22)
+      expect(bs[7].ra).toBeGreaterThanOrEqual(0.045)
+      // a deep chest, and a thick plume of a tail
+      expect(bs[0].ra).toBeGreaterThanOrEqual(0.11)
+      expect(Math.max(...[19, 20, 21, 22].map((i) => Math.max(bs[i].ra, bs[i].rb)))).toBeGreaterThanOrEqual(0.08)
     }
+    // sitting, its muzzle at three quarters of its height
+    expect(sit[4].b[1] / top).toBeGreaterThan(0.7)
+    expect(sit[4].b[1] / top).toBeLessThan(0.8)
   })
 
   it('gives every bone a real length, so the shader never divides by zero', () => {

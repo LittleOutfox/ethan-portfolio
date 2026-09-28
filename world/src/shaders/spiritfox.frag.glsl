@@ -3,9 +3,9 @@
 // marched through from the camera. A blue spirit, as in the reference: pale
 // blue-white where the moon and the sky reach it, deep blue in its shadows,
 // a slow drift of light moving through it, its outline soft and luminous
-// (as the ink foxes' lines glow), bright eyes, its tail dissolving into
-// blue foxfire and a faint aura about it. See-through: a spirit, not a
-// creature of flesh.
+// (as the ink foxes' lines glow), bright eyes, and its tail dissolving into
+// blue foxfire. No halo about it: its light stays within its outline.
+// See-through: a spirit, not a creature of flesh.
 uniform vec4 uFoxBones[FOX_BONES * 2]; // per bone: (a, ra), (b, rb)
 uniform vec4 uFoxEyes[2];              // (centre, radius)
 uniform float uFoxFade;                // 0 gone … 1 fully here
@@ -89,11 +89,6 @@ void main() {
     if (t > tExit) break;
   }
 
-  // the aura: light gathered where the ray passes near the fox (gone well
-  // before the edge of the box it is drawn in, so no box ever shows)
-  vec3 azure = vec3(0.34, 0.66, 1.0);
-  vec3 aura = azure * exp(-max(dMin, 0.0) / 0.045) * 0.12 * (1.0 - smoothstep(0.05, 0.1, dMin));
-
   vec3 col = vec3(0.0);
   float a = 0.0;
   vec3 at = vLocal + rd * tNear;
@@ -121,27 +116,21 @@ void main() {
     // nearly there in the middle, thinning toward its soft edge
     a = mix(0.62, 0.18, pow(edge, 1.3)) * (1.0 - flame * 0.7 * flicker);
   } else {
-    // a near miss: the soft glow of its edge, feathered out a few pixels
+    // a near miss: its outline softened over a pixel or two, no further
     float px = length(at - vEye) / uScale;
-    float wisps = noise2(vec2(at.x * 40.0 + at.z * 25.0, at.y * 40.0 - uTime * 0.6));
-    float fringe = 1.0 - smoothstep(0.0, px * 3.5 + 0.016 * wisps, dMin);
+    float fringe = 1.0 - smoothstep(0.0, px * 1.5, dMin);
     col = vec3(0.3, 0.62, 1.0) * 0.38;
-    a = fringe * fringe * 0.3;
+    a = fringe * fringe * 0.18;
   }
 
   // the mist and the page's veil touch it as they touch everything
   vec3 world = (modelMatrix * vec4(at, 1.0)).xyz;
   col = finish(fog(col, world));
-  aura = fog(aura, world) - fog(vec3(0.0), world);
-  aura = finish(aura) - finish(vec3(0.0));
   a *= uFoxFade;
-  if (a < 0.001 && max(aura.r, max(aura.g, aura.b)) < 0.0004) discard;
+  if (a < 0.001) discard;
   gl_FragDepth = depthOf(at);
-  // each part to the screen's colours on its own, then the see-through body over what lies behind, the aura added
+  // to the screen's colours, then the see-through body over what lies behind
   gl_FragColor = vec4(col, 1.0);
   #include <colorspace_fragment>
-  vec3 furOut = gl_FragColor.rgb;
-  gl_FragColor = vec4(aura, 1.0);
-  #include <colorspace_fragment>
-  gl_FragColor = vec4(furOut * a + gl_FragColor.rgb * uFoxFade, a);
+  gl_FragColor = vec4(gl_FragColor.rgb * a, a);
 }

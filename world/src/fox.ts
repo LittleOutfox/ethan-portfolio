@@ -1,12 +1,13 @@
 // The spirit fox that runs with you: where it goes through the journey, how
 // it moves (a gait driven by the scroll), and the shape it takes each frame.
 // Pure and three-free, so it can be tested; scene/SpiritFox.tsx hands the
-// shape to a shader that draws it as a soft glowing volume.
+// shape to a shader that draws it as a soft translucent volume.
 //
-// Its look follows the spirit foxes of the reference Ethan chose: tall ears
-// and a slim pointed snout, a fluffy ruff at its chest, slender legs and a
-// great bushy tail. Its own space: +x is where its nose points, +y up, +z to
-// its left; metres, standing about 0.43 m at the shoulder.
+// Its proportions are taken from a fox model Ethan chose (a sitting fox):
+// its sitting pose was fitted to that model's silhouettes, side and front,
+// and the standing and running poses carry the same head, muzzle, ears,
+// neck, chest, legs and tail. Its own space: +x is where its nose points, +y
+// up, +z to its left; metres, standing about 0.48 m at the shoulder.
 import { KEYS } from './keys'
 import { ROUTE, heightAt } from './layout'
 import { makeCameraPath, type Key, type Pose } from './path'
@@ -216,30 +217,30 @@ const HEAD_GROUP = [2, 3, 4, 5, 6, 7, 8]
 /** Standing, alert. */
 function standing(): Bone[] {
   const bs: Bone[] = [
-    bone([0.17, 0.37, 0], 0.092, [-0.17, 0.36, 0], 0.074), // 0 torso: chest → hips
-    bone([0.19, 0.345, 0], 0.066, [0.24, 0.29, 0], 0.042), // 1 the curve of its chest
-    bone([0.2, 0.41, 0], 0.05, [0.29, 0.5, 0], 0.045), // 2 neck, slender
-    bone([0.29, 0.52, 0], 0.062, [0.35, 0.515, 0], 0.054), // 3 head
-    bone([0.36, 0.5, 0], 0.036, [0.5, 0.47, 0], 0.009), // 4 muzzle, long and pointed
-    bone([0.325, 0.49, 0.03], 0.034, [0.3, 0.475, 0.05], 0.02), // 5 cheek, left
-    bone([0.325, 0.49, -0.03], 0.034, [0.3, 0.475, -0.05], 0.02), // 6 cheek, right
-    bone([0.3, 0.56, 0.04], 0.036, [0.28, 0.72, 0.08], 0.004), // 7 ear, left: tall, as the spirit foxes' are
-    bone([0.3, 0.56, -0.04], 0.036, [0.28, 0.72, -0.08], 0.004), // 8 ear, right
+    bone([0.17, 0.37, 0], 0.12, [-0.2, 0.36, 0], 0.11), // 0 torso: chest → hips
+    bone([0.2, 0.34, 0], 0.095, [0.23, 0.25, 0], 0.07), // 1 the deep chest
+    bone([0.2, 0.43, 0], 0.085, [0.27, 0.52, 0], 0.078), // 2 neck
+    bone([0.28, 0.56, 0], 0.085, [0.37, 0.545, 0], 0.075), // 3 head
+    bone([0.39, 0.535, 0], 0.05, [0.545, 0.525, 0], 0.01), // 4 muzzle, long and pointed
+    bone([0.35, 0.525, 0.05], 0.055, [0.28, 0.505, 0.08], 0.04), // 5 cheek, left
+    bone([0.35, 0.525, -0.05], 0.055, [0.28, 0.505, -0.08], 0.04), // 6 cheek, right
+    bone([0.29, 0.605, 0.06], 0.05, [0.34, 0.725, 0.12], 0.005), // 7 ear, left: broad, set wide
+    bone([0.29, 0.605, -0.06], 0.05, [0.34, 0.725, -0.12], 0.005), // 8 ear, right
   ]
   for (const z of [0.055, -0.055]) {
     // 9–12 front legs: shoulder → elbow → paw
-    bs.push(bone([0.17, 0.3, z], 0.032, [0.18, 0.16, z], 0.02), bone([0.18, 0.16, z], 0.016, [0.19, 0.02, z], 0.02))
+    bs.push(bone([0.17, 0.3, z], 0.045, [0.18, 0.16, z], 0.03), bone([0.18, 0.16, z], 0.028, [0.19, 0.022, z], 0.022))
   }
   for (const z of [0.06, -0.06]) {
     // 13–18 hind legs: hip → knee → hock → paw
     bs.push(
-      bone([-0.16, 0.31, z], 0.05, [-0.11, 0.19, z], 0.026),
-      bone([-0.11, 0.19, z], 0.02, [-0.19, 0.08, z], 0.016),
-      bone([-0.19, 0.08, z], 0.016, [-0.17, 0.02, z], 0.02),
+      bone([-0.2, 0.33, z], 0.085, [-0.13, 0.2, z], 0.045),
+      bone([-0.13, 0.2, z], 0.03, [-0.22, 0.08, z], 0.025),
+      bone([-0.22, 0.08, z], 0.025, [-0.2, 0.022, z], 0.022),
     )
   }
   // 19–22 the tail, a great plume, held low and sweeping back as a fox holds it
-  tail(bs, [[-0.23, 0.36, 0], [-0.34, 0.27, 0], [-0.46, 0.2, 0], [-0.6, 0.16, 0], [-0.72, 0.16, 0]])
+  tail(bs, [[-0.3, 0.36, 0], [-0.42, 0.28, 0], [-0.56, 0.22, 0], [-0.71, 0.19, 0], [-0.85, 0.19, 0]])
   return bs
 }
 
@@ -249,35 +250,35 @@ function tail(bs: Bone[], pts: V[]) {
 }
 
 /**
- * Sitting as a fox sits: upright, its chest and ruff high and forward, its
- * forelegs straight down and close together, its haunches folded under it in
- * a round mass, its hind paws tucked in beside its forepaws, and its tail
- * lying on the snow behind it, curling off to one side.
+ * Sitting as a fox sits (as the model sits): upright, its deep chest high and
+ * forward, its forelegs straight down and close together, its haunches folded
+ * under it in a round mass, its hind paws tucked in beside its forepaws, and
+ * its tail curled round one side of it on the snow, the tip by its forepaws.
  */
 function sitting(): Bone[] {
   const bs: Bone[] = [
-    bone([0.07, 0.4, 0], 0.092, [-0.1, 0.14, 0], 0.088),
-    bone([0.09, 0.37, 0], 0.066, [0.12, 0.28, 0], 0.042),
-    bone([0.07, 0.45, 0], 0.05, [0.09, 0.55, 0], 0.045),
-    bone([0.08, 0.59, 0], 0.062, [0.13, 0.585, 0], 0.054),
-    bone([0.15, 0.57, 0], 0.036, [0.28, 0.55, 0], 0.009),
-    bone([0.115, 0.56, 0.03], 0.034, [0.08, 0.54, 0.05], 0.02),
-    bone([0.115, 0.56, -0.03], 0.034, [0.08, 0.54, -0.05], 0.02),
-    bone([0.08, 0.64, 0.04], 0.036, [0.06, 0.8, 0.08], 0.004),
-    bone([0.08, 0.64, -0.04], 0.036, [0.06, 0.8, -0.08], 0.004),
+    bone([0.07, 0.46, 0], 0.125, [-0.14, 0.2, 0], 0.13), // 0 torso: chest high and forward, down to the haunches
+    bone([0.09, 0.42, 0], 0.095, [0.11, 0.3, 0], 0.07), // 1 the deep chest
+    bone([0.05, 0.52, 0], 0.09, [0.08, 0.6, 0], 0.08), // 2 neck
+    bone([0.07, 0.63, 0], 0.085, [0.15, 0.62, 0], 0.075), // 3 head
+    bone([0.17, 0.61, 0], 0.05, [0.325, 0.6, 0], 0.01), // 4 muzzle
+    bone([0.13, 0.6, 0.05], 0.055, [0.06, 0.58, 0.08], 0.04), // 5 cheek, left
+    bone([0.13, 0.6, -0.05], 0.055, [0.06, 0.58, -0.08], 0.04), // 6 cheek, right
+    bone([0.075, 0.68, 0.06], 0.05, [0.125, 0.8, 0.12], 0.005), // 7 ear, left
+    bone([0.075, 0.68, -0.06], 0.05, [0.125, 0.8, -0.12], 0.005), // 8 ear, right
   ]
-  for (const z of [0.04, -0.04]) {
-    bs.push(bone([0.09, 0.3, z], 0.03, [0.1, 0.16, z], 0.02), bone([0.1, 0.16, z], 0.016, [0.11, 0.02, z], 0.02))
+  for (const z of [0.045, -0.045]) {
+    bs.push(bone([0.08, 0.34, z], 0.045, [0.09, 0.17, z], 0.03), bone([0.09, 0.17, z], 0.028, [0.12, 0.022, z], 0.022))
   }
-  for (const z of [0.075, -0.075]) {
+  for (const z of [0.045, -0.045]) {
     const s = Math.sign(z)
     bs.push(
-      bone([-0.1, 0.15, z], 0.062, [0.0, 0.09, z + s * 0.01], 0.035),
-      bone([0.0, 0.09, z + s * 0.01], 0.02, [-0.11, 0.035, z], 0.016),
-      bone([-0.11, 0.035, z], 0.016, [0.02, 0.02, z * 0.8], 0.02),
+      bone([-0.17, 0.17, z], 0.11, [-0.03, 0.1, z + s * 0.04], 0.055),
+      bone([-0.03, 0.1, z + s * 0.04], 0.03, [-0.15, 0.035, z + s * 0.05], 0.025),
+      bone([-0.15, 0.035, z + s * 0.05], 0.025, [0.03, 0.022, z + s * 0.04], 0.022),
     )
   }
-  tail(bs, [[-0.17, 0.1, 0], [-0.3, 0.09, 0.04], [-0.45, 0.11, 0.1], [-0.57, 0.1, 0.18], [-0.63, 0.08, 0.27]])
+  tail(bs, [[-0.24, 0.12, -0.02], [-0.29, 0.085, -0.13], [-0.21, 0.1, -0.25], [-0.02, 0.09, -0.28], [0.15, 0.05, -0.23]])
   return bs
 }
 
@@ -320,7 +321,7 @@ export function pawsDown(from: number, to: number, gallop: number, out: number[]
 
 /** Where leg k's paw lands, in the fox's own space (x, z). */
 export function pawSpot(k: number, gallop: number): [number, number] {
-  return [(k < 2 ? 0.19 : -0.17) + reachOf(gallop), [0.055, -0.055, 0.06, -0.06][k]]
+  return [(k < 2 ? 0.19 : -0.2) + reachOf(gallop), [0.055, -0.055, 0.06, -0.06][k]]
 }
 
 /** Running: a trot that stretches into a gallop, the legs reaching and lifting in turn, the body bobbing, the tail streaming behind. */
@@ -334,7 +335,7 @@ function running(phase: number, gallop: number): Bone[] {
   const flex = 0.04 * Math.sin(tau * phase + 1) * gallop
   const low = 0.03 * gallop
   const chest: V = [0.17 + flex, 0.37 + bob + rock - low, 0]
-  const hips: V = [-0.17 - flex, 0.36 + bob - rock - low, 0]
+  const hips: V = [-0.2 - flex, 0.36 + bob - rock - low, 0]
   const shift = (i: number, dx: number, dy: number) => {
     for (const p of [bs[i].a, bs[i].b]) {
       p[0] += dx
@@ -362,7 +363,7 @@ function running(phase: number, gallop: number): Bone[] {
     const py = lift * Math.pow(Math.max(swing, 0), 1.5)
     if (leg.front) {
       const root: V = [chest[0], chest[1] - 0.07, leg.z]
-      const paw: V = [0.19 + px, 0.02 + py, leg.z]
+      const paw: V = [0.19 + px, 0.022 + py, leg.z]
       const l1 = dist(bs[leg.root].a, bs[leg.root].b)
       const l2 = dist(bs[leg.root + 1].a, bs[leg.root + 1].b)
       const elbow = knee(root, paw, l1, l2, -1)
@@ -372,7 +373,7 @@ function running(phase: number, gallop: number): Bone[] {
       bs[leg.root + 1].b = paw
     } else {
       const root: V = [hips[0] + 0.01, hips[1] - 0.05, leg.z]
-      const paw: V = [-0.17 + px, 0.02 + py, leg.z]
+      const paw: V = [-0.2 + px, 0.022 + py, leg.z]
       const hock: V = [paw[0] - 0.02, paw[1] + 0.06, leg.z]
       const l1 = dist(bs[leg.root].a, bs[leg.root].b)
       const l2 = dist(bs[leg.root + 1].a, bs[leg.root + 1].b)
@@ -387,7 +388,7 @@ function running(phase: number, gallop: number): Bone[] {
   }
   // the tail streams out behind, higher at a gallop, waving
   const lift2 = 0.04 - 0.02 * gallop
-  const pts: V[] = [[hips[0] - 0.06, hips[1] + 0.01, 0], [-0.37, 0.33, 0], [-0.53, 0.33, 0], [-0.7, 0.37, 0], [-0.83, 0.44, 0]]
+  const pts: V[] = [[hips[0] - 0.1, hips[1] + 0.01, 0], [-0.44, 0.35, 0], [-0.6, 0.36, 0], [-0.76, 0.39, 0], [-0.9, 0.44, 0]]
   pts.forEach((p, k) => {
     if (k === 0) return
     p[1] += lift2 * k * 0.3 + 0.012 * k * Math.sin(tau * phase - k * 0.9)
@@ -446,8 +447,8 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
   // the eyes sit on the front of its head, either side of the snout's root
   const head = bs[3]
   const eyePts: V[] = [
-    [head.b[0] + 0.012, head.b[1] + 0.022, 0.028],
-    [head.b[0] + 0.012, head.b[1] + 0.022, -0.028],
+    [head.b[0] + 0.03, head.b[1] + 0.03, 0.05],
+    [head.b[0] + 0.03, head.b[1] + 0.03, -0.05],
   ]
 
   // looking back: the head group turns about the neck's base
@@ -471,6 +472,6 @@ export function foxPose(g: Gait, time: number, look: number, bones: Float32Array
   bs.forEach((b, i) => {
     bones.set([b.a[0], b.a[1], b.a[2], b.ra, b.b[0], b.b[1], b.b[2], b.rb], i * 8)
   })
-  eyePts.forEach((p, i) => eyes.set([p[0], p[1], p[2], 0.011], i * 4))
+  eyePts.forEach((p, i) => eyes.set([p[0], p[1], p[2], 0.016], i * 4))
 }
 
