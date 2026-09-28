@@ -11,10 +11,10 @@ export function makeUniforms() {
     uResolution: { value: new Vector2(1, 1) },
     uInk: { value: new Color('#08070d') },
     uSpirit: { value: new Color('#a8b4ec') },
-    uMoonColor: { value: new Color('#e6ecfb') },
+    uMoonColor: { value: new Color('#e9e8fb') },
     uEmber: { value: new Color('#e0a05c') },
-    /** frost: the icy blue in the willows' strands, the glints in the snow, the glow along the horizon */
-    uFrost: { value: new Color('#9ec3ff') },
+    /** frost: the periwinkle in the mist, the trees' glow, the glints in the snow */
+    uFrost: { value: new Color('#b0acff') },
     /** spirit light: the blue glowing in the roots and the stream */
     uGlow: { value: new Color('#4aa8ff') },
     uMoonDir: { value: new Vector3(...MOON_DIR) },

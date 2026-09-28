@@ -15,11 +15,11 @@ void main() {
     if (a < 0.5) discard;
   #endif
 
-  // dark blue-green, with snow lying along the top and frost catching the light
-  vec3 col = mix(vec3(0.003, 0.006, 0.012), vec3(0.006, 0.011, 0.02), noise2(vUv * 3.0 + sd));
+  // dark indigo, with snow lying along the top and frost catching the light
+  vec3 col = mix(vec3(0.004, 0.004, 0.012), vec3(0.008, 0.007, 0.021), noise2(vUv * 3.0 + sd));
   float lying = smoothstep(0.35, 0.8, vUv.y) * smoothstep(0.35, 0.7, noise2(vUv * 9.0 + sd * 2.0));
   col = mix(col, mix(uSpirit, uMoonColor, 0.5) * 0.05, lying * 0.9);
-  col += uFrost * smoothstep(0.85, 0.97, noise2(vUv * 22.0 + sd * 3.0)) * 0.015;
+  col += uFrost * smoothstep(0.85, 0.97, noise2(vUv * 22.0 + sd * 3.0)) * 0.035;
 
   col = fog(col, vWorldSeed.xyz);
   gl_FragColor = vec4(finish(col), a);

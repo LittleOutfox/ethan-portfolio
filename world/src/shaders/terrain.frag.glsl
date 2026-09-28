@@ -25,16 +25,17 @@ void main() {
 
   // the forest floor under snow: drifts lying over dark ground, a cold sheen
   // where they face the moon, and none near the den's fire, where it melted
-  vec3 ground = mix(uInk, vec3(0.002, 0.003, 0.008), 0.5) * (0.8 + 0.4 * mottle);
+  vec3 ground = mix(uInk, vec3(0.003, 0.0025, 0.008), 0.5) * (0.8 + 0.4 * mottle);
   float drift = smoothstep(0.25, 0.55, noise2(vWorld.xz * 0.22) * 0.7 + mottle * 0.3);
   drift *= smoothstep(5.0, 13.0, distance(vWorld.xz, uHearth.xz));
-  vec3 lying = mix(uFogColor * 1.2, uSpirit * 0.032, 0.45 + 0.3 * mottle) + uMoonColor * sheen * 0.01;
+  vec3 lying = mix(uFogColor * 1.2, mix(uSpirit, uFrost, 0.4) * 0.032, 0.45 + 0.3 * mottle) + uMoonColor * sheen * 0.01;
   vec3 col = mix(ground, lying + uFrost * glint * 0.06, drift);
   // the path is trodden dark through it
   col = mix(col, ground * 1.3 + uSpirit * 0.004, vMask.x * 0.6);
 
   // the spirit stream never freezes: dark water glowing blue from within,
-  // light drifting downstream, the night sky mirrored in it, its banks lit
+  // light drifting downstream, the night sky mirrored in it (cooled a little
+  // from the violet mist, so the water keeps its own blue), its banks lit
   // where they meet it
   float sd = streamDistance(vWorld.xz);
   float water = 1.0 - smoothstep(uStreamB.w - 0.3, uStreamB.w + 0.1, sd);
@@ -46,7 +47,7 @@ void main() {
     float ripple = noise2(flow * vec2(0.7, 2.4)) * 0.6 + noise2(flow * vec2(1.9, 5.0) + 3.0) * 0.4;
     float deep = clamp(1.0 - sd / uStreamB.w, 0.0, 1.0);
     vec3 glow = uGlow * (0.03 + 0.07 * deep) * (0.6 + 0.8 * ripple);
-    vec3 w = mix(glow, fogTint(reflect(v, vec3(0.0, 1.0, 0.0))) * 1.3, fres * 0.6);
+    vec3 w = mix(glow, fogTint(reflect(v, vec3(0.0, 1.0, 0.0))) * vec3(0.55, 1.4, 1.25), fres * 0.6);
     w += uGlow * smoothstep(0.78, 0.92, ripple) * 0.07;
     col = mix(col, w, water);
     col += uGlow * bank * 0.04 * (1.0 - water * 0.5);

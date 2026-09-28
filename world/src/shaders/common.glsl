@@ -32,14 +32,14 @@ float noise2(vec2 p) {
              mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
-// The fog's own colour: deep blue, a cold glow all along the horizon, and
+// The fog's own colour: blue-violet, a cold glow all along the horizon, and
 // brighter toward the moon where moonlight scatters in the mist — the glow
 // at the end of the path.
 vec3 fogTint(vec3 dir) {
   float s = max(dot(dir, uMoonDir), 0.0);
   float low = exp(-abs(dir.y) * 7.0);
-  vec3 lit = mix(uFrost, uGlow, 0.4);
-  return uFogColor + mix(uFrost, uGlow, 0.5) * uHaze * 0.12 * low
+  vec3 lit = mix(uFrost, uGlow, 0.25);
+  return uFogColor + uFrost * uHaze * 0.12 * low
        + lit * uHaze * 0.5 * (0.35 * pow(s, 6.0) + 0.65 * pow(s, 48.0));
 }
 

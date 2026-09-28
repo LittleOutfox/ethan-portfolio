@@ -53,8 +53,8 @@ export const MOON_DIR: Vec3 = (() => {
 /**
  * How the world is lit at each key (same t as KEYS). Colours are the site's
  * own tokens (ink #08070d, spirit #a8b4ec, ember #e0a05c) and the winter
- * forest's (moon #e6ecfb, frost #9ec3ff, glow #4aa8ff), all at night strength.
- *   fog      the deep blue that distance dissolves into
+ * forest's (moon #e9e8fb, frost #b0acff, glow #4aa8ff), all at night strength.
+ *   fog      the blue-violet that distance dissolves into
  *   density  fog density per metre
  *   moon     moon disc + halo strength (the canopy hides it inside the forest)
  *   canopy   how much of the upper sky the forest roof darkens
@@ -72,14 +72,14 @@ export interface Grade {
 }
 
 export const GRADES: Grade[] = [
-  { fog: '#0a102f', density: 0.02, moon: 0.0, canopy: 0.2, snow: 0.3, haze: 0.021 },
-  { fog: '#0a102f', density: 0.024, moon: 0.0, canopy: 0.5, snow: 0.3, haze: 0.031 },
-  { fog: '#090f2b', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.3, haze: 0.036 },
-  { fog: '#090f2b', density: 0.03, moon: 0.0, canopy: 0.9, snow: 0.3, haze: 0.032 },
-  { fog: '#0a102f', density: 0.028, moon: 0.0, canopy: 0.8, snow: 0.3, haze: 0.028 },
-  { fog: '#0b1131', density: 0.026, moon: 0.1, canopy: 0.7, snow: 0.3, haze: 0.026 },
-  { fog: '#12101b', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.2, haze: 0.012 },
-  { fog: '#0b1132', density: 0.022, moon: 0.7, canopy: 0.3, snow: 0.35, haze: 0.03 },
-  { fog: '#0d1335', density: 0.02, moon: 1.0, canopy: 0.0, snow: 0.5, haze: 0.03 },
-  { fog: '#0c1331', density: 0.012, moon: 0.65, canopy: 0.0, snow: 1.0, haze: 0.015 },
+  { fog: '#140f32', density: 0.02, moon: 0.0, canopy: 0.2, snow: 0.3, haze: 0.017 },
+  { fog: '#140f32', density: 0.024, moon: 0.0, canopy: 0.5, snow: 0.3, haze: 0.031 },
+  { fog: '#120e2e', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.3, haze: 0.036 },
+  { fog: '#120e2e', density: 0.03, moon: 0.0, canopy: 0.9, snow: 0.3, haze: 0.032 },
+  { fog: '#140f32', density: 0.028, moon: 0.0, canopy: 0.8, snow: 0.3, haze: 0.028 },
+  { fog: '#150f34', density: 0.026, moon: 0.1, canopy: 0.7, snow: 0.3, haze: 0.026 },
+  { fog: '#14101c', density: 0.03, moon: 0.0, canopy: 0.85, snow: 0.2, haze: 0.012 },
+  { fog: '#150f35', density: 0.022, moon: 0.7, canopy: 0.3, snow: 0.35, haze: 0.03 },
+  { fog: '#171138', density: 0.02, moon: 1.0, canopy: 0.0, snow: 0.5, haze: 0.03 },
+  { fog: '#161034', density: 0.012, moon: 0.65, canopy: 0.0, snow: 1.0, haze: 0.015 },
 ]

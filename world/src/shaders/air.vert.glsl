@@ -22,7 +22,7 @@ void main() {
   float flake = step(pick, 0.5);
   // how many of each kind show: a share of its half, faded in by rank
   float rank = pick - 0.5 * (1.0 - flake);
-  float share = flake > 0.5 ? mix(0.05, 0.22, uSnow) : mix(0.05, 0.015, uSnow);
+  float share = flake > 0.5 ? mix(0.05, 0.22, uSnow) : mix(0.08, 0.02, uSnow);
   float show = smoothstep(rank, rank + 0.015, share);
   if (show <= 0.0) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // off screen: nothing to draw

@@ -37,11 +37,11 @@ void main() {
            + glow * uWarm
            + band * smoothstep(aKind - 3.0, aKind - 2.0, uTails)
            + lantern;
-  // orbs are spirit blue to pale; the fire is amber; the tail bands a pale
-  // blue; the lanterns a warm red, the one warm light out in the snow
-  vec3 blue = mix(vec3(0.3, 0.62, 1.0), vec3(0.58, 0.8, 1.0), fract(aSeed.x * 7.3));
+  // orbs are spirit blue to periwinkle; the fire is amber; the tail bands a
+  // pale blue; the lanterns a warm red, the one warm light out in the snow
+  vec3 blue = mix(vec3(0.32, 0.58, 1.0), vec3(0.62, 0.68, 1.0), fract(aSeed.x * 7.3));
   vec3 col = mix(blue, vec3(1.0, 0.62, 0.3), max(ember, glow));
-  col = mix(col, vec3(0.7, 0.86, 1.0), band);
+  col = mix(col, vec3(0.74, 0.8, 1.0), band);
   col = mix(col, vec3(1.0, 0.36, 0.22), lantern);
   vColor = vec4(col, light * flick * on);
   vOrb = orb;
