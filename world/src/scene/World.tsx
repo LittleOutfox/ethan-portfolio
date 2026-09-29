@@ -20,7 +20,7 @@ export function World({ bus, tier }: { bus: Bus; tier: TierSpec }) {
   const trees = useMemo(() => forestFor(tier.density), [tier])
   // where the page's own torii pass through (works progress); fixed once the page has built them
   const gates = useMemo(
-    () => (bus.gates.length === 3 && bus.gates.every((g) => g > 0 && g < 1) ? bus.gates.slice() : GATE_PASS_DEFAULT),
+    () => (bus.gates.length > 0 && bus.gates.every((g) => g > 0 && g < 1) ? bus.gates.slice() : GATE_PASS_DEFAULT),
     [bus],
   )
   return (
