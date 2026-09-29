@@ -67,7 +67,18 @@ export function makeFraming() {
 export const HEARTH: Vec3 = [74, 9.8, -104]
 
 /** Works progress of each DOM gate's pass-through, if the page hasn't published its own. */
-export const GATE_PASS_DEFAULT = [0.4, 0.64, 0.88]
+/**
+ * Where each of n works gates passes through, as a fraction of the works pin:
+ * the page's timeline (js/main.js works()) starts gate i at 2 + 2.6i and sweeps
+ * it past the screen's edges 2.4 later; the whole timeline runs 2 + 2.6n + 1.1.
+ */
+export function gatePasses(n: number): number[] {
+  const total = 2 + 2.6 * n + 1.1
+  return Array.from({ length: n }, (_, i) => (2 + 2.6 * i + 2.4) / total)
+}
+
+/** The pass points before the page reports its own: five gates. */
+export const GATE_PASS_DEFAULT = gatePasses(5)
 
 /** The moon hangs low over the story's far end, straight down −z. */
 export const MOON_DIR: Vec3 = (() => {

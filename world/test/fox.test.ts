@@ -65,8 +65,8 @@ describe('the spirit fox’s path', () => {
   })
 
   it('keeps out from behind the works cards: beside the stair, not on it, while they show', () => {
-    // the cards' text spans x 0.37–0.62 on the ultrawide and 0.24–0.76 on a laptop, from works 0.3 to 0.75
-    for (let t = 4.25; t <= 4.85; t += 0.05) {
+    // the cards' text spans x 0.37–0.62 on the ultrawide and 0.24–0.76 on a laptop, from works 0.15 to 0.95 (five gates)
+    for (let t = 4.15; t <= 4.95; t += 0.05) {
       at(t, spot)
       expect(onScreen(t, spot.x, spot.y + 0.3, spot.z).sx).toBeGreaterThan(0.67)
       expect(onScreen(t, spot.x, spot.y + 0.3, spot.z, 1440 / 900).sx).toBeGreaterThan(0.8)

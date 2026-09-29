@@ -881,7 +881,7 @@
     });
   })();
 
-  // ---- 03 · the leap: three torii gates -----------------------------
+  // ---- 03 · the leap: a torii gate for every work ------------------
   // each work is a gate deep in the forest — approach it, read it,
   // then pass through as its beams sweep past the edges of the screen
   (function works() {
@@ -897,7 +897,8 @@
       scrollTrigger: {
         trigger: '.works-pin',
         start: 'top top',
-        end: '+=400%',
+        // every gate keeps the scroll it had when there were three (400%)
+        end: '+=' + (100 + 100 * gates.length) + '%',
         pin: true,
         refreshPriority: 1,
         scrub: 1,
@@ -944,6 +945,8 @@
       tl.addLabel('gate' + i, at + 1.5);
       var numEl = gate.querySelector('.wscene-num');
       var inner = gate.querySelector('.wgate-inner');
+      var signal = gate.querySelector('.wgate-signal');
+      var script = signal ? [inner, signal] : inner; // a gate's signal comes and goes with its words
 
       // the gate stands far down the path — approach it
       tl.fromTo(gate,
@@ -951,7 +954,7 @@
         { autoAlpha: 1, scale: 1, yPercent: 0, duration: 1.15, ease: 'power2.out' },
         at);
       // its inscription resolves a beat later
-      tl.fromTo(inner,
+      tl.fromTo(script,
         { autoAlpha: 0, y: 44 },
         { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power3.out' },
         at + 0.45);
@@ -961,7 +964,7 @@
         { scale: 1.4, opacity: 1, duration: STEP + 0.5, ease: 'none' },
         at);
       // step through: the inscription dissolves, the beams sweep past
-      tl.to(inner,
+      tl.to(script,
         { autoAlpha: 0, duration: 0.4, ease: 'none' },
         at + STEP - 0.75);
       tl.to(gate,

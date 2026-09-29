@@ -43,8 +43,9 @@ export interface ToriiPlace {
 }
 
 /**
- * Where every torii stands: first the three great gates the camera crosses
- * (works is world time 4 → 5), then the far gates climbing the shrine hill.
+ * Where every torii stands: first a great gate for every work, which the
+ * camera crosses (works is world time 4 → 5), then the far gates climbing the
+ * shrine hill.
  */
 export function toriiPlaces(gates: number[]): ToriiPlace[] {
   const sample = makeCameraPath(KEYS)
@@ -79,9 +80,10 @@ export function toriiPlaces(gates: number[]): ToriiPlace[] {
 }
 
 /**
- * The shrine: stone steps up the stair, three great torii the camera walks
- * through exactly when the page's own gates pass (bus.gates, works progress),
- * and a line of smaller gates climbing on into the mist, never reached.
+ * The shrine: stone steps up the stair, a great torii for every work, which
+ * the camera walks through exactly when the page's own gates pass (bus.gates,
+ * works progress), and a line of smaller gates climbing on into the mist,
+ * never reached.
  */
 export function Shrine({ U, gates }: { U: Uniforms; gates: number[] }) {
   const meshes = useMemo(() => {

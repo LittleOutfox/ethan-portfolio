@@ -902,7 +902,11 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   margin-top: 4.5vh;
   font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
   color: var(--moon-dim);
+  text-wrap: balance; /* a row that wraps splits evenly: no tag left on its own */
 }
+/* a word kept whole stays in the row's one run of text, not a flex item of its own (which
+   put the gap either side of it and, on small screens, broke the row into columns) */
+.wscene-role .nowrap { display: contents; }
 .wscene-role::before, .wscene-role::after {
   content: ''; width: 52px; height: 1px; background: var(--hairline);
 }
@@ -955,6 +959,77 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   transform: scaleX(1); transform-origin: left;
 }
 .wscene-visit:focus-visible .visit-arrow { transform: translate(3px, -3px); }
+
+/* the signals at the gates' feet: small timing diagrams in the site's hairlines,
+   the controls in the corridor's small caps. Only where a gate has room for one */
+.wgate-signal { display: none; }
+@media (min-width: 961px) and (min-height: 700px) {
+  /* the gate that carries a signal lifts its inscription to make room at its
+     feet; its title keeps the height cap every title has (13vh there), so the
+     meta stays clear of the tie beam */
+  .has-signal .wgate-inner { padding-bottom: 18vh; }
+  .has-signal .wscene-title { font-size: clamp(56px, min(9vw, 10vh), 150px); }
+  .has-signal .wscene-meta { margin-bottom: 2.4vh; }
+  .has-signal .wscene-line { margin-top: 2.4vh; }
+  .has-signal .wscene-role { margin-top: 3vh; }
+  .has-signal .wscene-visit { margin-top: 2vh; }
+  .wgate-signal {
+    display: block;
+    position: absolute; left: 0; right: 0; bottom: 14vh;
+    width: min(56vw, 900px); margin: 0 auto; /* centred by margins: GSAP owns its transform */
+    pointer-events: auto;
+    text-align: left;
+  }
+}
+/* laptop heights: the words, the beam and the figure share less room — the
+   line sets a touch smaller, the words lift less, the figure sits lower */
+@media (min-width: 961px) and (min-height: 700px) and (max-height: 920px) {
+  .has-signal .wgate-inner { padding-bottom: 15vh; }
+  .has-signal .wscene-line { font-size: clamp(16px, min(1.8vw, 2.8vh), 26px); line-height: 1.45; }
+  .wgate-signal { bottom: 11vh; }
+}
+.sig-head {
+  display: flex; align-items: baseline; gap: 22px; flex-wrap: wrap;
+  margin-bottom: 1.2vh;
+  font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--moon-faint);
+}
+.sig-title { color: var(--moon-dim); }
+.sig-byte { display: inline-flex; align-items: baseline; gap: 10px; }
+.sig-input {
+  width: 1.6em; padding: 0 0 2px;
+  font-family: var(--serif); font-size: 22px; line-height: 1; text-align: center;
+  letter-spacing: 0; text-transform: none;
+  color: var(--moon); background: transparent;
+  border: 0; border-bottom: 1px solid var(--spirit-soft); border-radius: 0;
+  caret-color: var(--spirit);
+  transition: border-color var(--dur-2) var(--out-soft);
+}
+.sig-input:hover, .sig-input:focus { border-color: var(--spirit); outline: none; }
+.sig-input:focus-visible { outline: 1px solid var(--spirit); outline-offset: 4px; }
+.sig-readout { font-variant-numeric: tabular-nums; letter-spacing: 0.2em; }
+.sig-scroll { overflow-x: auto; scrollbar-width: none; }
+.sig-scroll::-webkit-scrollbar { display: none; }
+.sig-scroll:focus-visible { outline: 1px solid var(--spirit); outline-offset: 6px; }
+.sig-svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.sig-rules line { stroke: var(--hairline); stroke-width: 1; shape-rendering: crispEdges; }
+.sig-clk line { stroke: rgba(var(--spirit-rgb), 0.35); stroke-width: 1; shape-rendering: crispEdges; }
+.sig-clk line.sig-sample { stroke: var(--spirit); }
+.sig-tx polyline { fill: none; stroke: rgba(var(--moon-rgb), 0.85); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
+.sig-marks line { stroke: var(--spirit); stroke-width: 3; shape-rendering: crispEdges; }
+/* never under 11px on screen: when the diagram draws small, its labels grow to hold the floor */
+.sig-label { font-family: var(--serif); font-style: italic; font-size: max(17px, calc(11px * var(--sig-units-per-px, 0))); fill: var(--moon-faint); }
+/* the caption is for assistive tech: the head row already says what the figure is */
+.sig-cap, .sig-bits { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the ASIC's write: a percent box whose digits sit against their unit, the output lane
+   in spirit, the bit names smaller */
+.sig-pct { display: inline-flex; align-items: baseline; gap: 2px; }
+.sig-duty { width: 2.2em; text-align: right; }
+.sig-duty:focus-visible { outline: none; } /* the ring wraps the number and its unit together */
+.sig-pct:has(.sig-duty:focus-visible) { outline: 1px solid var(--spirit); outline-offset: 4px; }
+.sig-unit { font-family: var(--serif); font-size: 22px; line-height: 1; letter-spacing: 0; color: var(--moon-dim); }
+.sig-pwm polyline { fill: none; stroke: var(--spirit); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
+.sig-bit { font-size: max(14px, calc(11px * var(--sig-units-per-px, 0))); }
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
@@ -1414,6 +1489,12 @@ html.no-js .wscene-num, html.reduced .wscene-num { display: none; }
 html.no-js .wgate-inner, html.reduced .wgate-inner { max-width: none; padding-top: 0; }
 html.no-js .works-fox, html.reduced .works-fox,
 html.no-js .works-count, html.reduced .works-count { display: none; }
+/* the gates stack as plain blocks: a signal follows its words in the flow, and
+   the words need no lift (without script there is no signal to show) */
+html.no-js .wgate-signal { display: none; }
+html.reduced .has-signal { flex-direction: column; }
+html.reduced .wgate-signal { position: static; margin: 5vh auto 0; }
+html.no-js .has-signal .wgate-inner, html.reduced .has-signal .wgate-inner { padding-bottom: 0; }
 
 html.no-js .tails-pin, html.reduced .tails-pin { padding: clamp(120px, 12.5vw, 210px) var(--pad-x); }
 html.no-js .tails-head, html.reduced .tails-head { position: static; margin-bottom: clamp(36px, 3.75vw, 63px); }

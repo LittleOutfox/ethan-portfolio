@@ -50,7 +50,7 @@ export function Foxfire({ U, density, gates }: { U: Uniforms; density: number; g
     for (let i = 0; i < Math.round(30 * density); i++) orb(5.3, 4, 12, 5, 9, 0.18, 0.26)
 
     // a stone lantern either side of each great torii, a little outside its pillars
-    for (const g of toriiPlaces(gates).slice(0, 3)) {
+    for (const g of toriiPlaces(gates).slice(0, gates.length)) {
       for (const side of [-1, 1]) {
         const off = side * (1.35 * g.scale + 1.3)
         const x = g.x + Math.cos(g.yaw) * off
