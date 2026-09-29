@@ -88,6 +88,12 @@ function mount(root) {
     '<div class="sig-scroll" tabindex="0" role="group" aria-label="UART timing diagram, scrolls sideways" aria-describedby="uartCap"></div>' +
     '<p class="sig-cap" id="uartCap">8N1, 16&times; oversampled, LSB first. The taller ticks are the centre-bit samples. Change the byte to redraw.<span class="sig-bits"></span></p>';
   const svg = el('svg', { viewBox: '0 0 ' + VB_W + ' ' + VB_H, class: 'sig-svg', 'aria-hidden': 'true', focusable: 'false' }, root.querySelector('.sig-scroll'));
+  // the labels keep the site's 11px floor however small the diagram draws: the css reads
+  // how many user units one screen pixel spans
+  new ResizeObserver(function (entries) {
+    const w = entries[0].contentRect.width;
+    if (w > 0) svg.style.setProperty('--sig-units-per-px', String(VB_W / w));
+  }).observe(svg);
   const input = root.querySelector('.sig-input');
   const readout = root.querySelector('.sig-readout');
   const bits = root.querySelector('.sig-bits');

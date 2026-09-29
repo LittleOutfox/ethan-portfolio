@@ -85,6 +85,12 @@ function mount(root) {
     '<div class="sig-scroll" tabindex="0" role="group" aria-label="SPI timing diagram, scrolls sideways" aria-describedby="spiCap"></div>' +
     '<p class="sig-cap" id="spiCap">SPI mode 0, 16 bits, MSB first: a write bit, the 7-bit address 0x04 (the duty register) and the duty as one byte, the percentage you set in the chip’s 256 steps (50% is 0x80; 100% is 0xFF, always on), sampled on each rising edge of SCLK and committed when nCS rises. The pwm lane shows two periods of the output, about 3 kHz, at its own time scale.<span class="sig-bits"></span></p>';
   const svg = el('svg', { viewBox: '0 0 ' + VB_W + ' ' + VB_H, class: 'sig-svg', 'aria-hidden': 'true', focusable: 'false' }, root.querySelector('.sig-scroll'));
+  // the labels keep the site's 11px floor however small the diagram draws: the css reads
+  // how many user units one screen pixel spans
+  new ResizeObserver(function (entries) {
+    const w = entries[0].contentRect.width;
+    if (w > 0) svg.style.setProperty('--sig-units-per-px', String(VB_W / w));
+  }).observe(svg);
   const input = root.querySelector('.sig-duty');
   const readout = root.querySelector('.sig-readout');
   const bits = root.querySelector('.sig-bits');

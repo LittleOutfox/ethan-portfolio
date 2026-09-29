@@ -1013,7 +1013,8 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .sig-clk line.sig-sample { stroke: var(--spirit); }
 .sig-tx polyline { fill: none; stroke: rgba(var(--moon-rgb), 0.85); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
 .sig-marks line { stroke: var(--spirit); stroke-width: 3; shape-rendering: crispEdges; }
-.sig-label { font-family: var(--serif); font-style: italic; font-size: 17px; fill: var(--moon-faint); }
+/* never under 11px on screen: when the diagram draws small, its labels grow to hold the floor */
+.sig-label { font-family: var(--serif); font-style: italic; font-size: max(17px, calc(11px * var(--sig-units-per-px, 0))); fill: var(--moon-faint); }
 /* the caption is for assistive tech: the head row already says what the figure is */
 .sig-cap, .sig-bits { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* the ASIC's write: a percent box whose digits sit against their unit, the output lane
@@ -1024,7 +1025,7 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .sig-pct:has(.sig-duty:focus-visible) { outline: 1px solid var(--spirit); outline-offset: 4px; }
 .sig-unit { font-family: var(--serif); font-size: 22px; line-height: 1; letter-spacing: 0; color: var(--moon-dim); }
 .sig-pwm polyline { fill: none; stroke: var(--spirit); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
-.sig-bit { font-size: 14px; }
+.sig-bit { font-size: max(14px, calc(11px * var(--sig-units-per-px, 0))); }
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
