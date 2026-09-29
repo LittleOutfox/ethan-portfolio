@@ -881,7 +881,7 @@
     });
   })();
 
-  // ---- 03 · the leap: three torii gates -----------------------------
+  // ---- 03 · the leap: a torii gate for every work ------------------
   // each work is a gate deep in the forest — approach it, read it,
   // then pass through as its beams sweep past the edges of the screen
   (function works() {
@@ -897,7 +897,8 @@
       scrollTrigger: {
         trigger: '.works-pin',
         start: 'top top',
-        end: '+=400%',
+        // every gate keeps the scroll it had when there were three (400%)
+        end: '+=' + (100 + 100 * gates.length) + '%',
         pin: true,
         refreshPriority: 1,
         scrub: 1,

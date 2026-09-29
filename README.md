@@ -11,7 +11,7 @@ A nine-tailed fox scroll-story portfolio. One continuous journey through a moonl
 | 00 | The Veil / Hero | ORIGIN — where the tales begin |
 | 01 | Awakening 觉醒 | the fox wakes, and remembers its name |
 | 02 | The Hunt | signals, traced through the dark — five disciplines |
-| 03 | The Leap | selected works, caught in motion — three spirit gates |
+| 03 | The Leap | selected works, caught in motion — five spirit gates |
 | 04 | The Den 炉火 | not every night is a hunt |
 | 05 | Transformation 蜕变 | every tail is earned — five milestones, five tails |
 | 06 | The Snowfield 雪 | the snow waits. leave a trace |
