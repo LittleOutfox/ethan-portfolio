@@ -956,6 +956,60 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 }
 .wscene-visit:focus-visible .visit-arrow { transform: translate(3px, -3px); }
 
+/* the signals at the gates' feet: small timing diagrams in the site's hairlines,
+   the controls in the corridor's small caps. Only where a gate has room for one */
+.wgate-signal { display: none; }
+@media (min-width: 961px) and (min-height: 700px) {
+  /* the gate that carries a signal lifts its inscription to make room at its
+     feet; its title keeps the height cap every title has (13vh there), so the
+     meta stays clear of the tie beam */
+  .has-signal .wgate-inner { padding-bottom: 18vh; }
+  .has-signal .wscene-title { font-size: clamp(56px, min(9vw, 10vh), 150px); }
+  .has-signal .wscene-meta { margin-bottom: 2.4vh; }
+  .has-signal .wscene-line { margin-top: 2.4vh; }
+  .has-signal .wscene-role { margin-top: 3vh; }
+  .has-signal .wscene-visit { margin-top: 2vh; }
+  .wgate-signal {
+    display: block;
+    position: absolute; left: 0; right: 0; bottom: 14vh;
+    width: min(56vw, 900px); margin: 0 auto; /* centred by margins: GSAP owns its transform */
+    pointer-events: auto;
+    text-align: left;
+  }
+}
+.sig-head {
+  display: flex; align-items: baseline; gap: 22px; flex-wrap: wrap;
+  margin-bottom: 1.2vh;
+  font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--moon-faint);
+}
+.sig-title { color: var(--moon-dim); }
+.sig-byte { display: inline-flex; align-items: baseline; gap: 10px; }
+.sig-input {
+  width: 1.6em; padding: 0 0 2px;
+  font-family: var(--serif); font-size: 22px; line-height: 1; text-align: center;
+  letter-spacing: 0; text-transform: none;
+  color: var(--moon); background: transparent;
+  border: 0; border-bottom: 1px solid var(--spirit-soft); border-radius: 0;
+  caret-color: var(--spirit);
+  transition: border-color var(--dur-2) var(--out-soft);
+}
+.sig-input:hover, .sig-input:focus { border-color: var(--spirit); outline: none; }
+.sig-input:focus-visible { outline: 1px solid var(--spirit); outline-offset: 4px; }
+.sig-readout { font-variant-numeric: tabular-nums; letter-spacing: 0.2em; }
+.sig-scroll { overflow-x: auto; scrollbar-width: none; }
+.sig-scroll::-webkit-scrollbar { display: none; }
+.sig-scroll:focus-visible { outline: 1px solid var(--spirit); outline-offset: 6px; }
+.sig-svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.sig-rules line { stroke: var(--hairline); stroke-width: 1; shape-rendering: crispEdges; }
+.sig-clk line { stroke: rgba(var(--spirit-rgb), 0.35); stroke-width: 1; shape-rendering: crispEdges; }
+.sig-clk line.sig-sample { stroke: var(--spirit); }
+.sig-tx polyline { fill: none; stroke: rgba(var(--moon-rgb), 0.85); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
+.sig-marks line { stroke: var(--spirit); stroke-width: 3; shape-rendering: crispEdges; }
+.sig-label { font-family: var(--serif); font-style: italic; font-size: 17px; fill: var(--moon-faint); }
+/* the caption is for assistive tech: the head row already says what the figure is */
+.sig-cap, .sig-bits { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
   font-family: var(--serif); font-size: 15px; letter-spacing: 0.2em;
