@@ -76,9 +76,12 @@ export function pwmHigh(duty) {
   return duty === 255 ? 1 : duty / 256;
 }
 
-/** The duty as a percentage with one decimal, e.g. '50.0%'. */
-export function dutyPercent(duty) {
-  return (pwmHigh(duty) * 100).toFixed(1) + '%';
+/** The duty byte for a percentage: the nearest of the 256 steps; 100% is 0xFF, the always-on code. */
+export function dutyFromPercent(pct) {
+  if (!(pct >= 0 && pct <= 100)) {
+    throw new RangeError('spi: percent must be in 0..100, received ' + pct);
+  }
+  return Math.min(255, Math.round(pct * 256 / 100));
 }
 
 /** The output across [0, width]: `periods` periods, each high for pwmHigh(duty) of it. */
@@ -103,9 +106,13 @@ export function formatWrite(addr, data) {
   return hex2(addr) + ' ← ' + hex2(data);
 }
 
-/** The duty box's text as a duty: digits only, clamped to 255; null while there are none. */
-export function dutyFromText(text) {
-  const digits = String(text).replace(/\D+/g, '');
-  if (!digits) return null;
-  return Math.min(255, parseInt(digits, 10));
+/** The percent box's text: the number typed (a decimal point may trail mid-typing), clamped
+    to 100, as the text to show and its value; null while there is no digit. */
+export function readPercent(text) {
+  let s = String(text).replace(/,/g, '.').replace(/[^\d.]/g, '');
+  const dot = s.indexOf('.');
+  if (dot >= 0) s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, '');
+  if (!/\d/.test(s)) return null;
+  const value = parseFloat(s);
+  return value > 100 ? { text: '100', value: 100 } : { text: s, value: value };
 }

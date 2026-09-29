@@ -4,9 +4,10 @@
    the pure generator in ./spi.js: nCS, SCLK and COPI across the
    16-bit frame (MSB first, sampled on SCLK's rising edges), and
    the PWM the new duty sets, two periods on its own time scale.
-   Changing the duty redraws it; nothing animates.
+   The duty is set as a percentage and sent as the nearest of the
+   chip's 256 steps. Changing it redraws; nothing animates.
    ------------------------------------------------------------ */
-import { copiPolyline, csPolyline, DUTY_REG, dutyFromText, dutyPercent, formatWrite, pwmPolyline, sampleXs, sclkPolyline, spiWrite } from './spi.js?v=1';
+import { copiPolyline, csPolyline, DUTY_REG, dutyFromPercent, formatWrite, pwmPolyline, readPercent, sampleXs, sclkPolyline, spiWrite } from './spi.js?v=2';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /* viewBox geometry (user units): 18 cells of 48 across the plot */
@@ -78,44 +79,45 @@ function mount(root) {
   root.innerHTML =
     '<div class="sig-head">' +
       '<span class="sig-title">One write on SPI</span>' +
-      '<label class="sig-byte">Duty <input class="sig-input sig-duty" type="text" inputmode="numeric" maxlength="3" autocomplete="off" spellcheck="false" value="128" aria-describedby="spiCap"></label>' +
+      '<label class="sig-byte">Duty <span class="sig-pct"><input class="sig-input sig-duty" type="text" inputmode="decimal" maxlength="4" autocomplete="off" spellcheck="false" value="50" aria-describedby="spiCap"><span class="sig-unit">%</span></span></label>' +
       '<output class="sig-readout" aria-live="polite"></output>' +
     '</div>' +
     '<div class="sig-scroll" tabindex="0" role="group" aria-label="SPI timing diagram, scrolls sideways" aria-describedby="spiCap"></div>' +
-    '<p class="sig-cap" id="spiCap">SPI mode 0, 16 bits, MSB first: a write bit, the 7-bit address 0x04 (the duty register) and the 8-bit duty, sampled on each rising edge of SCLK and committed when nCS rises. The pwm lane shows two periods of the output, about 3 kHz, at its own time scale.<span class="sig-bits"></span></p>';
+    '<p class="sig-cap" id="spiCap">SPI mode 0, 16 bits, MSB first: a write bit, the 7-bit address 0x04 (the duty register) and the duty as one byte, the percentage you set in the chip’s 256 steps (50% is 0x80; 100% is 0xFF, always on), sampled on each rising edge of SCLK and committed when nCS rises. The pwm lane shows two periods of the output, about 3 kHz, at its own time scale.<span class="sig-bits"></span></p>';
   const svg = el('svg', { viewBox: '0 0 ' + VB_W + ' ' + VB_H, class: 'sig-svg', 'aria-hidden': 'true', focusable: 'false' }, root.querySelector('.sig-scroll'));
   const input = root.querySelector('.sig-duty');
   const readout = root.querySelector('.sig-readout');
   const bits = root.querySelector('.sig-bits');
-  let last = 128;
+  let last = 50;
 
-  function render(duty) {
-    last = duty;
+  function render(pct) {
+    last = pct;
+    const duty = dutyFromPercent(pct);
     const frame = draw(svg, duty);
-    readout.textContent = dutyPercent(duty) + ' · ' + formatWrite(DUTY_REG, duty);
+    readout.textContent = formatWrite(DUTY_REG, duty);
     bits.textContent = ' Bits: ' + frame.bits.map(function (b) { return b.name + ' ' + b.value; }).join(', ') + '.';
   }
   input.addEventListener('input', function () {
-    const d = dutyFromText(input.value);
-    if (d === null) return; // an empty box waits for a number
-    if (String(d) !== input.value) input.value = String(d);
-    render(d);
+    const r = readPercent(input.value);
+    if (r === null) return; // an empty box waits for a number
+    if (r.text !== input.value) input.value = r.text;
+    render(r.value);
   });
   input.addEventListener('keydown', function (e) {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     e.preventDefault();
-    const step = e.shiftKey ? 16 : 1;
-    const cur = dutyFromText(input.value);
-    const from = cur === null ? last : cur;
-    const next = Math.max(0, Math.min(255, from + (e.key === 'ArrowUp' ? step : -step)));
-    input.value = String(next);
-    render(next);
+    const step = e.shiftKey ? 10 : 1;
+    const r = readPercent(input.value);
+    const from = r === null ? last : r.value;
+    // whole steps: from 12.5, up is 13 and down is 12
+    const next = e.key === 'ArrowUp' ? Math.floor(from) + step : Math.ceil(from) - step;
+    const pct = Math.max(0, Math.min(100, next));
+    input.value = String(pct);
+    render(pct);
   });
-  input.addEventListener('blur', function () {
-    if (dutyFromText(input.value) === null) input.value = String(last);
-  });
+  input.addEventListener('blur', function () { input.value = String(last); }); // '12.' or an emptied box settles
   input.addEventListener('focus', function () { input.select(); });
-  render(128);
+  render(50);
 }
 
 document.querySelectorAll('[data-signal="spi"]').forEach(mount);

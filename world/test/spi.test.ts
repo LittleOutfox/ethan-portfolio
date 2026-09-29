@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  copiPolyline, csPolyline, DUTY_REG, dutyFromText, dutyPercent, FRAME_CELLS,
-  formatWrite, pwmHigh, pwmPolyline, sampleXs, sclkPolyline, spiWrite,
+  copiPolyline, csPolyline, DUTY_REG, dutyFromPercent, FRAME_CELLS,
+  formatWrite, pwmHigh, pwmPolyline, readPercent, sampleXs, sclkPolyline, spiWrite,
 } from '../../js/spi.js'
 
 function parsePoints(points: string): [number, number][] {
@@ -78,9 +78,6 @@ describe('the PWM it sets (pwm_peripheral.v: high while an 8-bit counter < duty;
     expect(pwmHigh(128)).toBe(0.5)
     expect(pwmHigh(254)).toBe(254 / 256)
     expect(pwmHigh(255)).toBe(1)
-    expect(dutyPercent(128)).toBe('50.0%')
-    expect(dutyPercent(255)).toBe('100.0%')
-    expect(dutyPercent(0)).toBe('0.0%')
     expect(() => pwmHigh(256)).toThrow(RangeError)
   })
 
@@ -92,15 +89,52 @@ describe('the PWM it sets (pwm_peripheral.v: high while an 8-bit counter < duty;
   })
 })
 
-describe('the duty box and the readout', () => {
-  it('keeps digits, clamps to 0..255, and waits on an empty box', () => {
-    expect(dutyFromText('128')).toBe(128)
-    expect(dutyFromText('0012')).toBe(12)
-    expect(dutyFromText('300')).toBe(255)
-    expect(dutyFromText('-5')).toBe(5)
-    expect(dutyFromText('a1b2')).toBe(12)
-    expect(dutyFromText('')).toBeNull()
-    expect(dutyFromText('abc')).toBeNull()
+describe('the duty as a percentage (what a visitor sets) and the byte the chip gets', () => {
+  it('writes the nearest of the 256 steps, and 100% as 0xFF, the always-on code', () => {
+    expect(dutyFromPercent(0)).toBe(0)
+    expect(dutyFromPercent(25)).toBe(0x40)
+    expect(dutyFromPercent(50)).toBe(0x80)
+    expect(dutyFromPercent(75)).toBe(0xc0)
+    expect(dutyFromPercent(12.5)).toBe(0x20)
+    expect(dutyFromPercent(1)).toBe(3)
+    expect(dutyFromPercent(99)).toBe(253)
+    expect(dutyFromPercent(100)).toBe(0xff)
+  })
+
+  it('lands within half a step of every whole percentage, and exactly on 0% and 100%', () => {
+    for (let p = 0; p <= 100; p++) {
+      expect(Math.abs(pwmHigh(dutyFromPercent(p)) - p / 100)).toBeLessThanOrEqual(0.5 / 256)
+    }
+    expect(pwmHigh(dutyFromPercent(0))).toBe(0)
+    expect(pwmHigh(dutyFromPercent(100))).toBe(1)
+  })
+
+  it('rejects a percentage outside 0..100', () => {
+    expect(() => dutyFromPercent(-1)).toThrow(RangeError)
+    expect(() => dutyFromPercent(100.5)).toThrow(RangeError)
+    expect(() => dutyFromPercent(Number.NaN)).toThrow(RangeError)
+  })
+})
+
+describe('the percent box and the readout', () => {
+  it('reads the number typed, keeping a decimal point mid-typing', () => {
+    expect(readPercent('50')).toEqual({ text: '50', value: 50 })
+    expect(readPercent('12.')).toEqual({ text: '12.', value: 12 })
+    expect(readPercent('12.5')).toEqual({ text: '12.5', value: 12.5 })
+    expect(readPercent('12,5')).toEqual({ text: '12.5', value: 12.5 })
+    expect(readPercent('.5')).toEqual({ text: '.5', value: 0.5 })
+    expect(readPercent('007')).toEqual({ text: '007', value: 7 })
+  })
+
+  it('clamps past 100, drops what is not a number, and waits on an empty box', () => {
+    expect(readPercent('150')).toEqual({ text: '100', value: 100 })
+    expect(readPercent('100.5')).toEqual({ text: '100', value: 100 })
+    expect(readPercent('5a')).toEqual({ text: '5', value: 5 })
+    expect(readPercent('-5')).toEqual({ text: '5', value: 5 })
+    expect(readPercent('50%')).toEqual({ text: '50', value: 50 })
+    expect(readPercent('')).toBeNull()
+    expect(readPercent('abc')).toBeNull()
+    expect(readPercent('.')).toBeNull()
   })
 
   it('prints the write as address ← datum in hex', () => {

@@ -1016,8 +1016,13 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .sig-label { font-family: var(--serif); font-style: italic; font-size: 17px; fill: var(--moon-faint); }
 /* the caption is for assistive tech: the head row already says what the figure is */
 .sig-cap, .sig-bits { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-/* the ASIC's write: a wider duty box, the output lane in spirit, the bit names smaller */
-.sig-duty { width: 2.2em; }
+/* the ASIC's write: a percent box whose digits sit against their unit, the output lane
+   in spirit, the bit names smaller */
+.sig-pct { display: inline-flex; align-items: baseline; gap: 2px; }
+.sig-duty { width: 2.2em; text-align: right; }
+.sig-duty:focus-visible { outline: none; } /* the ring wraps the number and its unit together */
+.sig-pct:has(.sig-duty:focus-visible) { outline: 1px solid var(--spirit); outline-offset: 4px; }
+.sig-unit { font-family: var(--serif); font-size: 22px; line-height: 1; letter-spacing: 0; color: var(--moon-dim); }
 .sig-pwm polyline { fill: none; stroke: var(--spirit); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
 .sig-bit { font-size: 14px; }
 

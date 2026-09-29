@@ -77,8 +77,10 @@ lanes `clk_16x` and `tx`, cell labels, centre-bit samples as spirit marks, a vis
 hidden caption listing the bits).
 
 **SPI PWM ASIC — the write and the output (new, same hand):** `js/spi.js` and
-`js/spi-figure.js`. A head row "One write on SPI · Duty [128] · 50.0% · 0x04 ← 0x80"
-(the duty box takes 0–255; arrow keys step it). Lanes, top to bottom:
+`js/spi-figure.js`. A head row "One write on SPI · Duty [50]% · 0x04 ← 0x80" (the duty
+box takes a percentage, 0–100, decimals allowed; arrow keys step it by 1, Shift by 10 —
+amended at Ethan's review: a raw 0–255 box needs the chip's spec to make sense). Lanes,
+top to bottom:
 - `nCS` low across the frame, rising after the last bit (the commit);
 - `SCLK` idle low, 16 pulses (SPI mode 0);
 - `COPI` the 16 bits MSB first — `W`, `A6…A0` = 0x04, `D7…D0` = the duty — each bit valid
@@ -86,9 +88,10 @@ hidden caption listing the bits).
 - `PWM` two periods of the output at that duty.
 
 Duty follows the RTL (`pwm_peripheral.v`): high while an 8-bit counter < duty, except duty
-255 which is always high — so the duty fraction is `d/256`, and `255 → 100%`. The
-generator exposes `spiWrite(addr, data)` (frame bits and polylines), `pwmHigh(duty)` and
-`dutyPercent(duty)`.
+255 which is always high — so the duty fraction is `d/256`, and `255 → 100%`. A
+percentage is sent as the nearest of the 256 steps (50% → 0x80, 100% → 0xFF). The
+generator exposes `spiWrite(addr, data)` (frame bits and polylines), `pwmHigh(duty)`,
+`dutyFromPercent(pct)` and `readPercent(text)` (the box's text).
 
 **On the page:** each figure mounts in a `<div class="wgate-signal" data-signal="uart|spi">`
 inside its gate (`.wgate.has-signal`). In `works()` the figure moves with the gate's
@@ -110,8 +113,9 @@ type-check accepts the tests' imports.
   edges, clock, centre samples, byteFromChar, formatByte), ported to TS.
 - `world/test/spi.test.ts`: 16 bits MSB first with W=1, address 0x04 and the data; SCLK has
   16 rising edges, each in the middle of its COPI bit; nCS low across all 16 and high
-  after; `pwmHigh`/`dutyPercent` for 0, 1, 128, 254, 255 against the RTL's rule;
-  out-of-range input throws.
+  after; `pwmHigh` for 0, 1, 128, 254, 255 against the RTL's rule; `dutyFromPercent`
+  within half a step of every whole percentage and 100% → 0xFF; `readPercent` for typed,
+  decimal, over-100 and empty text; out-of-range input throws.
 - `world/test/fox.test.ts`: the works-cards window updated for five gates.
 - The existing world suite stays green.
 
