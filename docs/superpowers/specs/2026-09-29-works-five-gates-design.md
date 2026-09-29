@@ -1,6 +1,6 @@
 # Works: five gates, five torii, two signals — design
 
-Date: 2026-09-29 · Branch: `works-five` (from `main` 4bd4ce4) · Approved in chat ("Lgtm")
+Date: 2026-09-29 · Branch: `works-five` (from `main` 4bd4ce4) · Approved: design ("Lgtm"), spec ("go for it", credit lines dropped)
 
 ## Goal
 
@@ -26,14 +26,14 @@ visit link). Numerals renumbered 01–05 in the new order. Text, from the repos'
 **01 · SPI PWM ASIC** — meta `ASIC · UWASIC · 2026`
 - line: A 16-channel PWM controller behind a write-only SPI port — shift-register capture in
   417 cells, verified in cocotb and taken through SKY130 RTL-to-GDS and Tiny Tapeout precheck.
-  PWM generator by Damir Gazizullin.
 - role: `Verilog · SPI · cocotb · OpenLane2 · SKY130`
 - visit: GitHub → https://github.com/LittleOutfox/spi-controlled-pwm-asic
 
 **04 · Diabetes Classifier** — meta `Machine learning · Personal · 2024`
 - line: Predicting diabetes from the CDC's national health survey — random forests and
-  XGBoost against simpler baselines, tuned with hyperopt toward recall. Preprocessing with
-  help from Toby Anderson.
+  XGBoost against simpler baselines, tuned with hyperopt toward recall.
+- (credits for the PWM generator and the preprocessing stay in the repos' READMEs, not on
+  the site — Ethan's call)
 - role: `Python · scikit-learn · XGBoost · hyperopt`
 - visit: GitHub → https://github.com/LittleOutfox/random-forest-classifier-diabetes
 
