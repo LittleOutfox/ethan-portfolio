@@ -1479,6 +1479,12 @@ html.no-js .wscene-num, html.reduced .wscene-num { display: none; }
 html.no-js .wgate-inner, html.reduced .wgate-inner { max-width: none; padding-top: 0; }
 html.no-js .works-fox, html.reduced .works-fox,
 html.no-js .works-count, html.reduced .works-count { display: none; }
+/* the gates stack as plain blocks: a signal follows its words in the flow, and
+   the words need no lift (without script there is no signal to show) */
+html.no-js .wgate-signal { display: none; }
+html.reduced .has-signal { flex-direction: column; }
+html.reduced .wgate-signal { position: static; margin: 5vh auto 0; }
+html.no-js .has-signal .wgate-inner, html.reduced .has-signal .wgate-inner { padding-bottom: 0; }
 
 html.no-js .tails-pin, html.reduced .tails-pin { padding: clamp(120px, 12.5vw, 210px) var(--pad-x); }
 html.no-js .tails-head, html.reduced .tails-head { position: static; margin-bottom: clamp(36px, 3.75vw, 63px); }
