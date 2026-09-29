@@ -902,7 +902,11 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   margin-top: 4.5vh;
   font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
   color: var(--moon-dim);
+  text-wrap: balance; /* a row that wraps splits evenly: no tag left on its own */
 }
+/* a word kept whole stays in the row's one run of text, not a flex item of its own (which
+   put the gap either side of it and, on small screens, broke the row into columns) */
+.wscene-role .nowrap { display: contents; }
 .wscene-role::before, .wscene-role::after {
   content: ''; width: 52px; height: 1px; background: var(--hairline);
 }
