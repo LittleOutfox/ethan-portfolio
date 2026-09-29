@@ -30,7 +30,7 @@
        lists and sizes as their mounts below, so the preload IS the fetch -->
   <link rel="preload" as="image" imagesrcset="assets/kitsune/descending-160.webp 160w, assets/kitsune/descending-320.webp 320w, assets/kitsune/descending-480.webp 480w" imagesizes="clamp(110px, 16vh, 160px)">
   <link rel="preload" as="image" imagesrcset="assets/kitsune/sitting-620.webp 620w, assets/kitsune/sitting-840.webp 840w, assets/kitsune/sitting-1240.webp 1240w, assets/kitsune/sitting-1680.webp 1680w" imagesizes="(max-width: 480px) min(88vw, 48vh), (min-width: 961px) and (max-height: 950px) clamp(320px, 46vh, 620px), clamp(340px, 60vh, 620px)">
-  <link rel="stylesheet" href="css/styles.css?v=48">
+  <link rel="stylesheet" href="css/styles.css?v=49">
   <script>
     document.documentElement.classList.replace('no-js', 'js');
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -213,7 +213,7 @@
         </header>
         <div class="works-fox spirit-mount" data-kfox="diving" data-fox-sizes="(max-width: 960px) 130px, clamp(200px, 21vw, 310px)" aria-hidden="true"></div>
         <div class="works-gates">
-          <article class="wgate" data-wgate>
+          <article class="wgate has-signal" data-wgate>
             <div class="wgate-frame" aria-hidden="true">
               <span class="wg-kasagi"></span>
               <span class="wg-shima"></span>
@@ -229,6 +229,8 @@
               <p class="wscene-role">Verilog&nbsp;· SPI&nbsp;· cocotb&nbsp;· OpenLane2&nbsp;· SKY130</p>
               <a class="wscene-visit" href="https://github.com/LittleOutfox/spi-controlled-pwm-asic" target="_blank" rel="noopener" aria-label="GitHub (opens in a new tab)">GitHub <span class="visit-arrow" aria-hidden="true">↗</span></a>
             </div>
+            <!-- the signal at the gate's feet: one SPI write and the PWM it sets, drawn by js/spi-figure.js -->
+            <div class="wgate-signal" data-signal="spi"></div>
           </article>
           <article class="wgate has-signal" data-wgate>
             <div class="wgate-frame" aria-hidden="true">
@@ -385,6 +387,7 @@
   <script src="js/main.js?v=38"></script>
   <!-- the signals at the gates' feet (desktop and landscape tablets only; see css) -->
   <script type="module" src="js/uart-figure.js?v=1"></script>
+  <script type="module" src="js/spi-figure.js?v=1"></script>
 
   <!-- Vercel Web Analytics -->
   <script>

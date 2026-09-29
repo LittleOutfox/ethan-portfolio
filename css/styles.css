@@ -977,6 +977,13 @@ html.js:not(.reduced) .wgate { opacity: 0; }
     text-align: left;
   }
 }
+/* laptop heights: the words, the beam and the figure share less room — the
+   line sets a touch smaller, the words lift less, the figure sits lower */
+@media (min-width: 961px) and (min-height: 700px) and (max-height: 920px) {
+  .has-signal .wgate-inner { padding-bottom: 15vh; }
+  .has-signal .wscene-line { font-size: clamp(16px, min(1.8vw, 2.8vh), 26px); line-height: 1.45; }
+  .wgate-signal { bottom: 11vh; }
+}
 .sig-head {
   display: flex; align-items: baseline; gap: 22px; flex-wrap: wrap;
   margin-bottom: 1.2vh;
@@ -1009,6 +1016,10 @@ html.js:not(.reduced) .wgate { opacity: 0; }
 .sig-label { font-family: var(--serif); font-style: italic; font-size: 17px; fill: var(--moon-faint); }
 /* the caption is for assistive tech: the head row already says what the figure is */
 .sig-cap, .sig-bits { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the ASIC's write: a wider duty box, the output lane in spirit, the bit names smaller */
+.sig-duty { width: 2.2em; }
+.sig-pwm polyline { fill: none; stroke: var(--spirit); stroke-width: 1; stroke-linecap: square; stroke-linejoin: miter; shape-rendering: crispEdges; }
+.sig-bit { font-size: 14px; }
 
 .works-count {
   position: absolute; right: var(--pad-x); bottom: 6vh;
