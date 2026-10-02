@@ -61,6 +61,8 @@ node tools/bake-fox-rasters.mjs [pose ...]
 
 The earlier iteration of this portfolio is preserved on the [`previous-attempt`](../../tree/previous-attempt) branch.
 
+The favicon is the fox from Google's [Noto Emoji](https://github.com/googlefonts/noto-emoji) (Apache 2.0): `assets/favicon.svg`, with `favicon.ico` (16/32/48), `assets/favicon-96x96.png` and `assets/apple-touch-icon.png` rendered from it in Chrome.
+
 ---
 
 以狐为引 — the fox leads the way.
