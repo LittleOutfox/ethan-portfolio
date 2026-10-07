@@ -787,14 +787,6 @@ main { position: relative; z-index: 4; }
   color: var(--moon-dim);
 }
 
-/* the walking fox is cut off on its right edge by design —
-   it sits flush against the viewport edge, forever leaving */
-.hunt-fox {
-  position: absolute; bottom: 7vh; right: 0;
-  width: clamp(300px, 34vw, 480px);
-  pointer-events: none;
-  z-index: 0;
-}
 .hunt-track { position: relative; z-index: 1; }
 
 .hunt-ground {
@@ -1288,7 +1280,6 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .hunt-intro { min-width: 80vw; }
   .skill { min-width: 74vw; }
   .hunt-outro { min-width: 80vw; }
-  .hunt-fox { width: 200px; left: 8vw; }
 
   .works-head { top: 12vh; transform: none; }
   .works-fox { right: 6vw; top: 6vh; width: 130px; }
@@ -1343,7 +1334,6 @@ html.js:not(.reduced) .wgate { opacity: 0; }
   .origin-facts { grid-template-columns: 1fr; gap: 18px; }
   .origin-facts dt { margin-bottom: 4px; }
 
-  .hunt-fox { width: 150px; opacity: 0.45; bottom: 4vh; }
   /* the closing line is set on one forced break; on a hand it must
      still sit inside the gutters, so the type follows the width */
   .hunt-outro { font-size: clamp(18px, 5.7vw, 24px); }
@@ -1474,7 +1464,6 @@ html.no-js .hunt-track, html.reduced .hunt-track {
   padding: clamp(120px, 12.5vw, 210px) var(--pad-x);
   gap: clamp(48px, 5vw, 84px) 6vw;
 }
-html.no-js .hunt-fox, html.reduced .hunt-fox,
 html.no-js .hunt-ground, html.reduced .hunt-ground { display: none; }
 
 html.no-js .works-pin, html.reduced .works-pin { padding: clamp(120px, 12.5vw, 210px) var(--pad-x); }

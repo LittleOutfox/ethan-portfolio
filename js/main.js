@@ -664,8 +664,8 @@
     opts = opts || {};
     var imgs = mount.querySelectorAll('img');
     // the rise rides the images, never the mount: the ambient mounts'
-    // own y is scrub-owned (parallax) and the hunt mount's is the idle
-    // breath — two writers on one transform fight (see velocity())
+    // own y is scrub-owned (parallax), and two writers on one transform
+    // fight (see velocity())
     gsap.set(imgs, { opacity: 0, y: opts.y === undefined ? 30 : opts.y });
     var tl = gsap.timeline({ paused: true });
     tl.to(imgs, { y: 0, duration: 2.2, ease: 'power4.out' }, 0);
@@ -832,30 +832,6 @@
       }
     });
     pins.hunt = horiz;
-
-    var foxMount = document.querySelector('.hunt-fox');
-    var foxTl = condense(foxMount, { y: 0 });
-    ScrollTrigger.create({
-      trigger: '.hunt-pin', start: 'top 70%', once: true,
-      onEnter: function () { foxTl.play(); }
-    });
-    // partly through the edge — hindquarters and tails in frame,
-    // and it slips a little further out as you follow. Travel is
-    // relative to the fox's own width so the crop reads the same on
-    // a 480px-capped fox at any viewport (vw-based travel walked it
-    // fully off-screen on ultrawide).
-    gsap.fromTo(foxMount, { xPercent: 16.5 }, {
-      xPercent: 42,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '.hunt-pin', start: 'top top',
-        end: function () { return '+=' + getDist(); },
-        scrub: 1.4, invalidateOnRefresh: true
-      }
-    });
-    // idle breath, not a gesture — the one deliberate exception to the
-    // expo/power4 voice (a breath should be sinusoidal)
-    gsap.to(foxMount, { y: -7, duration: 2.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
 
     gsap.utils.toArray('.skill').forEach(function (el, idx) {
       // columns already inside the first frame (wide viewports) can't
