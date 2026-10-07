@@ -789,16 +789,6 @@ main { position: relative; z-index: 4; }
 
 .hunt-track { position: relative; z-index: 1; }
 
-.hunt-ground {
-  position: absolute; bottom: 11vh; left: 0;
-  width: 100%; height: 2px;
-}
-.hunt-ground path {
-  fill: none; stroke: rgba(var(--moon-rgb), 0.14);
-  stroke-width: 0.4; stroke-dasharray: 0.8 1.6;
-  vector-effect: non-scaling-stroke;
-}
-
 /* ------------------------------------------------------------
    03 · the leap (works corridor)
    ------------------------------------------------------------ */
@@ -1464,7 +1454,6 @@ html.no-js .hunt-track, html.reduced .hunt-track {
   padding: clamp(120px, 12.5vw, 210px) var(--pad-x);
   gap: clamp(48px, 5vw, 84px) 6vw;
 }
-html.no-js .hunt-ground, html.reduced .hunt-ground { display: none; }
 
 html.no-js .works-pin, html.reduced .works-pin { padding: clamp(120px, 12.5vw, 210px) var(--pad-x); }
 html.no-js .works-head, html.reduced .works-head { position: static; transform: none; margin-bottom: clamp(48px, 5vw, 84px); }
